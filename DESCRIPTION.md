@@ -7,6 +7,8 @@ App que permite al usuario ingresar su estado de cuenta y a partir de este calcu
 * El usuario podrá ingresar su estado de cuenta de diferentes cuentas bancarias. Los estados de cuenta se ingresan en formato PDF.
 * El sistema podrá identificar los gastos.
     * Para los bancos más populares del país se tendrá un parser específico.
+        * Prototipo/MVP: Se contará con parser para un solo banco.
+        * Desarrollo a largo plazo: Se agregarán parsers para bancos adicionales.
     * Para otros se utilizará un modelo de IA para obtener la información. Previo a usar el modelo, de forma local se removerá información privada del usuario como nombre y domicilio.
 * El sistema organizará los gastos en diferentes categorías.
     * Para los negocios más populares de Guatemala se tendrá una categoría específica ya definida.
