@@ -321,24 +321,19 @@ export function ExpenseDashboard({
               <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center dark:bg-indigo-900/80 dark:text-indigo-300 shrink-0">
                 <Icons.CreditCard className="w-4 h-4" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-indigo-950 dark:text-indigo-100">
-                    Suscripciones Detectadas &amp; Gastos Recurrentes
-                  </h3>
-                  <span className="text-2xs font-mono px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300 font-medium">
-                    {subscriptionSummary.count}{" "}
-                    {subscriptionSummary.count === 1 ? "servicio" : "servicios"}
-                  </span>
-                </div>
-                <p className="text-2xs text-indigo-900/70 dark:text-indigo-300/70">
-                  Compromiso recurrente detectado en servicios digitales o cuotas fijas
-                </p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-2xs font-semibold tracking-wider text-indigo-900/70 dark:text-indigo-300/80 uppercase">
+                  Gastos recurrentes
+                </h3>
+                <span className="text-2xs font-mono px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300 font-medium">
+                  {subscriptionSummary.count}{" "}
+                  {subscriptionSummary.count === 1 ? "servicio" : "servicios"}
+                </span>
               </div>
             </div>
 
             <div className="text-right">
-              <span className="text-2xs text-indigo-900/70 dark:text-indigo-300/70 block">
+              <span className="text-2xs font-semibold tracking-wider text-indigo-900/70 dark:text-indigo-300/80 uppercase block">
                 Gasto recurrente total:
               </span>
               <span className="text-base font-bold font-mono text-indigo-950 dark:text-indigo-50 whitespace-nowrap">
@@ -347,16 +342,12 @@ export function ExpenseDashboard({
             </div>
           </div>
 
-          {/* Informational reminder badge / callout (US-013 AC) */}
-          <div className="p-3 rounded-xl border border-indigo-200/80 bg-white/80 dark:border-indigo-900/50 dark:bg-zinc-900/70 flex items-start gap-2.5">
+          {/* Informational reminder note (simplified) */}
+          <div className="p-3.5 rounded-xl border border-indigo-200/80 bg-white/80 dark:border-indigo-900/50 dark:bg-zinc-900/70 flex items-start gap-2.5">
             <Icons.Info className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
-            <div className="text-xs text-indigo-950/90 dark:text-indigo-200/90 leading-relaxed space-y-0.5">
-              <span className="font-semibold block">
-                Auditoría mensual de suscripciones:
-              </span>
-              <p className="text-2xs text-zinc-600 dark:text-zinc-300">
-                Revisa si continúas utilizando activamente cada uno de estos servicios. Cancelar plataformas en desuso o suscripciones duplicadas es una forma directa de reducir gastos sin alterar tu rutina. Puedes activar o desactivar la marca recurrente en cualquier transacción.
-              </p>
+            <div className="text-xs text-indigo-950/90 dark:text-indigo-200/90 leading-relaxed space-y-1">
+              <p>Revisa si aún usas estos servicios. Cancelar suscripciones puede ayudarte a ahorrar dinero.</p>
+              <p>Puedes marcar o desmarcar cualquier transacción como recurrente.</p>
             </div>
           </div>
 
@@ -365,17 +356,12 @@ export function ExpenseDashboard({
             {subscriptionSummary.services.map((sub) => (
               <div
                 key={`sub-panel-${sub.id}-${sub.name}`}
-                className="p-3 rounded-xl border border-indigo-200/70 bg-white dark:border-indigo-900/40 dark:bg-zinc-900/90 flex items-center justify-between gap-3 shadow-2xs"
+                className="p-3.5 rounded-xl border border-indigo-200/70 bg-white dark:border-indigo-900/40 dark:bg-zinc-900/90 flex items-center justify-between gap-3 shadow-2xs"
               >
-                <div className="space-y-0.5 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                      {sub.name}
-                    </span>
-                    <span className="text-3xs font-mono px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 dark:border-indigo-800 shrink-0">
-                      Recurrente
-                    </span>
-                  </div>
+                <div className="space-y-1 min-w-0 flex-1">
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 block leading-snug break-words">
+                    {sub.name}
+                  </span>
                   <div className="flex items-center gap-2 text-2xs text-zinc-500 font-mono">
                     <span>{sub.date}</span>
                     <span>·</span>
@@ -389,7 +375,7 @@ export function ExpenseDashboard({
                   <button
                     type="button"
                     onClick={() => onToggleSubscription(sub.id)}
-                    className="text-3xs font-medium px-2 py-1 rounded-lg text-zinc-600 hover:text-red-600 bg-zinc-100 hover:bg-red-50 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-red-950/40 dark:hover:text-red-300 transition-colors shrink-0 cursor-pointer"
+                    className="text-2xs font-medium px-2.5 py-1 rounded-md text-zinc-600 hover:text-red-600 bg-zinc-100 hover:bg-red-50 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-red-950/40 dark:hover:text-red-300 transition-colors shrink-0 cursor-pointer whitespace-nowrap"
                     title="Desmarcar esta transacción como suscripción recurrente"
                   >
                     Desmarcar

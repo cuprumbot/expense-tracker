@@ -494,23 +494,10 @@ export function TransactionTable({
               }
             >
               <div>
-                <div className="flex items-center justify-between gap-1">
+                <div>
                   <p className="text-2xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wider">
                     Gastos pendientes de clasificar
                   </p>
-                  <span
-                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-3xs font-medium ${selectedCategory === "Pendiente"
-                      ? "bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200"
-                      : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                      }`}
-                  >
-                    <Icons.Filter className="w-2.5 h-2.5" />
-                    <span>
-                      {selectedCategory === "Pendiente"
-                        ? "Filtrando pendientes"
-                        : "Clic para filtrar"}
-                    </span>
-                  </span>
                 </div>
 
                 <p className="text-xl font-bold font-mono text-amber-900 dark:text-amber-100 mt-1">
@@ -576,8 +563,8 @@ export function TransactionTable({
                     <Icons.CreditCard className="w-3.5 h-3.5" />
                   </div>
                   <div>
-                    <span className="text-xs font-semibold text-indigo-950 dark:text-indigo-200">
-                      Suscripciones recurrentes detectadas
+                    <span className="text-2xs font-semibold tracking-wider text-indigo-900/70 dark:text-indigo-300/80 uppercase">
+                      Gastos recurrentes
                     </span>
                     <span className="ml-2 text-2xs font-mono px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300">
                       {subscriptionSummary.count} {subscriptionSummary.count === 1 ? "servicio" : "servicios"}
@@ -728,7 +715,7 @@ export function TransactionTable({
 
       {/* Bulk Actions Floating/Sticky Bar */}
       {selectedIds.size > 0 && (
-        <div className="p-3 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-md animate-in fade-in duration-150">
+        <div className="p-3 bg-zinc-900 text-white dark:bg-zinc-900 dark:text-zinc-100 border border-zinc-800 dark:border-zinc-700/80 rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-lg animate-in fade-in duration-150">
           <div className="flex items-center gap-3">
             <span className="text-xs font-semibold">
               {selectedIds.size}{" "}
@@ -762,7 +749,7 @@ export function TransactionTable({
                   setBulkTargetCategory(e.target.value);
                 }
               }}
-              className="px-2.5 py-1 text-xs rounded-lg bg-zinc-800 text-white border border-zinc-700 dark:bg-zinc-200 dark:text-zinc-900 dark:border-zinc-300 cursor-pointer"
+              className="px-2.5 py-1 text-xs rounded-lg bg-zinc-800 text-white border border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-600 cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-zinc-400"
             >
               <option value="">Seleccionar categoría...</option>
               {availableCategoriesList.map((cat) => (
@@ -776,7 +763,7 @@ export function TransactionTable({
               type="button"
               disabled={!bulkTargetCategory}
               onClick={handleApplyBulkCategory}
-              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-zinc-900 bg-white hover:bg-zinc-100 disabled:opacity-50 rounded-lg dark:bg-zinc-900 dark:text-white dark:hover:bg-zinc-800 transition-colors cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-zinc-900 bg-white hover:bg-zinc-100 disabled:opacity-50 rounded-lg dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-colors cursor-pointer shadow-xs"
             >
               <Icons.Check className="w-3.5 h-3.5" />
               <span>Guardar</span>
@@ -785,7 +772,7 @@ export function TransactionTable({
               <button
                 type="button"
                 onClick={handleApplyBulkDelete}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-300 hover:text-red-100 bg-red-950/60 hover:bg-red-900/80 rounded-lg dark:text-red-700 dark:bg-red-100 dark:hover:bg-red-200 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-300 hover:text-red-100 bg-red-950/60 hover:bg-red-900/80 rounded-lg dark:text-red-300 dark:bg-red-950/60 dark:hover:bg-red-900/80 transition-colors cursor-pointer border border-red-800/40"
                 title="Eliminar transacciones seleccionadas"
               >
                 <Icons.Trash2 className="w-3.5 h-3.5" />

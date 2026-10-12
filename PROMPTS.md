@@ -273,3 +273,9 @@ For the "Suscripciones Destacadas & Gastos Recurrentes" panel:
 - Simplify the note below, "Revisa si aún usas estos servicios. Cancelar suscripciones puede ayudarte a ahorrar dinero.\nPuedes marcar o desmarcar cualquier transacción como recurrente." (Render the "\n" as a paragraph break).
 - For the expenses shown on this panel remove the "Recurrente" visual indicator. If they are here, they surely are recurrent.
 - Make the "Desmarcar" button a reasonable size so it doesn't cut the expense name.
+
+---
+
+While we worked on the previous User Stories, some items from US-015 and US-016 were completed already. Mark those as done with `[x]`.
+
+Do not implement any code for the other ones at this time. I will check them manually at a later time and instruct you to implement them.
