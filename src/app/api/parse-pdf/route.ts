@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parsePDFStatement } from "@/lib/pdf-parser";
-
+import { classifyTransactions } from "@/lib/expense-classifier";
 
 /**
  * Local Next.js API Route Handler for extracting PDF statements.
@@ -22,6 +22,10 @@ export async function POST(req: NextRequest) {
     const uint8Array = new Uint8Array(arrayBuffer);
 
     const result = await parsePDFStatement(uint8Array);
+
+    if (result.transactions && Array.isArray(result.transactions)) {
+      result.transactions = classifyTransactions(result.transactions);
+    }
 
     return NextResponse.json(result);
   } catch (error) {

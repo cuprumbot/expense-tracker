@@ -119,3 +119,21 @@ Work autonomously end-to-end:
     Let me test the changes manually before staging and commiting.
 
 Only stop when User Story #7 is fully verified, then report what was done.
+
+---
+
+Execute User Story #8 from USER_STORIES.md.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    Some of this work might be already implemented. Try to classify as much as possible, but if you're not sure about the category, you can use the "Pendiente" category. Consider the US-009, at a later time we will give the user the option to customize their categories and categorize the pending expenses if they are few.
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+    Let me test the changes manually before staging and commiting.
+
+Only stop when User Story #8 is fully verified, then report what was done.

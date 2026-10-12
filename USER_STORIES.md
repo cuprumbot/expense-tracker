@@ -124,22 +124,22 @@ This document outlines the user stories, implementation phases, and testable acc
 
 ## Phase 4: Local Expense Classification & Merchant Directory
 
-### [ ] US-007: Local Merchant Matching and Default Category Directory
+### [x] US-007: Local Merchant Matching and Default Category Directory
 - **As a** user,
 - **I want** known Guatemalan businesses in my statement to be automatically categorized locally,
 - **So that** expenses are categorized instantly without unnecessary LLM costs or data exposure.
 - **Split-Brain Boundary:** 100% Local (Client / Local Server directory lookup).
 - **Acceptance Criteria:**
-  - [ ] A local merchant catalog is defined with popular Guatemalan businesses mapped to standard categories:
+  - [x] A local merchant catalog is defined with popular Guatemalan businesses mapped to standard categories:
     - **Supermercado:** Paiz, La Torre, Walmart, Despensa Familiar, Suma.
     - **Restaurantes y Cafés:** Pollo Campero, San Martín, McDonald's, Starbucks, Wendy's, Taco Bell, Anafres.
     - **Servicios Básicos:** EEGSA, EMPAGUA, Claro, Tigo, Energuate.
     - **Transporte y Combustible:** Shell, Puma, Texaco, Uno, Uber, TuMuni (Parquímetros).
     - **Salud y Farmacia:** Farmacias Meykos, Farmacias Galeno, Farmacias Batres, Cruz Azul.
     - **Entretenimiento y Compras:** Cemaco, Siman, Miraflores, Oakland Mall, Pradera.
-  - [ ] Matches transaction descriptions against the catalog using normalized, case-insensitive substring and fuzzy matching.
-  - [ ] Categorized items are tagged with `classificationSource: 'local'`.
-  - [ ] Unmatched items are tagged as `unclassified` with `category: null`.
+  - [x] Matches transaction descriptions against the catalog using normalized, case-insensitive substring and fuzzy matching.
+  - [x] Categorized items are tagged with `classificationSource: 'local'`.
+  - [x] Unmatched items are tagged as `unclassified` with `category: null` or default category "Pendiente".
 
 ### [ ] US-008: Local Recurring Subscription Detection
 - **As a** user,

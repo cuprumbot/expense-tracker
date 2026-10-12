@@ -8,6 +8,7 @@ import { AnonymizationModal } from "@/components/anonymization-modal";
 import { TransactionTable } from "@/components/transaction-table";
 import { SupportedFileType } from "@/lib/file-validator";
 import { parseCSVContent } from "@/lib/csv-parser";
+import { classifyTransactions } from "@/lib/expense-classifier";
 import {
   Transaction,
   CSVParsingSummary,
@@ -69,7 +70,7 @@ export default function Home() {
             detectedMapping: result.detectedMapping,
           });
         } else if (result.success) {
-          setTransactions(result.transactions);
+          setTransactions(classifyTransactions(result.transactions));
           setSummary(result.summary);
           setBankName(null);
         }
@@ -126,7 +127,7 @@ export default function Home() {
         }
 
         setBankName(data.bankName);
-        setTransactions(data.transactions);
+        setTransactions(classifyTransactions(data.transactions));
         setSummary(data.summary);
       } catch (err) {
         console.error("Error al enviar PDF para procesamiento local:", err);
@@ -145,7 +146,7 @@ export default function Home() {
     const result = parseCSVContent(rawCSVText, mapping);
 
     if (result.success && !result.needsMapping) {
-      setTransactions(result.transactions);
+      setTransactions(classifyTransactions(result.transactions));
       setSummary(result.summary);
       setMappingModal((prev) => ({ ...prev, isOpen: false }));
     }
@@ -177,7 +178,7 @@ export default function Home() {
       }
 
       setBankName(unsupportedBank?.bankName || "Banco no compatible");
-      setTransactions(data.transactions);
+      setTransactions(classifyTransactions(data.transactions));
       setSummary(data.summary);
       setUnsupportedBank(null);
     } catch (err) {

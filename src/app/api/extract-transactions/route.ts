@@ -3,6 +3,7 @@ import {
   extractTransactionsWithGemini,
   validateSanitizedPayload,
 } from "@/lib/llm-extractor";
+import { classifyTransactions } from "@/lib/expense-classifier";
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,10 +36,11 @@ export async function POST(req: NextRequest) {
 
     // Call Gemini Pro securely on the server
     const result = await extractTransactionsWithGemini(sanitizedText, bankName);
+    const categorizedTransactions = classifyTransactions(result.transactions);
 
     return NextResponse.json({
       success: true,
-      transactions: result.transactions,
+      transactions: categorizedTransactions,
       summary: result.summary,
     });
   } catch (error) {
