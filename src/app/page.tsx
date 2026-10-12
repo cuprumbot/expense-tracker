@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Icons } from "@/components/icons";
 import { FileUpload } from "@/components/file-upload";
 import { ColumnMappingModal } from "@/components/column-mapping-modal";
+import { AnonymizationModal } from "@/components/anonymization-modal";
 import { TransactionTable } from "@/components/transaction-table";
 import { SupportedFileType } from "@/lib/file-validator";
 import { parseCSVContent } from "@/lib/csv-parser";
@@ -30,6 +31,8 @@ export default function Home() {
     bankName: string;
     rawText: string;
   } | null>(null);
+  const [isAnonymizeModalOpen, setIsAnonymizeModalOpen] = useState(false);
+  const [confirmedSanitizedText, setConfirmedSanitizedText] = useState<string | null>(null);
 
   const [mappingModal, setMappingModal] = useState<{
     isOpen: boolean;
@@ -98,6 +101,8 @@ export default function Home() {
             bankName: data.bankName || "Banco no identificado",
             rawText: data.rawText || "",
           });
+          setIsAnonymizeModalOpen(true);
+          setConfirmedSanitizedText(null);
           return;
         }
 
@@ -144,6 +149,15 @@ export default function Home() {
     }
   };
 
+  const handleConfirmAnonymization = (sanitizedText: string) => {
+    setConfirmedSanitizedText(sanitizedText);
+    setIsAnonymizeModalOpen(false);
+  };
+
+  const handleCancelAnonymization = () => {
+    setIsAnonymizeModalOpen(false);
+  };
+
   const handleReset = () => {
     setRoutedFile(null);
     setTransactions(null);
@@ -153,6 +167,8 @@ export default function Home() {
     setIsProcessingPDF(false);
     setPdfError(null);
     setUnsupportedBank(null);
+    setIsAnonymizeModalOpen(false);
+    setConfirmedSanitizedText(null);
     setMappingModal({
       isOpen: false,
       headers: [],
@@ -235,7 +251,50 @@ export default function Home() {
           </section>
         )}
 
-        {unsupportedBank && !isProcessingPDF && (
+        {unsupportedBank && !isProcessingPDF && confirmedSanitizedText && (
+          <section className="border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 p-6 rounded-xl space-y-4">
+            <div className="flex items-start gap-3">
+              <Icons.ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <div className="space-y-1 flex-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
+                    Texto anonimizado y verificado localmente
+                  </h3>
+                  <span className="text-2xs font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                    {unsupportedBank.bankName}
+                  </span>
+                </div>
+                <p className="text-xs text-emerald-800 dark:text-emerald-300/90 leading-relaxed pt-1">
+                  Todos los identificadores personales (nombres, cuentas, direcciones, NIT y contacto) han sido sustituidos por etiquetas de protección. Ningún dato sensible saldrá de tu navegador.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2 border-t border-emerald-200/60 dark:border-emerald-900/40">
+              <button
+                type="button"
+                onClick={() => setIsAnonymizeModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-800 bg-white border border-emerald-300 rounded-lg hover:bg-emerald-50 dark:text-emerald-200 dark:bg-zinc-900 dark:border-emerald-800 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <Icons.Eye className="w-3.5 h-3.5" />
+                <span>Revisar anonimización</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 dark:text-zinc-300 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <Icons.RefreshCw className="w-3.5 h-3.5" />
+                <span>Cargar otro archivo</span>
+              </button>
+              <div className="text-2xs text-emerald-700 dark:text-emerald-400 font-mono ml-auto">
+                Listo para US-006 (Extracción con IA)
+              </div>
+            </div>
+          </section>
+        )}
+
+        {unsupportedBank && !isProcessingPDF && !confirmedSanitizedText && (
           <section className="border border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20 p-6 rounded-xl space-y-4">
             <div className="flex items-start gap-3">
               <Icons.Info className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
@@ -250,12 +309,20 @@ export default function Home() {
                 </div>
                 <p className="text-xs text-amber-800 dark:text-amber-300/90 leading-relaxed pt-1">
                   El formato de este archivo no corresponde a Banco G&amp;T Continental.
-                  Para procesarlo sin comprometer su privacidad, el documento debe transicionar al motor de anonimización local (US-005) antes de extraer sus transacciones.
+                  Para procesarlo sin comprometer su privacidad, el documento debe anonimizarse localmente antes de continuar.
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 pt-2 border-t border-amber-200/60 dark:border-amber-900/40">
+              <button
+                type="button"
+                onClick={() => setIsAnonymizeModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors"
+              >
+                <Icons.Lock className="w-3.5 h-3.5" />
+                <span>Revisar y anonimizar datos</span>
+              </button>
               <button
                 type="button"
                 onClick={handleReset}
@@ -264,9 +331,6 @@ export default function Home() {
                 <Icons.RefreshCw className="w-3.5 h-3.5" />
                 <span>Cargar otro archivo</span>
               </button>
-              <div className="text-2xs text-amber-700 dark:text-amber-400 font-mono">
-                Transición a US-005: Anonimización local
-              </div>
             </div>
           </section>
         )}
@@ -313,6 +377,17 @@ export default function Home() {
         onConfirm={handleConfirmMapping}
         onCancel={() => setMappingModal((prev) => ({ ...prev, isOpen: false }))}
       />
+
+      {/* Unsupported Bank Anonymization Modal */}
+      {unsupportedBank && (
+        <AnonymizationModal
+          isOpen={isAnonymizeModalOpen}
+          bankName={unsupportedBank.bankName}
+          rawText={unsupportedBank.rawText}
+          onConfirm={handleConfirmAnonymization}
+          onCancel={handleCancelAnonymization}
+        />
+      )}
     </div>
   );
 }

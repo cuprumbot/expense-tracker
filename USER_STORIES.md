@@ -86,21 +86,21 @@ This document outlines the user stories, implementation phases, and testable acc
 
 ## Phase 3: Privacy, Anonymization & Unsupported Bank Extraction
 
-### [ ] US-005: Local PII Anonymization and Preview Confirmation
+### [x] US-005: Local PII Anonymization and Preview Confirmation
 - **As a** privacy-conscious user uploading a statement from an unsupported bank,
 - **I want** all personal information (such as my name, address, account numbers, and NIT) to be redacted locally and shown to me for approval,
 - **So that** no sensitive identity data is ever sent to an external LLM.
 - **Split-Brain Boundary:** 100% Local. PII detection and redaction must happen entirely on the client before any network request to external APIs.
 - **Acceptance Criteria:**
-  - [ ] Local regex and rule-based sanitizer scans the extracted raw text to detect and replace sensitive data with placeholders:
+  - [x] Local regex and rule-based sanitizer scans the extracted raw text to detect and replace sensitive data with placeholders:
     - User names -> `[NOMBRE_REDACTADO]`
     - Physical and mailing addresses -> `[DIRECCION_REDACTADA]`
     - Bank account and card numbers -> `[CUENTA_REDACTADA]`
     - Tax IDs (NIT, DPI) -> `[IDENTIFICACION_REDACTADA]`
     - Phone numbers and emails -> `[CONTACTO_REDACTADO]`
-  - [ ] A preview modal in Spanish displays the sanitized text with highlighted redactions.
-  - [ ] The user can review the redacted text, manually redact additional sensitive words if needed, and must click an explicit confirmation button ("Confirmar y procesar") before proceeding.
-  - [ ] If the user cancels, no external request is made and the user can enter expenses manually or use a CSV.
+  - [x] A preview modal in Spanish displays the sanitized text with highlighted redactions.
+  - [x] The user can review the redacted text, manually redact additional sensitive words if needed, and must click an explicit confirmation button ("Confirmar y procesar") before proceeding.
+  - [x] If the user cancels, no external request is made and the user can enter expenses manually or use a CSV.
 
 ### [ ] US-006: LLM-Assisted Transaction Extraction for Unsupported Banks
 - **As a** user with an unsupported bank statement,
