@@ -74,8 +74,8 @@ export function ExpenseDashboard({
           </div>
 
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-zinc-900 dark:text-zinc-50 whitespace-nowrap">
-              {formatCurrency(metrics.totalSpend)}
+            <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-zinc-900 dark:text-zinc-50 whitespace-nowrap inline-block">
+              {formatCurrency(metrics.totalSpend).replace(" ", "\u00A0")}
             </span>
           </div>
 
@@ -110,20 +110,26 @@ export function ExpenseDashboard({
               : undefined
           }
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <span className="text-2xs font-semibold tracking-wider text-zinc-500 uppercase">
               Mayor rubro de gasto
             </span>
             {metrics.topCategory && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200">
-                <span>{metrics.topCategory.percentage}% del total</span>
+              <span className="text-2xs font-mono font-medium px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200 shrink-0 whitespace-nowrap">
+                {metrics.topCategory.percentage}% del total
               </span>
             )}
           </div>
 
           {metrics.topCategory ? (
             <>
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-zinc-900 dark:text-zinc-50 whitespace-nowrap inline-block">
+                  {formatCurrency(metrics.topCategory.total).replace(" ", "\u00A0")}
+                </span>
+              </div>
+
+              <div className="mt-1.5 flex items-center gap-2 min-w-0">
                 <span
                   className="w-2.5 h-2.5 rounded-full shrink-0"
                   style={{
@@ -133,15 +139,13 @@ export function ExpenseDashboard({
                     ),
                   }}
                 />
-                <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                <span className="text-xs sm:text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-tight">
                   {metrics.topCategory.category}
                 </span>
               </div>
-              <p className="mt-1 text-sm font-semibold font-mono text-zinc-800 dark:text-zinc-200 whitespace-nowrap">
-                {formatCurrency(metrics.topCategory.total)}
-              </p>
+
               <p className="mt-1 text-2xs text-zinc-500 dark:text-zinc-400">
-                {metrics.topCategory.count} movimientos · Clic para filtrar
+                {metrics.topCategory.count} {metrics.topCategory.count === 1 ? "movimiento" : "movimientos"} · Clic para filtrar
               </p>
             </>
           ) : (
@@ -163,11 +167,11 @@ export function ExpenseDashboard({
           }`}
           title="Haga clic para filtrar gastos de suscripciones"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <span className="text-2xs font-semibold tracking-wider text-indigo-900/70 dark:text-indigo-300/80 uppercase">
-              Suscripciones recurrentes
+              Suscripciones
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/70 dark:text-indigo-300">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/70 dark:text-indigo-300 shrink-0">
               <Icons.CreditCard className="w-3 h-3" />
               <span>
                 {subscriptionSummary.count}{" "}
@@ -177,8 +181,8 @@ export function ExpenseDashboard({
           </div>
 
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-indigo-950 dark:text-indigo-100 whitespace-nowrap">
-              {formatCurrency(subscriptionSummary.totalMonthlyCommitment)}
+            <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-indigo-950 dark:text-indigo-100 whitespace-nowrap inline-block">
+              {formatCurrency(subscriptionSummary.totalMonthlyCommitment).replace(" ", "\u00A0")}
             </span>
           </div>
 
@@ -244,50 +248,17 @@ export function ExpenseDashboard({
               );
             })}
           </div>
-
-          {/* Bar Legend Labels */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-2xs text-zinc-500">
-            {activeCategories.map((cat) => {
-              const color = getCategoryColor(cat.category, customCategories);
-              const isSelected = selectedCategory === cat.category;
-              return (
-                <button
-                  key={`legend-${cat.category}`}
-                  type="button"
-                  onClick={() =>
-                    onSelectCategory(
-                      isSelected ? "all" : cat.category
-                    )
-                  }
-                  className={`inline-flex items-center gap-1.5 transition-colors cursor-pointer ${
-                    isSelected
-                      ? "font-semibold text-zinc-900 dark:text-zinc-100 underline"
-                      : "hover:text-zinc-800 dark:hover:text-zinc-200"
-                  }`}
-                >
-                  <span
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span>{cat.category}</span>
-                  <span className="font-mono text-3xs opacity-80">
-                    {cat.percentage}%
-                  </span>
-                </button>
-              );
-            })}
-          </div>
         </div>
 
-        {/* Category Breakdown Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pt-2">
+        {/* Category Breakdown Cards Grid (Max 3 wide, fused with percentage) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-1">
           {activeCategories.map((cat: CategoryReportItem) => {
             const color = getCategoryColor(cat.category, customCategories);
             const isSelected = selectedCategory === cat.category;
 
             return (
               <div
-                key={`card-${cat.category}`}
+                key={`cat-card-${cat.category}`}
                 onClick={() =>
                   onSelectCategory(isSelected ? "all" : cat.category)
                 }
@@ -295,39 +266,39 @@ export function ExpenseDashboard({
                   borderLeftColor: color,
                   borderLeftWidth: "4px",
                 }}
-                className={`p-3.5 rounded-xl border bg-white dark:bg-zinc-900 transition-all cursor-pointer ${
+                className={`p-4 rounded-xl border bg-white dark:bg-zinc-900 transition-all cursor-pointer shadow-2xs ${
                   isSelected
-                    ? "border-zinc-900 dark:border-zinc-100 ring-1 ring-zinc-900 dark:ring-zinc-100 bg-zinc-50/50 dark:bg-zinc-800/40"
-                    : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                    ? "border-zinc-900 dark:border-zinc-100 ring-2 ring-zinc-900/80 dark:ring-zinc-100/80 bg-zinc-50/70 dark:bg-zinc-800/50"
+                    : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50/40 dark:hover:bg-zinc-800/20"
                 }`}
                 title={`Haga clic para filtrar por ${cat.category}`}
               >
-                <div className="flex items-start justify-between gap-1.5">
-                  <div className="flex items-center gap-1.5 truncate">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <span
-                      className="w-2 h-2 rounded-full shrink-0"
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: color }}
                     />
                     <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                       {cat.category}
                     </span>
                   </div>
-                  <span className="text-2xs font-mono font-medium px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 shrink-0">
+                  <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200 shrink-0">
                     {cat.percentage}%
                   </span>
                 </div>
 
-                <div className="mt-2.5 flex items-baseline justify-between">
-                  <span className="text-sm font-bold font-mono text-zinc-900 dark:text-zinc-50">
-                    {formatCurrency(cat.total)}
+                <div className="mt-3 flex items-baseline justify-between gap-2">
+                  <span className="text-base font-bold font-mono text-zinc-900 dark:text-zinc-50 whitespace-nowrap">
+                    {formatCurrency(cat.total).replace(" ", "\u00A0")}
                   </span>
-                  <span className="text-3xs text-zinc-400">
+                  <span className="text-2xs text-zinc-500 dark:text-zinc-400 shrink-0">
                     {cat.count} {cat.count === 1 ? "movimiento" : "movimientos"}
                   </span>
                 </div>
 
                 {/* Micro progress bar for this category */}
-                <div className="mt-2 w-full h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div className="mt-2.5 w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
@@ -342,54 +313,54 @@ export function ExpenseDashboard({
         </div>
       </div>
 
-      {/* Active Subscriptions Alert & Recurring Spend Panel (US-013) */}
-      <div className="rounded-2xl border border-indigo-200/90 bg-indigo-50/30 p-5 dark:border-indigo-900/60 dark:bg-indigo-950/20 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center dark:bg-indigo-900/80 dark:text-indigo-300 shrink-0">
-              <Icons.CreditCard className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-indigo-950 dark:text-indigo-100">
-                  Suscripciones Detectadas &amp; Gastos Recurrentes
-                </h3>
-                <span className="text-2xs font-mono px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300 font-medium">
-                  {subscriptionSummary.count}{" "}
-                  {subscriptionSummary.count === 1 ? "servicio" : "servicios"}
-                </span>
+      {/* Active Subscriptions Alert & Recurring Spend Panel (US-013) - Only if count > 0 */}
+      {subscriptionSummary.count > 0 && (
+        <div className="rounded-2xl border border-indigo-200/90 bg-indigo-50/30 p-5 dark:border-indigo-900/60 dark:bg-indigo-950/20 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center dark:bg-indigo-900/80 dark:text-indigo-300 shrink-0">
+                <Icons.CreditCard className="w-4 h-4" />
               </div>
-              <p className="text-2xs text-indigo-900/70 dark:text-indigo-300/70">
-                Compromiso recurrente detectado en servicios digitales o cuotas fijas
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-indigo-950 dark:text-indigo-100">
+                    Suscripciones Detectadas &amp; Gastos Recurrentes
+                  </h3>
+                  <span className="text-2xs font-mono px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300 font-medium">
+                    {subscriptionSummary.count}{" "}
+                    {subscriptionSummary.count === 1 ? "servicio" : "servicios"}
+                  </span>
+                </div>
+                <p className="text-2xs text-indigo-900/70 dark:text-indigo-300/70">
+                  Compromiso recurrente detectado en servicios digitales o cuotas fijas
+                </p>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <span className="text-2xs text-indigo-900/70 dark:text-indigo-300/70 block">
+                Gasto recurrente total:
+              </span>
+              <span className="text-base font-bold font-mono text-indigo-950 dark:text-indigo-50 whitespace-nowrap">
+                {formatCurrency(subscriptionSummary.totalMonthlyCommitment).replace(" ", "\u00A0")}
+              </span>
+            </div>
+          </div>
+
+          {/* Informational reminder badge / callout (US-013 AC) */}
+          <div className="p-3 rounded-xl border border-indigo-200/80 bg-white/80 dark:border-indigo-900/50 dark:bg-zinc-900/70 flex items-start gap-2.5">
+            <Icons.Info className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-indigo-950/90 dark:text-indigo-200/90 leading-relaxed space-y-0.5">
+              <span className="font-semibold block">
+                Auditoría mensual de suscripciones:
+              </span>
+              <p className="text-2xs text-zinc-600 dark:text-zinc-300">
+                Revisa si continúas utilizando activamente cada uno de estos servicios. Cancelar plataformas en desuso o suscripciones duplicadas es una forma directa de reducir gastos sin alterar tu rutina. Puedes activar o desactivar la marca recurrente en cualquier transacción.
               </p>
             </div>
           </div>
 
-          <div className="text-right">
-            <span className="text-2xs text-indigo-900/70 dark:text-indigo-300/70 block">
-              Gasto recurrente total:
-            </span>
-            <span className="text-base font-bold font-mono text-indigo-950 dark:text-indigo-50">
-              {formatCurrency(subscriptionSummary.totalMonthlyCommitment)}
-            </span>
-          </div>
-        </div>
-
-        {/* Informational reminder badge / callout (US-013 AC) */}
-        <div className="p-3 rounded-xl border border-indigo-200/80 bg-white/80 dark:border-indigo-900/50 dark:bg-zinc-900/70 flex items-start gap-2.5">
-          <Icons.Info className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
-          <div className="text-xs text-indigo-950/90 dark:text-indigo-200/90 leading-relaxed space-y-0.5">
-            <span className="font-semibold block">
-              Auditoría mensual de suscripciones:
-            </span>
-            <p className="text-2xs text-zinc-600 dark:text-zinc-300">
-              Revisa si continúas utilizando activamente cada uno de estos servicios. Cancelar plataformas en desuso o suscripciones duplicadas es una forma directa de reducir gastos sin alterar tu rutina. Puedes activar o desactivar la marca recurrente en cualquier transacción.
-            </p>
-          </div>
-        </div>
-
-        {/* Subscriptions Grid */}
-        {subscriptionSummary.services.length > 0 ? (
+          {/* Subscriptions Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1">
             {subscriptionSummary.services.map((sub) => (
               <div
@@ -408,8 +379,8 @@ export function ExpenseDashboard({
                   <div className="flex items-center gap-2 text-2xs text-zinc-500 font-mono">
                     <span>{sub.date}</span>
                     <span>·</span>
-                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                      {formatCurrency(sub.amount)}
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
+                      {formatCurrency(sub.amount).replace(" ", "\u00A0")}
                     </span>
                   </div>
                 </div>
@@ -427,12 +398,8 @@ export function ExpenseDashboard({
               </div>
             ))}
           </div>
-        ) : (
-          <div className="p-4 rounded-xl border border-dashed border-indigo-200 dark:border-indigo-900/60 text-center text-xs text-indigo-900/70 dark:text-indigo-300/70">
-            No se identificaron suscripciones recurrentes este mes. Puedes marcar cualquier gasto de la lista como suscripción usando el botón recurrente de cada fila.
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

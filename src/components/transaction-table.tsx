@@ -484,8 +484,8 @@ export function TransactionTable({
                 }
               }}
               className={`p-4 rounded-xl border-2 transition-all cursor-pointer text-left flex flex-col justify-between ${selectedCategory === "Pendiente"
-                  ? "border-amber-500 bg-amber-100/70 dark:border-amber-500 dark:bg-amber-950/60 ring-2 ring-amber-400/60 shadow-xs"
-                  : "border-amber-400/90 bg-amber-50/50 hover:bg-amber-100/50 hover:border-amber-500 dark:border-amber-600 dark:bg-amber-950/30 dark:hover:bg-amber-950/50 shadow-2xs"
+                ? "border-amber-500 bg-amber-100/70 dark:border-amber-500 dark:bg-amber-950/60 ring-2 ring-amber-400/60 shadow-xs"
+                : "border-amber-400/90 bg-amber-50/50 hover:bg-amber-100/50 hover:border-amber-500 dark:border-amber-600 dark:bg-amber-950/30 dark:hover:bg-amber-950/50 shadow-2xs"
                 }`}
               title={
                 selectedCategory === "Pendiente"
@@ -496,12 +496,12 @@ export function TransactionTable({
               <div>
                 <div className="flex items-center justify-between gap-1">
                   <p className="text-2xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wider">
-                    Gastos pendientes
+                    Gastos pendientes de clasificar
                   </p>
                   <span
                     className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-3xs font-medium ${selectedCategory === "Pendiente"
-                        ? "bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200"
-                        : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                      ? "bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200"
+                      : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
                       }`}
                   >
                     <Icons.Filter className="w-2.5 h-2.5" />
@@ -520,9 +520,7 @@ export function TransactionTable({
                 <p className="text-2xs text-amber-800/90 dark:text-amber-300/90 mt-1 leading-snug">
                   {stats.pending > UNCLASSIFIED_THRESHOLD
                     ? `Tienes ${stats.pending} gastos pendientes de clasificar, espera mientras la IA los clasifica...`
-                    : stats.pending === 1
-                      ? "1 gasto pendiente de clasificar, clasifícalo para continuar"
-                      : `${stats.pending} gastos pendientes de clasificar, clasifícalos para continuar`}
+                    : "Click aquí para filtrarlos y continuar."}
                 </p>
               </div>
 
@@ -691,8 +689,8 @@ export function TransactionTable({
               type="button"
               onClick={() => setSelectedCategory("all")}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${selectedCategory === "all"
-                  ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100"
-                  : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-800 dark:hover:bg-zinc-800"
+                ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100"
+                : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-800 dark:hover:bg-zinc-800"
                 }`}
             >
               <span>Todos</span>
@@ -711,8 +709,8 @@ export function TransactionTable({
                   onClick={() => setSelectedCategory(isSelected ? "all" : cat)}
                   style={isSelected && inlineStyle ? inlineStyle : undefined}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${isSelected
-                      ? `${styleClass.bg} ${styleClass.text} ${styleClass.border} ring-1 ring-current`
-                      : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-800 dark:hover:bg-zinc-800"
+                    ? `${styleClass.bg} ${styleClass.text} ${styleClass.border} ring-1 ring-current`
+                    : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-800 dark:hover:bg-zinc-800"
                     }`}
                 >
                   <span
@@ -884,7 +882,6 @@ export function TransactionTable({
                   </button>
                 </th>
                 <th className="px-3 py-2.5 font-medium">Categoría</th>
-                <th className="px-3 py-2.5 font-medium text-center">Origen</th>
                 <th className="px-3 py-2.5 font-medium text-center">Suscripción</th>
                 <th className="px-3 py-2.5 font-medium text-right">
                   <button
@@ -904,7 +901,7 @@ export function TransactionTable({
               {sortedTransactions.length === 0 && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={7}
                     className="px-4 py-8 text-center text-xs text-zinc-500"
                   >
                     <div className="flex flex-col items-center justify-center gap-1.5">
@@ -983,11 +980,6 @@ export function TransactionTable({
                         </select>
                       </td>
                       <td className="px-3 py-2 text-center whitespace-nowrap">
-                        <span className="text-3xs font-mono px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 font-semibold">
-                          Manual
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 text-center whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() =>
@@ -997,8 +989,8 @@ export function TransactionTable({
                             }))
                           }
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border cursor-pointer ${editForm.isSubscription
-                              ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
-                              : "bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700"
+                            ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
+                            : "bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700"
                             }`}
                         >
                           <Icons.CreditCard className="w-3 h-3" />
@@ -1051,10 +1043,10 @@ export function TransactionTable({
                   <tr
                     key={tx.id}
                     className={`transition-colors ${isSelected
-                        ? "bg-zinc-100/70 dark:bg-zinc-800/40"
-                        : isPending
-                          ? "bg-amber-50/25 dark:bg-amber-950/10 hover:bg-amber-50/50 dark:hover:bg-amber-950/20"
-                          : "hover:bg-zinc-50/60 dark:hover:bg-zinc-900/60"
+                      ? "bg-zinc-100/70 dark:bg-zinc-800/40"
+                      : isPending
+                        ? "bg-amber-50/25 dark:bg-amber-950/10 hover:bg-amber-50/50 dark:hover:bg-amber-950/20"
+                        : "hover:bg-zinc-50/60 dark:hover:bg-zinc-900/60"
                       }`}
                   >
                     <td className="w-10 px-3 py-2.5 text-center">
@@ -1080,8 +1072,8 @@ export function TransactionTable({
                           onChange={(e) => handleCategorySelection(tx, e.target.value)}
                           style={inlineStyle}
                           className={`text-2xs font-medium px-2 py-0.5 rounded-full border cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-colors ${isPending
-                              ? "bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-400/60 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700 font-semibold"
-                              : `${styleClass.bg} ${styleClass.text} ${styleClass.border}`
+                            ? "bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-400/60 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700 font-semibold"
+                            : `${styleClass.bg} ${styleClass.text} ${styleClass.border}`
                             }`}
                           title="Haga clic para cambiar o asignar la categoría"
                         >
@@ -1116,44 +1108,13 @@ export function TransactionTable({
                       )}
                     </td>
                     <td className="px-3 py-2.5 whitespace-nowrap text-center">
-                      {isPending ? (
-                        <span
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 border border-amber-300 dark:border-amber-700 animate-pulse"
-                          title="Gasto pendiente de categorización"
-                        >
-                          Sin clasificar
-                        </span>
-                      ) : tx.classificationSource === "local" ? (
-                        <span
-                          className="text-3xs font-mono px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-                          title="Clasificado localmente en el dispositivo"
-                        >
-                          Local
-                        </span>
-                      ) : tx.classificationSource === "llm" ? (
-                        <span
-                          className="text-3xs font-mono px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 font-semibold"
-                          title="Clasificado con IA (Gemini Pro)"
-                        >
-                          IA
-                        </span>
-                      ) : (
-                        <span
-                          className="text-3xs font-mono px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 font-semibold"
-                          title="Asignado manualmente por el usuario"
-                        >
-                          Manual
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2.5 whitespace-nowrap text-center">
                       {onToggleSubscription ? (
                         <button
                           type="button"
                           onClick={() => onToggleSubscription(tx.id)}
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border transition-colors cursor-pointer ${tx.isSubscription
-                              ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60"
-                              : "bg-transparent text-zinc-400 border-dashed border-zinc-200 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-800 dark:text-zinc-500 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+                            ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60"
+                            : "bg-transparent text-zinc-400 border-dashed border-zinc-200 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-800 dark:text-zinc-500 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
                             }`}
                           title={
                             tx.isSubscription
@@ -1163,8 +1124,8 @@ export function TransactionTable({
                         >
                           <Icons.CreditCard
                             className={`w-3 h-3 ${tx.isSubscription
-                                ? "text-indigo-600 dark:text-indigo-400"
-                                : "text-zinc-400"
+                              ? "text-indigo-600 dark:text-indigo-400"
+                              : "text-zinc-400"
                               }`}
                           />
                           <span>

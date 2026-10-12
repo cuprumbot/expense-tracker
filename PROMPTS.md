@@ -261,3 +261,15 @@ For the expenses table:
 - Hide the "Origen" column
 
 ---
+
+The UI/UX need several improvements, use the `frontend-design` skill when implementing them:
+
+- When clicking to select multiple expenses a banner appear so we can classify them into a category, that banner seem lo be in light mode while the rest of the app is in dark mode.
+- For the "Gastos pendientes de clasificar" card, remove the "Clic para filtrar" button. The whole card should be clickable to filter.
+
+For the "Suscripciones Destacadas & Gastos Recurrentes" panel:
+- Change the title, put only "Gastos recurrentes". Use the same all-uppercase font that you use for the cards on top of the page.
+- Remove the "Compromiso recurrente detectado..." subtitle.
+- Simplify the note below, "Revisa si aún usas estos servicios. Cancelar suscripciones puede ayudarte a ahorrar dinero.\nPuedes marcar o desmarcar cualquier transacción como recurrente." (Render the "\n" as a paragraph break).
+- For the expenses shown on this panel remove the "Recurrente" visual indicator. If they are here, they surely are recurrent.
+- Make the "Desmarcar" button a reasonable size so it doesn't cut the expense name.
