@@ -69,18 +69,18 @@ This document outlines the user stories, implementation phases, and testable acc
   - [x] Outputs canonical transaction JSON: `Array<{ id: string, date: string, description: string, amount: number, currency: 'GTQ' }>`.
   - [x] Discards empty rows, headers, and invalid records with summary validation feedback.
 
-### [ ] US-004: Local PDF Text Extraction & G&T Continental Bank Parser
+### [x] US-004: Local PDF Text Extraction & G&T Continental Bank Parser
 - **As a** user with a G&T Continental bank account,
 - **I want to** upload my G&T Continental PDF statement and have it parsed locally,
 - **So that** my expenses are extracted quickly and privately without querying an external LLM.
 - **Split-Brain Boundary:** 100% Local (Local PDF parsing and regex extraction).
 - **Acceptance Criteria:**
-  - [ ] Extracts text content locally from the uploaded PDF using a standard library (e.g., `pdfjs-dist`).
-  - [ ] Detects bank identity ("G&T Continental" / "Banco G&T Continental") from statement headers using local pattern matching.
-  - [ ] If G&T Continental is identified, applies a dedicated local regex/tabular parser tailored to the bank statement layout.
-  - [ ] Successfully extracts transaction date, description/merchant, and debit amounts into the canonical transaction JSON structure.
-  - [ ] Filters out balance summaries, opening/closing balances, fee explanations, and non-expense lines.
-  - [ ] If the PDF is not from G&T Continental, flags the file as an "unsupported bank" and transitions to the Anonymization Engine (US-005).
+  - [x] Extracts text content locally from the uploaded PDF using a standard library (e.g., `pdfjs-dist`).
+  - [x] Detects bank identity ("G&T Continental" / "Banco G&T Continental") from statement headers using local pattern matching.
+  - [x] If G&T Continental is identified, applies a dedicated local regex/tabular parser tailored to the bank statement layout.
+  - [x] Successfully extracts transaction date, description/merchant, and debit amounts into the canonical transaction JSON structure.
+  - [x] Filters out balance summaries, opening/closing balances, fee explanations, and non-expense lines.
+  - [x] If the PDF is not from G&T Continental, flags the file as an "unsupported bank" and transitions to the Anonymization Engine (US-005).
 
 ---
 

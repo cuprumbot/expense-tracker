@@ -38,3 +38,26 @@ Work autonomously end-to-end:
     Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
 
 Only stop when User Story #3 is fully verified, then report what was done.
+
+---
+
+Execute User Story #4 from USER_STORIES.md.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    The folder `demo` contains some example bank statement PDF files. Use them as reference to greate the `G&T Continental` parser.
+
+    The parser must be able to extract the following information from the PDF:
+        - Transaction Date
+        - Transaction Description
+        - Transaction Amount
+    
+    The PDF files contain sensible information, so they must never leave the application. They must only be processed locally.
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+Only stop when User Story #4 is fully verified, then report what was done.

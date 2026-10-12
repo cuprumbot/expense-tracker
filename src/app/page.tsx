@@ -22,6 +22,14 @@ export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[] | null>(null);
   const [summary, setSummary] = useState<CSVParsingSummary | null>(null);
   const [rawCSVText, setRawCSVText] = useState<string | null>(null);
+  const [bankName, setBankName] = useState<string | null>(null);
+
+  const [isProcessingPDF, setIsProcessingPDF] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [unsupportedBank, setUnsupportedBank] = useState<{
+    bankName: string;
+    rawText: string;
+  } | null>(null);
 
   const [mappingModal, setMappingModal] = useState<{
     isOpen: boolean;
@@ -37,6 +45,8 @@ export default function Home() {
 
   const handleFileRouted = async (file: File, type: SupportedFileType) => {
     setRoutedFile({ file, type });
+    setPdfError(null);
+    setUnsupportedBank(null);
 
     if (type === "csv") {
       try {
@@ -56,9 +66,68 @@ export default function Home() {
         } else if (result.success) {
           setTransactions(result.transactions);
           setSummary(result.summary);
+          setBankName(null);
         }
       } catch (err) {
         console.error("Error al procesar el archivo CSV:", err);
+      }
+    } else if (type === "pdf") {
+      setIsProcessingPDF(true);
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/parse-pdf", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          setPdfError(
+            data.error ||
+              "Ocurrió un error al procesar el estado de cuenta PDF."
+          );
+          return;
+        }
+
+        if (!data.isSupportedBank) {
+          setUnsupportedBank({
+            bankName: data.bankName || "Banco no identificado",
+            rawText: data.rawText || "",
+          });
+          return;
+        }
+
+        // Log debug entries in the browser terminal (DevTools console)
+        if (data.debugLogs && Array.isArray(data.debugLogs)) {
+          data.debugLogs.forEach(
+            (log: { type: string; date: string; description: string; amount: string }) => {
+              if (log.type === "credit_or_payment") {
+                console.log(
+                  `[Depuración PDF - Entrada en Crédito/Pagos] Fecha: ${log.date} | Descripción: ${log.description} | Monto: ${log.amount}`
+                );
+              } else if (log.type === "dollar_currency") {
+                console.log(
+                  `[Depuración PDF - Entrada en $] Fecha: ${log.date} | Descripción: ${log.description} | Monto: ${log.amount}`
+                );
+              }
+            }
+          );
+        }
+
+        setBankName(data.bankName);
+        setTransactions(data.transactions);
+        setSummary(data.summary);
+      } catch (err) {
+        console.error("Error al enviar PDF para procesamiento local:", err);
+        setPdfError(
+          "No se pudo completar el análisis local del archivo PDF."
+        );
+      } finally {
+        setIsProcessingPDF(false);
       }
     }
   };
@@ -80,6 +149,10 @@ export default function Home() {
     setTransactions(null);
     setSummary(null);
     setRawCSVText(null);
+    setBankName(null);
+    setIsProcessingPDF(false);
+    setPdfError(null);
+    setUnsupportedBank(null);
     setMappingModal({
       isOpen: false,
       headers: [],
@@ -119,41 +192,112 @@ export default function Home() {
           </p>
         </section>
 
-        {/* Dynamic Workspace: File Ingestion or Extracted Transactions Table */}
-        {!transactions || !summary ? (
-          <section className="border border-zinc-200 rounded-xl bg-zinc-50/50 p-6 sm:p-8 dark:border-zinc-800 dark:bg-zinc-900/40 space-y-6">
-            <div className="flex items-center justify-between border-b border-zinc-200/80 pb-4 dark:border-zinc-800/80">
-              <span className="text-xs font-medium tracking-tight text-zinc-700 dark:text-zinc-300">
-                Carga de documento
-              </span>
-              <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                <span>PDF</span>
-                <span className="text-zinc-300 dark:text-zinc-700">/</span>
-                <span>CSV</span>
+        {/* Dynamic Processing States */}
+        {isProcessingPDF && (
+          <section className="border border-zinc-200 rounded-xl bg-zinc-50/50 p-8 dark:border-zinc-800 dark:bg-zinc-900/40 text-center space-y-4">
+            <div className="w-10 h-10 mx-auto rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-200">
+              <Icons.RefreshCw className="w-5 h-5 animate-spin" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                Procesando estado de cuenta en el dispositivo...
+              </h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Extrayendo texto y detectando entidad bancaria de forma 100% privada.
+              </p>
+            </div>
+          </section>
+        )}
+
+        {pdfError && !isProcessingPDF && (
+          <section className="border border-red-200 bg-red-50/50 dark:border-red-900/50 dark:bg-red-950/20 p-6 rounded-xl space-y-3">
+            <div className="flex items-start gap-3">
+              <Icons.AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+              <div className="space-y-1 flex-1">
+                <h3 className="text-sm font-semibold text-red-900 dark:text-red-200">
+                  Error al procesar el archivo PDF
+                </h3>
+                <p className="text-xs text-red-700 dark:text-red-300">
+                  {pdfError}
+                </p>
+              </div>
+            </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100/80 hover:bg-red-200/80 rounded-lg dark:text-red-300 dark:bg-red-900/40 dark:hover:bg-red-900/60 transition-colors"
+              >
+                <Icons.RefreshCw className="w-3.5 h-3.5" />
+                <span>Intentar de nuevo</span>
+              </button>
+            </div>
+          </section>
+        )}
+
+        {unsupportedBank && !isProcessingPDF && (
+          <section className="border border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20 p-6 rounded-xl space-y-4">
+            <div className="flex items-start gap-3">
+              <Icons.Info className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-1 flex-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                    Banco no compatible para extracción directa
+                  </h3>
+                  <span className="text-2xs font-mono px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">
+                    {unsupportedBank.bankName}
+                  </span>
+                </div>
+                <p className="text-xs text-amber-800 dark:text-amber-300/90 leading-relaxed pt-1">
+                  El formato de este archivo no corresponde a Banco G&amp;T Continental.
+                  Para procesarlo sin comprometer su privacidad, el documento debe transicionar al motor de anonimización local (US-005) antes de extraer sus transacciones.
+                </p>
               </div>
             </div>
 
-            <FileUpload onFileRouted={handleFileRouted} />
-
-            {routedFile && routedFile.type === "pdf" && (
-              <div className="text-xs text-zinc-500 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-t border-zinc-200/80 pt-3 dark:border-zinc-800/80">
-                <span>
-                  Archivo seleccionado:{" "}
-                  <strong className="text-zinc-800 dark:text-zinc-200 font-medium">
-                    {routedFile.file.name}
-                  </strong>
-                </span>
-                <span className="font-mono text-zinc-400">
-                  Ruta: Detección Bancaria PDF (US-004)
-                </span>
+            <div className="flex items-center gap-3 pt-2 border-t border-amber-200/60 dark:border-amber-900/40">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 dark:text-zinc-300 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <Icons.RefreshCw className="w-3.5 h-3.5" />
+                <span>Cargar otro archivo</span>
+              </button>
+              <div className="text-2xs text-amber-700 dark:text-amber-400 font-mono">
+                Transición a US-005: Anonimización local
               </div>
-            )}
+            </div>
           </section>
+        )}
+
+        {/* Dynamic Workspace: File Ingestion or Extracted Transactions Table */}
+        {!transactions || !summary ? (
+          !isProcessingPDF && !pdfError && !unsupportedBank && (
+            <section className="border border-zinc-200 rounded-xl bg-zinc-50/50 p-6 sm:p-8 dark:border-zinc-800 dark:bg-zinc-900/40 space-y-6">
+              <div className="flex items-center justify-between border-b border-zinc-200/80 pb-4 dark:border-zinc-800/80">
+                <span className="text-xs font-medium tracking-tight text-zinc-700 dark:text-zinc-300">
+                  Carga de documento
+                </span>
+                <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+                  <span>PDF</span>
+                  <span className="text-zinc-300 dark:text-zinc-700">/</span>
+                  <span>CSV</span>
+                </div>
+              </div>
+
+              <FileUpload onFileRouted={handleFileRouted} />
+            </section>
+          )
         ) : (
           <TransactionTable
             transactions={transactions}
             summary={summary}
-            sourceLabel={routedFile?.file.name || "Archivo CSV"}
+            sourceLabel={
+              bankName
+                ? `${bankName} · ${routedFile?.file.name}`
+                : routedFile?.file.name || "Archivo de movimientos"
+            }
             onReset={handleReset}
           />
         )}

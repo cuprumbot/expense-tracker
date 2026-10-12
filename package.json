@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint src",
     "test": "node --import tsx --test src/**/*.test.ts"
   },
   "dependencies": {
@@ -14,6 +14,7 @@
     "lucide-react": "^1.55.0",
     "next": "16.4.0",
     "papaparse": "^5.7.0",
+    "pdf-parse": "^2.4.5",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
@@ -21,6 +22,7 @@
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^22.20.5",
     "@types/papaparse": "^5.5.2",
+    "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
