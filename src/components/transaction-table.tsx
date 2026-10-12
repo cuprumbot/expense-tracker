@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Transaction, CSVParsingSummary } from "@/types/transaction";
+import {
+  Transaction,
+  CSVParsingSummary,
+  CustomCategory,
+} from "@/types/transaction";
 import { formatCurrency } from "@/lib/currency";
 import {
   getSubscriptionSummary,
@@ -9,11 +13,13 @@ import {
   AVAILABLE_CATEGORIES,
 } from "@/lib/expense-classifier";
 import { Icons } from "@/components/icons";
+import { CustomCategoryModal } from "@/components/custom-category-modal";
 
 interface TransactionTableProps {
   transactions: Transaction[];
   summary: CSVParsingSummary;
   sourceLabel?: string;
+  customCategories?: CustomCategory[];
   onReset: () => void;
   onUpdateCategory?: (
     transactionId: string,
@@ -21,6 +27,11 @@ interface TransactionTableProps {
     applyToAllWithSameDescription?: boolean,
     targetDescription?: string
   ) => void;
+  onAddCustomCategory?: (category: CustomCategory) => void;
+  onEditTransaction?: (transaction: Transaction) => void;
+  onDeleteTransaction?: (transactionId: string) => void;
+  onBulkAssignCategory?: (transactionIds: string[], newCategory: string) => void;
+  onBulkDeleteTransactions?: (transactionIds: string[]) => void;
   onClassifyPendingWithLLM?: () => void;
   isClassifyingWithLLM?: boolean;
   llmClassificationError?: string | null;
@@ -33,13 +44,11 @@ type SortDirection = "asc" | "desc";
 function parseDateForSort(dateStr: string): number {
   if (!dateStr) return 0;
   const trimmed = dateStr.trim();
-  // YYYY-MM-DD or YYYY/MM/DD
   const isoMatch = trimmed.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
   if (isoMatch) {
     const [, y, m, d] = isoMatch;
     return new Date(Number(y), Number(m) - 1, Number(d)).getTime();
   }
-  // DD/MM/YYYY or DD-MM-YYYY
   const dmyMatch = trimmed.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
   if (dmyMatch) {
     const [, d, m, y] = dmyMatch;
@@ -119,8 +128,14 @@ export function TransactionTable({
   transactions,
   summary,
   sourceLabel = "Archivo de movimientos",
+  customCategories = [],
   onReset,
   onUpdateCategory,
+  onAddCustomCategory,
+  onEditTransaction,
+  onDeleteTransaction,
+  onBulkAssignCategory,
+  onBulkDeleteTransactions,
   onClassifyPendingWithLLM,
   isClassifyingWithLLM = false,
   llmClassificationError = null,
@@ -129,6 +144,18 @@ export function TransactionTable({
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkTargetCategory, setBulkTargetCategory] = useState<string>("");
+  const [isNewCategoryModalOpen, setIsNewCategoryModalOpen] = useState(false);
+  const [editingTxId, setEditingTxId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{
+    date: string;
+    description: string;
+    amount: string;
+    category: string;
+  }>({ date: "", description: "", amount: "", category: "Pendiente" });
+  const [deletingTxId, setDeletingTxId] = useState<string | null>(null);
+
   const [batchCategoryPrompt, setBatchCategoryPrompt] = useState<{
     transaction: Transaction;
     newCategory: string;
@@ -164,6 +191,25 @@ export function TransactionTable({
       categoryTotals,
     };
   }, [transactions]);
+
+  // Unique categories from transactions + custom
+  const uniqueCategories = useMemo(() => {
+    return Object.keys(stats.categoryTotals).sort((a, b) => {
+      if (a === "Pendiente") return 1;
+      if (b === "Pendiente") return -1;
+      return stats.categoryTotals[b].count - stats.categoryTotals[a].count;
+    });
+  }, [stats.categoryTotals]);
+
+  // All available categories list for selects
+  const availableCategoriesList = useMemo(() => {
+    const set = new Set([
+      ...AVAILABLE_CATEGORIES,
+      ...customCategories.map((c) => c.name),
+      ...uniqueCategories.filter((c) => c !== "Pendiente"),
+    ]);
+    return Array.from(set);
+  }, [customCategories, uniqueCategories]);
 
   // Filtered transactions
   const filteredTransactions = useMemo(() => {
@@ -205,25 +251,46 @@ export function TransactionTable({
     return filteredTransactions.reduce((acc, tx) => acc + tx.amount, 0);
   }, [filteredTransactions]);
 
-  const uniqueCategories = useMemo(() => {
-    return Object.keys(stats.categoryTotals).sort((a, b) => {
-      if (a === "Pendiente") return 1;
-      if (b === "Pendiente") return -1;
-      return stats.categoryTotals[b].count - stats.categoryTotals[a].count;
-    });
-  }, [stats.categoryTotals]);
-
-  const availableCategoriesList = useMemo(() => {
-    const set = new Set([
-      ...AVAILABLE_CATEGORIES,
-      ...uniqueCategories.filter((c) => c !== "Pendiente"),
-    ]);
-    return Array.from(set);
-  }, [uniqueCategories]);
-
   const subscriptionSummary = useMemo(() => {
     return getSubscriptionSummary(transactions);
   }, [transactions]);
+
+  // Helper for dynamic category style
+  const getCategoryBadgeStyle = (categoryName: string) => {
+    if (CATEGORY_STYLES[categoryName]) {
+      return {
+        styleClass: CATEGORY_STYLES[categoryName],
+        inlineStyle: undefined as React.CSSProperties | undefined,
+        inlineDotStyle: undefined as React.CSSProperties | undefined,
+      };
+    }
+    const custom = customCategories.find(
+      (c) => c.name.toLowerCase() === categoryName.toLowerCase()
+    );
+    if (custom) {
+      return {
+        styleClass: {
+          bg: "",
+          text: "",
+          border: "border",
+          dot: "",
+        },
+        inlineStyle: {
+          backgroundColor: `${custom.color}15`,
+          color: custom.color,
+          borderColor: `${custom.color}40`,
+        },
+        inlineDotStyle: {
+          backgroundColor: custom.color,
+        },
+      };
+    }
+    return {
+      styleClass: DEFAULT_STYLE,
+      inlineStyle: undefined,
+      inlineDotStyle: undefined,
+    };
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -235,6 +302,11 @@ export function TransactionTable({
   };
 
   const handleCategorySelection = (tx: Transaction, targetCategory: string) => {
+    if (targetCategory === "__create_new__") {
+      setIsNewCategoryModalOpen(true);
+      return;
+    }
+
     const currentCategory = tx.category || "Pendiente";
     if (targetCategory === currentCategory) return;
     if (!onUpdateCategory) return;
@@ -268,6 +340,88 @@ export function TransactionTable({
     ) : (
       <Icons.ArrowDown className="w-3 h-3 text-zinc-900 dark:text-zinc-100 shrink-0" />
     );
+  };
+
+  // Selection handlers
+  const allFilteredSelected =
+    sortedTransactions.length > 0 &&
+    sortedTransactions.every((tx) => selectedIds.has(tx.id));
+
+  const handleToggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        sortedTransactions.forEach((tx) => next.delete(tx.id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        sortedTransactions.forEach((tx) => next.add(tx.id));
+        return next;
+      });
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleApplyBulkCategory = () => {
+    if (!bulkTargetCategory || selectedIds.size === 0) return;
+    onBulkAssignCategory?.(Array.from(selectedIds), bulkTargetCategory);
+    setSelectedIds(new Set());
+    setBulkTargetCategory("");
+  };
+
+  const handleApplyBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    onBulkDeleteTransactions?.(Array.from(selectedIds));
+    setSelectedIds(new Set());
+  };
+
+  // Inline edit handlers
+  const startEditing = (tx: Transaction) => {
+    setEditingTxId(tx.id);
+    setEditForm({
+      date: tx.date,
+      description: tx.description,
+      amount: tx.amount.toString(),
+      category: tx.category || "Pendiente",
+    });
+  };
+
+  const handleSaveEdit = (tx: Transaction) => {
+    const amt = parseFloat(editForm.amount);
+    if (isNaN(amt) || amt <= 0 || !editForm.description.trim()) {
+      return;
+    }
+    const isSub =
+      editForm.category.toLowerCase() === "suscripciones" ||
+      (tx.isSubscription && editForm.category !== "Pendiente");
+
+    onEditTransaction?.({
+      ...tx,
+      date: editForm.date.trim() || tx.date,
+      description: editForm.description.trim(),
+      amount: Number(amt.toFixed(2)),
+      category: editForm.category,
+      classificationSource: "manual",
+      isSubscription: isSub ? true : undefined,
+    });
+    setEditingTxId(null);
+  };
+
+  const cancelEditing = () => {
+    setEditingTxId(null);
   };
 
   return (
@@ -473,26 +627,38 @@ export function TransactionTable({
         </div>
       )}
 
-      {/* Category Pills Filter */}
+      {/* Category Pills Filter & New Category Button */}
       {uniqueCategories.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-zinc-500">
             <span className="font-medium">Filtrar por categoría:</span>
-            {selectedCategory !== "all" && (
-              <button
-                type="button"
-                onClick={() => setSelectedCategory("all")}
-                className="text-2xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 underline"
-              >
-                Mostrar todos ({transactions.length})
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {selectedCategory !== "all" && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory("all")}
+                  className="text-2xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 underline"
+                >
+                  Mostrar todos ({transactions.length})
+                </button>
+              )}
+              {onAddCustomCategory && (
+                <button
+                  type="button"
+                  onClick={() => setIsNewCategoryModalOpen(true)}
+                  className="inline-flex items-center gap-1 text-2xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100 underline cursor-pointer"
+                >
+                  <Icons.Plus className="w-3 h-3" />
+                  <span>Nueva categoría</span>
+                </button>
+              )}
+            </div>
           </div>
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
               onClick={() => setSelectedCategory("all")}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                 selectedCategory === "all"
                   ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100"
                   : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-800 dark:hover:bg-zinc-800"
@@ -504,7 +670,7 @@ export function TransactionTable({
 
             {uniqueCategories.map((cat) => {
               const info = stats.categoryTotals[cat];
-              const style = CATEGORY_STYLES[cat] || DEFAULT_STYLE;
+              const { styleClass, inlineStyle, inlineDotStyle } = getCategoryBadgeStyle(cat);
               const isSelected = selectedCategory === cat;
 
               return (
@@ -512,18 +678,92 @@ export function TransactionTable({
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                  style={isSelected && inlineStyle ? inlineStyle : undefined}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                     isSelected
-                      ? `${style.bg} ${style.text} ${style.border} ring-1 ring-current`
+                      ? `${styleClass.bg} ${styleClass.text} ${styleClass.border} ring-1 ring-current`
                       : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-800 dark:hover:bg-zinc-800"
                   }`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${styleClass.dot}`}
+                    style={inlineDotStyle}
+                  />
                   <span>{cat}</span>
                   <span className="text-2xs opacity-75">({info.count})</span>
                 </button>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Actions Floating/Sticky Bar */}
+      {selectedIds.size > 0 && (
+        <div className="p-3 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-md animate-in fade-in duration-150">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold">
+              {selectedIds.size}{" "}
+              {selectedIds.size === 1
+                ? "transacción seleccionada"
+                : "transacciones seleccionadas"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-2xs underline opacity-75 hover:opacity-100 cursor-pointer"
+            >
+              Deseleccionar todas
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <label
+              htmlFor="bulk-cat-select"
+              className="text-xs font-medium opacity-90 hidden sm:inline"
+            >
+              Asignar categoría:
+            </label>
+            <select
+              id="bulk-cat-select"
+              value={bulkTargetCategory}
+              onChange={(e) => {
+                if (e.target.value === "__create_new__") {
+                  setIsNewCategoryModalOpen(true);
+                } else {
+                  setBulkTargetCategory(e.target.value);
+                }
+              }}
+              className="px-2.5 py-1 text-xs rounded-lg bg-zinc-800 text-white border border-zinc-700 dark:bg-zinc-200 dark:text-zinc-900 dark:border-zinc-300 cursor-pointer"
+            >
+              <option value="">Seleccionar categoría...</option>
+              {availableCategoriesList.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+              <option value="__create_new__">+ Nueva categoría...</option>
+            </select>
+            <button
+              type="button"
+              disabled={!bulkTargetCategory}
+              onClick={handleApplyBulkCategory}
+              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-zinc-900 bg-white hover:bg-zinc-100 disabled:opacity-50 rounded-lg dark:bg-zinc-900 dark:text-white dark:hover:bg-zinc-800 transition-colors cursor-pointer shadow-xs"
+            >
+              <Icons.Check className="w-3.5 h-3.5" />
+              <span>Guardar</span>
+            </button>
+            {onBulkDeleteTransactions && (
+              <button
+                type="button"
+                onClick={handleApplyBulkDelete}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-300 hover:text-red-100 bg-red-950/60 hover:bg-red-900/80 rounded-lg dark:text-red-700 dark:bg-red-100 dark:hover:bg-red-200 transition-colors cursor-pointer"
+                title="Eliminar transacciones seleccionadas"
+              >
+                <Icons.Trash2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Eliminar</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -545,21 +785,42 @@ export function TransactionTable({
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={onReset}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 border border-zinc-200 rounded-lg hover:bg-zinc-50 dark:text-zinc-400 dark:border-zinc-700 dark:hover:text-zinc-100 dark:hover:bg-zinc-900 transition-colors"
-          >
-            <Icons.RefreshCw className="w-3.5 h-3.5" />
-            <span>Cargar otro archivo</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {onAddCustomCategory && (
+              <button
+                type="button"
+                onClick={() => setIsNewCategoryModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 dark:text-zinc-300 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:bg-zinc-800 transition-colors shadow-2xs cursor-pointer"
+              >
+                <Icons.Plus className="w-3.5 h-3.5" />
+                <span>Nueva categoría</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onReset}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 border border-zinc-200 rounded-lg hover:bg-zinc-50 dark:text-zinc-400 dark:border-zinc-700 dark:hover:text-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+            >
+              <Icons.RefreshCw className="w-3.5 h-3.5" />
+              <span>Cargar otro archivo</span>
+            </button>
+          </div>
         </div>
 
-        <div className="overflow-x-auto max-h-[500px]">
+        <div className="overflow-x-auto max-h-[550px]">
           <table className="min-w-full text-xs text-left">
             <thead className="bg-zinc-50 sticky top-0 border-b border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 z-10 select-none">
               <tr>
-                <th className="px-4 py-2.5 font-medium">
+                <th className="w-10 px-3 py-2.5 text-center">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    onChange={handleToggleSelectAll}
+                    aria-label="Seleccionar todas las transacciones filtradas"
+                    className="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 cursor-pointer"
+                  />
+                </th>
+                <th className="px-3 py-2.5 font-medium">
                   <button
                     type="button"
                     onClick={() => handleSort("date")}
@@ -570,7 +831,7 @@ export function TransactionTable({
                     {renderSortIndicator("date")}
                   </button>
                 </th>
-                <th className="px-4 py-2.5 font-medium">
+                <th className="px-3 py-2.5 font-medium">
                   <button
                     type="button"
                     onClick={() => handleSort("description")}
@@ -581,8 +842,9 @@ export function TransactionTable({
                     {renderSortIndicator("description")}
                   </button>
                 </th>
-                <th className="px-4 py-2.5 font-medium">Categoría</th>
-                <th className="px-4 py-2.5 font-medium text-right">
+                <th className="px-3 py-2.5 font-medium">Categoría</th>
+                <th className="px-3 py-2.5 font-medium text-center">Origen</th>
+                <th className="px-3 py-2.5 font-medium text-right">
                   <button
                     type="button"
                     onClick={() => handleSort("amount")}
@@ -593,23 +855,142 @@ export function TransactionTable({
                     {renderSortIndicator("amount")}
                   </button>
                 </th>
+                <th className="px-3 py-2.5 font-medium text-center w-28">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {sortedTransactions.map((tx) => {
                 const category = tx.category || "Pendiente";
-                const catStyle = CATEGORY_STYLES[category] || DEFAULT_STYLE;
-                const isLocal = tx.classificationSource === "local";
+                const isPending = category === "Pendiente";
+                const { styleClass, inlineStyle, inlineDotStyle } = getCategoryBadgeStyle(category);
+                const isEditing = editingTxId === tx.id;
+                const isDeleting = deletingTxId === tx.id;
+                const isSelected = selectedIds.has(tx.id);
+
+                if (isEditing) {
+                  return (
+                    <tr
+                      key={tx.id}
+                      className="bg-amber-50/40 dark:bg-amber-950/20 transition-colors"
+                    >
+                      <td className="w-10 px-3 py-2.5 text-center">
+                        <input
+                          type="checkbox"
+                          disabled
+                          className="opacity-40 rounded"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          value={editForm.date}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({ ...prev, date: e.target.value }))
+                          }
+                          className="w-24 px-2 py-1 text-2xs font-mono border rounded border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-1 focus:ring-zinc-900"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          value={editForm.description}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              description: e.target.value,
+                            }))
+                          }
+                          className="w-full px-2 py-1 text-xs border rounded border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-1 focus:ring-zinc-900"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={editForm.category}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              category: e.target.value,
+                            }))
+                          }
+                          className="text-2xs font-medium px-2 py-1 rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+                        >
+                          <option value="Pendiente">Pendiente</option>
+                          {availableCategoriesList.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2 text-center whitespace-nowrap">
+                        <span className="text-3xs font-mono px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 font-semibold">
+                          Manual
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          value={editForm.amount}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              amount: e.target.value,
+                            }))
+                          }
+                          className="w-24 px-2 py-1 text-xs font-mono text-right border rounded border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-1 focus:ring-zinc-900"
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleSaveEdit(tx)}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-3xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded transition-colors shadow-2xs cursor-pointer"
+                            title="Guardar cambios"
+                          >
+                            <Icons.Check className="w-3 h-3" />
+                            <span>Guardar</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEditing}
+                            className="p-1 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded transition-colors cursor-pointer"
+                            title="Cancelar edición"
+                          >
+                            <Icons.X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }
 
                 return (
                   <tr
                     key={tx.id}
-                    className="hover:bg-zinc-50/60 dark:hover:bg-zinc-900/60 transition-colors"
+                    className={`transition-colors ${
+                      isSelected
+                        ? "bg-zinc-100/70 dark:bg-zinc-800/40"
+                        : isPending
+                        ? "bg-amber-50/25 dark:bg-amber-950/10 hover:bg-amber-50/50 dark:hover:bg-amber-950/20"
+                        : "hover:bg-zinc-50/60 dark:hover:bg-zinc-900/60"
+                    }`}
                   >
-                    <td className="px-4 py-2.5 whitespace-nowrap text-zinc-500 font-mono text-2xs">
+                    <td className="w-10 px-3 py-2.5 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleToggleSelect(tx.id)}
+                        aria-label={`Seleccionar transacción ${tx.description}`}
+                        className="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 cursor-pointer"
+                      />
+                    </td>
+                    <td className="px-3 py-2.5 whitespace-nowrap text-zinc-500 font-mono text-2xs">
                       {tx.date}
                     </td>
-                    <td className="px-4 py-2.5 text-zinc-900 dark:text-zinc-100 font-medium">
+                    <td className="px-3 py-2.5 text-zinc-900 dark:text-zinc-100 font-medium">
                       <div className="flex items-center gap-2">
                         <span>{tx.description}</span>
                         {tx.isSubscription && (
@@ -622,65 +1003,135 @@ export function TransactionTable({
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-2.5 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        {onUpdateCategory ? (
-                          <select
-                            value={category}
-                            aria-label={`Categoría para ${tx.description}`}
-                            onChange={(e) => handleCategorySelection(tx, e.target.value)}
-                            className={`text-2xs font-medium px-2 py-0.5 rounded-full border cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-colors ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
-                            title="Haga clic para cambiar o asignar la categoría manualmente"
+                    <td className="px-3 py-2.5 whitespace-nowrap">
+                      {onUpdateCategory ? (
+                        <select
+                          value={category}
+                          aria-label={`Categoría para ${tx.description}`}
+                          onChange={(e) => handleCategorySelection(tx, e.target.value)}
+                          style={inlineStyle}
+                          className={`text-2xs font-medium px-2 py-0.5 rounded-full border cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-colors ${
+                            isPending
+                              ? "bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-400/60 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700 font-semibold"
+                              : `${styleClass.bg} ${styleClass.text} ${styleClass.border}`
+                          }`}
+                          title="Haga clic para cambiar o asignar la categoría"
+                        >
+                          <option value="Pendiente">Pendiente</option>
+                          {availableCategoriesList.map((c) => (
+                            <option
+                              key={c}
+                              value={c}
+                              className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100"
+                            >
+                              {c}
+                            </option>
+                          ))}
+                          <option
+                            value="__create_new__"
+                            className="bg-zinc-50 font-semibold text-zinc-800 dark:bg-zinc-800 dark:text-zinc-100"
                           >
-                            <option value="Pendiente">Pendiente</option>
-                            {availableCategoriesList.map((c) => (
-                              <option
-                                key={c}
-                                value={c}
-                                className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100"
-                              >
-                                {c}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
+                            + Nueva categoría...
+                          </option>
+                        </select>
+                      ) : (
+                        <span
+                          style={inlineStyle}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border ${styleClass.bg} ${styleClass.text} ${styleClass.border}`}
+                        >
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full ${catStyle.dot}`} />
-                            <span>{category}</span>
-                          </span>
-                        )}
-
-                        {/* Source Tag */}
-                        {isLocal && (
-                          <span
-                            className="text-3xs font-mono px-1 py-0.2 rounded bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
-                            title="Clasificado localmente en el dispositivo"
-                          >
-                            Local
-                          </span>
-                        )}
-                        {tx.classificationSource === "llm" && (
-                          <span
-                            className="text-3xs font-mono px-1 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 font-semibold"
-                            title="Clasificado con IA (Gemini Pro)"
-                          >
-                            IA
-                          </span>
-                        )}
-                        {tx.classificationSource === "manual" && (
-                          <span
-                            className="text-3xs font-mono px-1 py-0.2 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 font-semibold"
-                            title="Asignado manualmente por el usuario"
-                          >
-                            Manual
-                          </span>
-                        )}
-                      </div>
+                            className={`w-1.5 h-1.5 rounded-full ${styleClass.dot}`}
+                            style={inlineDotStyle}
+                          />
+                          <span>{category}</span>
+                        </span>
+                      )}
                     </td>
-                    <td className="px-4 py-2.5 whitespace-nowrap text-right font-mono text-zinc-900 dark:text-zinc-100 font-medium">
+                    <td className="px-3 py-2.5 whitespace-nowrap text-center">
+                      {isPending ? (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 border border-amber-300 dark:border-amber-700 animate-pulse"
+                          title="Gasto pendiente de categorización"
+                        >
+                          Sin clasificar
+                        </span>
+                      ) : tx.classificationSource === "local" ? (
+                        <span
+                          className="text-3xs font-mono px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                          title="Clasificado localmente en el dispositivo"
+                        >
+                          Local
+                        </span>
+                      ) : tx.classificationSource === "llm" ? (
+                        <span
+                          className="text-3xs font-mono px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 font-semibold"
+                          title="Clasificado con IA (Gemini Pro)"
+                        >
+                          IA
+                        </span>
+                      ) : (
+                        <span
+                          className="text-3xs font-mono px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 font-semibold"
+                          title="Asignado manualmente por el usuario"
+                        >
+                          Manual
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 whitespace-nowrap text-right font-mono text-zinc-900 dark:text-zinc-100 font-medium">
                       {formatCurrency(tx.amount)}
+                    </td>
+                    <td className="px-3 py-2.5 whitespace-nowrap text-center">
+                      {isDeleting ? (
+                        <div className="flex items-center justify-center gap-1.5 text-2xs animate-in fade-in">
+                          <span className="text-zinc-500 font-medium">¿Eliminar?</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onDeleteTransaction?.(tx.id);
+                              setDeletingTxId(null);
+                              setSelectedIds((prev) => {
+                                const next = new Set(prev);
+                                next.delete(tx.id);
+                                return next;
+                              });
+                            }}
+                            className="text-red-600 dark:text-red-400 font-bold hover:underline cursor-pointer"
+                          >
+                            Sí
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingTxId(null)}
+                            className="text-zinc-400 hover:underline cursor-pointer"
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center gap-1 text-zinc-400">
+                          {onEditTransaction && (
+                            <button
+                              type="button"
+                              onClick={() => startEditing(tx)}
+                              className="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 rounded transition-colors cursor-pointer"
+                              title="Editar transacción"
+                            >
+                              <Icons.Pencil className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {onDeleteTransaction && (
+                            <button
+                              type="button"
+                              onClick={() => setDeletingTxId(tx.id)}
+                              className="p-1 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 rounded transition-colors cursor-pointer"
+                              title="Eliminar transacción"
+                            >
+                              <Icons.Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -689,6 +1140,16 @@ export function TransactionTable({
           </table>
         </div>
       </div>
+
+      {/* Custom Category Creation Modal */}
+      <CustomCategoryModal
+        isOpen={isNewCategoryModalOpen}
+        existingCategoryNames={availableCategoriesList}
+        onSave={(newCategory) => {
+          onAddCustomCategory?.(newCategory);
+        }}
+        onClose={() => setIsNewCategoryModalOpen(false)}
+      />
 
       {/* Batch Category Confirmation Modal */}
       {batchCategoryPrompt && (

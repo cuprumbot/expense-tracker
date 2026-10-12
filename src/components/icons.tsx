@@ -23,10 +23,12 @@ import {
   Info,
   Trash2,
   X,
-  File,
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  Plus,
+  Pencil,
+  Palette,
 } from "lucide-react";
 
 export const Icons = {
@@ -58,4 +60,7 @@ export const Icons = {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  Plus,
+  Pencil,
+  Palette,
 };

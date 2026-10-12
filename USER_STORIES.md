@@ -175,19 +175,19 @@ This document outlines the user stories, implementation phases, and testable acc
 
 ## Phase 6: User Review, Customization & Local Persistence
 
-### [ ] US-010: Expense Review and Category Customization Interface
+### [x] US-010: Expense Review and Category Customization Interface
 - **As a** user,
 - **I want to** review the classified expenses, manually change categories, add new categories, and assign unclassified items,
 - **So that** my expense report accurately reflects my personal spending habits.
 - **Split-Brain Boundary:** 100% Local (Client).
 - **Acceptance Criteria:**
-  - [ ] Displays a complete tabular view of all transactions with Date, Description, Amount (in Q), Category, and Source badge (`Local`, `IA`, `Sin clasificar`).
-  - [ ] Unclassified items are highlighted with a prominent visual badge prompting user action.
-  - [ ] User can change the category of any transaction via a dropdown menu.
-  - [ ] User can create a new custom category with a name and color code.
-  - [ ] User can edit or delete individual transactions.
-  - [ ] User can bulk-assign categories to multiple selected transactions.
-  - [ ] All UI labels and actions are in Spanish ("Categoría", "Origen", "Editar", "Guardar", "Nueva categoría").
+  - [x] Displays a complete tabular view of all transactions with Date, Description, Amount (in Q), Category, and Source badge (`Local`, `IA`, `Sin clasificar`).
+  - [x] Unclassified items are highlighted with a prominent visual badge prompting user action.
+  - [x] User can change the category of any transaction via a dropdown menu.
+  - [x] User can create a new custom category with a name and color code.
+  - [x] User can edit or delete individual transactions.
+  - [x] User can bulk-assign categories to multiple selected transactions.
+  - [x] All UI labels and actions are in Spanish ("Categoría", "Origen", "Editar", "Guardar", "Nueva categoría").
 
 ### [ ] US-011: Local Storage Persistence
 - **As a** user,

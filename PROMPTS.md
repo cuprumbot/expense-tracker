@@ -164,22 +164,18 @@ Only stop when User Story #9 is fully verified, then report what was done.
 
 ---
 
-Improve this message:
-`X gastos pendientes de clasificar(5 o menos: asignación manual directa disponible en la tabla)`
-Use:
-`X gastos pendientes de clasificar, clasifícalos para continuar`
+Execute User Story #10 from USER_STORIES.md.
 
-Improve this message:
-`Clasificación con IA disponible (16 gastos pendientes)
-Umbral > 5 superado
-Tienes X gastos sin categorizar. Al superar el límite de 5, puedes solicitar a Gemini Pro que los clasifique automáticamente de forma privada (solo descripciones y montos).`
-Use:
-`Tienes X gastos pendientes de clasificar, espera mientras la IA los clasifica...`
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
 
-Add the following behaviour:
-Clicking the `Descripción` table header sorts the expenses by name, first A to Z, then if clicked again Z to A
-Add the same behaviour to the `Fecha` table header
-Add the same behaviour to the `Monto` table header
+Work autonomously end-to-end:
 
-Add the following behaviour:
-When you change some expense category and you have more with the exact same name, it asks you if you want to change the others
+    Check carefully which parts of this User Story are already implemented. Implement what is missing.
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+    Let me test the changes manually before staging and commiting.
+
+Only stop when User Story #10 is fully verified, then report what was done.

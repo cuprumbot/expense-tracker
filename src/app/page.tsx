@@ -21,6 +21,7 @@ import {
   Transaction,
   CSVParsingSummary,
   CSVColumnMapping,
+  CustomCategory,
 } from "@/types/transaction";
 
 export default function Home() {
@@ -31,6 +32,7 @@ export default function Home() {
 
   const [transactions, setTransactions] = useState<Transaction[] | null>(null);
   const [summary, setSummary] = useState<CSVParsingSummary | null>(null);
+  const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
   const [rawCSVText, setRawCSVText] = useState<string | null>(null);
   const [bankName, setBankName] = useState<string | null>(null);
 
@@ -165,6 +167,96 @@ export default function Home() {
         }
         return tx;
       });
+    });
+  };
+
+  const handleAddCustomCategory = (category: CustomCategory) => {
+    setCustomCategories((prev) => {
+      if (prev.some((c) => c.name.toLowerCase() === category.name.toLowerCase())) {
+        return prev;
+      }
+      return [...prev, category];
+    });
+  };
+
+  const handleEditTransaction = (updatedTx: Transaction) => {
+    setTransactions((prev) => {
+      if (!prev) return null;
+      const next = prev.map((t) => (t.id === updatedTx.id ? updatedTx : t));
+      const newTotal = next.reduce((acc, t) => acc + t.amount, 0);
+      setSummary((s) =>
+        s
+          ? {
+              ...s,
+              validTransactionsCount: next.length,
+              totalAmount: Number(newTotal.toFixed(2)),
+            }
+          : null
+      );
+      return next;
+    });
+  };
+
+  const handleDeleteTransaction = (transactionId: string) => {
+    setTransactions((prev) => {
+      if (!prev) return null;
+      const next = prev.filter((t) => t.id !== transactionId);
+      const newTotal = next.reduce((acc, t) => acc + t.amount, 0);
+      setSummary((s) =>
+        s
+          ? {
+              ...s,
+              validTransactionsCount: next.length,
+              totalAmount: Number(newTotal.toFixed(2)),
+            }
+          : null
+      );
+      return next;
+    });
+  };
+
+  const handleBulkAssignCategory = (
+    transactionIds: string[],
+    newCategory: string
+  ) => {
+    const idSet = new Set(transactionIds);
+    const isSub = newCategory.toLowerCase() === "suscripciones";
+    setTransactions((prev) => {
+      if (!prev) return null;
+      return prev.map((t) => {
+        if (idSet.has(t.id)) {
+          return {
+            ...t,
+            category: newCategory,
+            classificationSource: "manual" as const,
+            isSubscription: isSub
+              ? true
+              : t.isSubscription && newCategory !== "Pendiente"
+              ? t.isSubscription
+              : undefined,
+          };
+        }
+        return t;
+      });
+    });
+  };
+
+  const handleBulkDeleteTransactions = (transactionIds: string[]) => {
+    const idSet = new Set(transactionIds);
+    setTransactions((prev) => {
+      if (!prev) return null;
+      const next = prev.filter((t) => !idSet.has(t.id));
+      const newTotal = next.reduce((acc, t) => acc + t.amount, 0);
+      setSummary((s) =>
+        s
+          ? {
+              ...s,
+              validTransactionsCount: next.length,
+              totalAmount: Number(newTotal.toFixed(2)),
+            }
+          : null
+      );
+      return next;
     });
   };
 
@@ -621,7 +713,13 @@ export default function Home() {
                 : routedFile?.file.name || "Archivo de movimientos"
             }
             onReset={handleReset}
+            customCategories={customCategories}
             onUpdateCategory={handleUpdateCategory}
+            onAddCustomCategory={handleAddCustomCategory}
+            onEditTransaction={handleEditTransaction}
+            onDeleteTransaction={handleDeleteTransaction}
+            onBulkAssignCategory={handleBulkAssignCategory}
+            onBulkDeleteTransactions={handleBulkDeleteTransactions}
             onClassifyPendingWithLLM={() => {
               if (transactions) {
                 const pending = transactions.filter(

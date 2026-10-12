@@ -12,6 +12,12 @@ export interface Transaction {
   isSubscription?: boolean;
 }
 
+export interface CustomCategory {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface CSVColumnMapping {
   dateColumn: string;
   descriptionColumn: string;
