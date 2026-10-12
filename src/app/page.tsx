@@ -563,7 +563,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-white text-zinc-900 antialiased selection:bg-zinc-900 selection:text-white dark:bg-zinc-950 dark:text-zinc-100">
       {/* Minimal Top Header */}
       <header className="border-b border-zinc-200/80 dark:border-zinc-800/80">
-        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-5xl lg:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-md bg-zinc-900 text-white flex items-center justify-center dark:bg-zinc-100 dark:text-zinc-900">
               <Icons.Wallet className="w-4 h-4" />
@@ -580,7 +580,7 @@ export default function Home() {
       </header>
 
       {/* Main Workspace */}
-      <main className="flex-1 max-w-3xl w-full mx-auto px-6 py-16 space-y-8">
+      <main className="flex-1 max-w-5xl lg:max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-8">
         {/* Title & Introduction */}
         <section className="space-y-2">
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">

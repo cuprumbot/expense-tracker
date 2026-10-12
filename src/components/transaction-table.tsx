@@ -412,7 +412,7 @@ export function TransactionTable({
       editForm.isSubscription !== undefined
         ? editForm.isSubscription
         : editForm.category.toLowerCase() === "suscripciones" ||
-          (tx.isSubscription && editForm.category !== "Pendiente");
+        (tx.isSubscription && editForm.category !== "Pendiente");
 
     onEditTransaction?.({
       ...tx,
@@ -444,36 +444,13 @@ export function TransactionTable({
         />
       ) : (
         <div className="space-y-4">
-          {/* Prominent Attention Callout for Unclassified Expenses */}
-          <div className="p-4 rounded-2xl border-2 border-amber-300 bg-amber-50/80 dark:border-amber-700 dark:bg-amber-950/40 flex items-start gap-3 shadow-xs">
-            <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-900 dark:bg-amber-900/80 dark:text-amber-200 flex items-center justify-center shrink-0 mt-0.5">
-              <Icons.AlertCircle className="w-4 h-4" />
-            </div>
-            <div className="flex-1 space-y-1">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-sm font-bold text-amber-950 dark:text-amber-100">
-                  ¡Atención requerida! Tienes {stats.pending}{" "}
-                  {stats.pending === 1
-                    ? "gasto pendiente de clasificar"
-                    : "gastos pendientes de clasificar"}
-                </h3>
-                <span className="text-2xs font-mono px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200 font-semibold">
-                  Acción requerida
-                </span>
-              </div>
-              <p className="text-xs text-amber-900/90 dark:text-amber-200/90 leading-relaxed">
-                Clasifica todos los gastos pendientes para desbloquear el reporte financiero consolidado, los gráficos de distribución por categoría y la auditoría completa de suscripciones.
-              </p>
-            </div>
-          </div>
-
-          {/* Summary Triage KPI Cards */}
+          {/* Summary Triage KPI Cards (US-009 & US-012) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="p-4 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 shadow-2xs">
               <p className="text-2xs font-medium text-zinc-500 uppercase tracking-wider">
                 Total de gastos
               </p>
-              <p className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mt-1">
+              <p className="text-xl font-semibold font-mono text-zinc-900 dark:text-zinc-100 mt-1 whitespace-nowrap">
                 {formatCurrency(summary.totalAmount)}
               </p>
               <p className="text-2xs text-zinc-400 mt-1">
@@ -481,11 +458,11 @@ export function TransactionTable({
               </p>
             </div>
 
-            <div className="p-4 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="p-4 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 shadow-2xs">
               <p className="text-2xs font-medium text-zinc-500 uppercase tracking-wider">
-                Clasificados localmente
+                Gastos clasificados
               </p>
-              <p className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+              <p className="text-xl font-semibold font-mono text-emerald-600 dark:text-emerald-400 mt-1">
                 {stats.classified} de {transactions.length}
               </p>
               <p className="text-2xs text-zinc-400 mt-1">
@@ -493,18 +470,104 @@ export function TransactionTable({
               </p>
             </div>
 
-            <div className="p-4 rounded-xl border-2 border-amber-400 bg-amber-50/30 dark:border-amber-600 dark:bg-amber-950/30">
-              <p className="text-2xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider">
-                Gastos pendientes
-              </p>
-              <p className="text-xl font-bold text-amber-900 dark:text-amber-100 mt-1">
-                {stats.pending}
-              </p>
-              <p className="text-2xs text-amber-700/80 dark:text-amber-300/80 mt-1">
-                Requieren revisión para completar el reporte
-              </p>
+            {/* Single Unified Alert & Filter Card for Unclassified Expenses */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() =>
+                setSelectedCategory(selectedCategory === "Pendiente" ? "all" : "Pendiente")
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSelectedCategory(selectedCategory === "Pendiente" ? "all" : "Pendiente");
+                }
+              }}
+              className={`p-4 rounded-xl border-2 transition-all cursor-pointer text-left flex flex-col justify-between ${selectedCategory === "Pendiente"
+                  ? "border-amber-500 bg-amber-100/70 dark:border-amber-500 dark:bg-amber-950/60 ring-2 ring-amber-400/60 shadow-xs"
+                  : "border-amber-400/90 bg-amber-50/50 hover:bg-amber-100/50 hover:border-amber-500 dark:border-amber-600 dark:bg-amber-950/30 dark:hover:bg-amber-950/50 shadow-2xs"
+                }`}
+              title={
+                selectedCategory === "Pendiente"
+                  ? "Haga clic para mostrar todos los gastos"
+                  : "Haga clic para filtrar y ver solo gastos pendientes"
+              }
+            >
+              <div>
+                <div className="flex items-center justify-between gap-1">
+                  <p className="text-2xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wider">
+                    Gastos pendientes
+                  </p>
+                  <span
+                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-3xs font-medium ${selectedCategory === "Pendiente"
+                        ? "bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200"
+                        : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                      }`}
+                  >
+                    <Icons.Filter className="w-2.5 h-2.5" />
+                    <span>
+                      {selectedCategory === "Pendiente"
+                        ? "Filtrando pendientes"
+                        : "Clic para filtrar"}
+                    </span>
+                  </span>
+                </div>
+
+                <p className="text-xl font-bold font-mono text-amber-900 dark:text-amber-100 mt-1">
+                  {stats.pending}
+                </p>
+
+                <p className="text-2xs text-amber-800/90 dark:text-amber-300/90 mt-1 leading-snug">
+                  {stats.pending > UNCLASSIFIED_THRESHOLD
+                    ? `Tienes ${stats.pending} gastos pendientes de clasificar, espera mientras la IA los clasifica...`
+                    : stats.pending === 1
+                      ? "1 gasto pendiente de clasificar, clasifícalo para continuar"
+                      : `${stats.pending} gastos pendientes de clasificar, clasifícalos para continuar`}
+                </p>
+              </div>
+
+              {/* If > 5 pending, show the AI Classification button inside the card */}
+              {stats.pending > UNCLASSIFIED_THRESHOLD && onClassifyPendingWithLLM && (
+                <div className="mt-3 pt-2.5 border-t border-amber-200/80 dark:border-amber-900/60">
+                  <button
+                    type="button"
+                    disabled={isClassifyingWithLLM}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClassifyPendingWithLLM();
+                    }}
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 rounded-lg dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-xs cursor-pointer"
+                  >
+                    {isClassifyingWithLLM ? (
+                      <>
+                        <Icons.RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Clasificando con IA...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Icons.Sparkles className="w-3.5 h-3.5" />
+                        <span>Clasificar con IA (Gemini Pro)</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
+
+          {/* AI Classification Error Message (if any) */}
+          {llmClassificationError && (
+            <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 text-xs dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200 flex items-start gap-2">
+              <Icons.AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-1">
+                <p className="font-semibold">No se pudo completar la clasificación con IA</p>
+                <p className="text-2xs">{llmClassificationError}</p>
+                <p className="text-2xs text-red-700 dark:text-red-300">
+                  Puedes clasificar los gastos manualmente con los menús desplegables de la tabla.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Subscriptions Audit Banner Preview (US-008) */}
           {subscriptionSummary.count > 0 && (
@@ -528,7 +591,7 @@ export function TransactionTable({
                   <span className="text-2xs text-indigo-700/80 dark:text-indigo-300/80 block">
                     Compromiso mensual estimado:
                   </span>
-                  <span className="text-sm font-semibold font-mono text-indigo-950 dark:text-indigo-100">
+                  <span className="text-sm font-semibold font-mono text-indigo-950 dark:text-indigo-100 whitespace-nowrap">
                     {formatCurrency(subscriptionSummary.totalMonthlyCommitment)}
                   </span>
                 </div>
@@ -541,103 +604,12 @@ export function TransactionTable({
                     className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-2xs font-medium bg-white border border-indigo-200 text-indigo-900 dark:bg-zinc-900 dark:border-indigo-800 dark:text-indigo-300 shadow-2xs"
                   >
                     <span>{sub.name}</span>
-                    <span className="font-mono text-indigo-600 dark:text-indigo-400">
+                    <span className="font-mono text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
                       {formatCurrency(sub.amount)}
                     </span>
                   </span>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* AI Classification Banner (> 5 pending, US-009) */}
-          {stats.pending > UNCLASSIFIED_THRESHOLD && (
-            <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20 space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 flex items-center justify-center shrink-0">
-                    <Icons.Sparkles className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-amber-950 dark:text-amber-200">
-                      {stats.pending === 1
-                        ? "Tienes 1 gasto pendiente de clasificar, espera mientras la IA lo clasifica..."
-                        : `Tienes ${stats.pending} gastos pendientes de clasificar, espera mientras la IA los clasifica...`}
-                    </h4>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  {onClassifyPendingWithLLM && (
-                    <button
-                      type="button"
-                      disabled={isClassifyingWithLLM}
-                      onClick={onClassifyPendingWithLLM}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 rounded-lg dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-xs cursor-pointer"
-                    >
-                      {isClassifyingWithLLM ? (
-                        <>
-                          <Icons.RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          <span>Clasificando con IA...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Icons.Sparkles className="w-3.5 h-3.5" />
-                          <span>Clasificar con IA (Gemini Pro)</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory("Pendiente")}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-amber-900 bg-amber-100/80 hover:bg-amber-200/80 rounded-lg dark:bg-amber-900/40 dark:text-amber-200 dark:hover:bg-amber-900/60 transition-colors cursor-pointer"
-                  >
-                    <span>Ver pendientes ({stats.pending})</span>
-                  </button>
-                </div>
-              </div>
-
-              {llmClassificationError && (
-                <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 text-xs dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200 flex items-start gap-2">
-                  <Icons.AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                  <div className="flex-1 space-y-1">
-                    <p className="font-semibold">No se pudo completar la clasificación con IA</p>
-                    <p className="text-2xs">{llmClassificationError}</p>
-                    <p className="text-2xs text-red-700 dark:text-red-300">
-                      Puedes clasificar los gastos manualmente con los menús desplegables de la tabla.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Manual Categorization Prompt (<= 5 pending, US-009) */}
-          {stats.pending > 0 && stats.pending <= UNCLASSIFIED_THRESHOLD && (
-            <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-900/40 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-md bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 flex items-center justify-center shrink-0">
-                  <Icons.Tag className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
-                    {stats.pending === 1
-                      ? "1 gasto pendiente de clasificar, clasifícalo para continuar"
-                      : `${stats.pending} gastos pendientes de clasificar, clasifícalos para continuar`}
-                  </span>
-                </div>
-              </div>
-
-              {selectedCategory !== "Pendiente" && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory("Pendiente")}
-                  className="text-2xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100 underline cursor-pointer"
-                >
-                  Filtrar solo pendientes ({stats.pending})
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -718,11 +690,10 @@ export function TransactionTable({
             <button
               type="button"
               onClick={() => setSelectedCategory("all")}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                selectedCategory === "all"
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${selectedCategory === "all"
                   ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100"
                   : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-800 dark:hover:bg-zinc-800"
-              }`}
+                }`}
             >
               <span>Todos</span>
               <span className="text-2xs opacity-75">({transactions.length})</span>
@@ -739,11 +710,10 @@ export function TransactionTable({
                   type="button"
                   onClick={() => setSelectedCategory(isSelected ? "all" : cat)}
                   style={isSelected && inlineStyle ? inlineStyle : undefined}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                    isSelected
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${isSelected
                       ? `${styleClass.bg} ${styleClass.text} ${styleClass.border} ring-1 ring-current`
                       : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-800 dark:hover:bg-zinc-800"
-                  }`}
+                    }`}
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${styleClass.dot}`}
@@ -1026,11 +996,10 @@ export function TransactionTable({
                               isSubscription: !prev.isSubscription,
                             }))
                           }
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border cursor-pointer ${
-                            editForm.isSubscription
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border cursor-pointer ${editForm.isSubscription
                               ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
                               : "bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700"
-                          }`}
+                            }`}
                         >
                           <Icons.CreditCard className="w-3 h-3" />
                           <span>
@@ -1081,13 +1050,12 @@ export function TransactionTable({
                 return (
                   <tr
                     key={tx.id}
-                    className={`transition-colors ${
-                      isSelected
+                    className={`transition-colors ${isSelected
                         ? "bg-zinc-100/70 dark:bg-zinc-800/40"
                         : isPending
-                        ? "bg-amber-50/25 dark:bg-amber-950/10 hover:bg-amber-50/50 dark:hover:bg-amber-950/20"
-                        : "hover:bg-zinc-50/60 dark:hover:bg-zinc-900/60"
-                    }`}
+                          ? "bg-amber-50/25 dark:bg-amber-950/10 hover:bg-amber-50/50 dark:hover:bg-amber-950/20"
+                          : "hover:bg-zinc-50/60 dark:hover:bg-zinc-900/60"
+                      }`}
                   >
                     <td className="w-10 px-3 py-2.5 text-center">
                       <input
@@ -1111,11 +1079,10 @@ export function TransactionTable({
                           aria-label={`Categoría para ${tx.description}`}
                           onChange={(e) => handleCategorySelection(tx, e.target.value)}
                           style={inlineStyle}
-                          className={`text-2xs font-medium px-2 py-0.5 rounded-full border cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-colors ${
-                            isPending
+                          className={`text-2xs font-medium px-2 py-0.5 rounded-full border cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-colors ${isPending
                               ? "bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-400/60 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700 font-semibold"
                               : `${styleClass.bg} ${styleClass.text} ${styleClass.border}`
-                          }`}
+                            }`}
                           title="Haga clic para cambiar o asignar la categoría"
                         >
                           <option value="Pendiente">Pendiente</option>
@@ -1184,11 +1151,10 @@ export function TransactionTable({
                         <button
                           type="button"
                           onClick={() => onToggleSubscription(tx.id)}
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border transition-colors cursor-pointer ${
-                            tx.isSubscription
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border transition-colors cursor-pointer ${tx.isSubscription
                               ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60"
                               : "bg-transparent text-zinc-400 border-dashed border-zinc-200 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-800 dark:text-zinc-500 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
-                          }`}
+                            }`}
                           title={
                             tx.isSubscription
                               ? "Suscripción activa. Clic para desmarcar como suscripción."
@@ -1196,11 +1162,10 @@ export function TransactionTable({
                           }
                         >
                           <Icons.CreditCard
-                            className={`w-3 h-3 ${
-                              tx.isSubscription
+                            className={`w-3 h-3 ${tx.isSubscription
                                 ? "text-indigo-600 dark:text-indigo-400"
                                 : "text-zinc-400"
-                            }`}
+                              }`}
                           />
                           <span>
                             {tx.isSubscription ? "Recurrente" : "No recurrente"}

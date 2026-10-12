@@ -237,6 +237,27 @@ When we have unclassified expenses:
 
 ---
 
-- The page looks nice on portrait mode, but doesn't seem to be optimized for landscape mode. Make it a little bit wider to use the space better, but keep the responsive design.
-- For the first card:
-    - "Total de gastos del mes" looks 
+The UI/UX need several improvements, use the `frontend-design` skill when implementing them:
+
+When all our expenses are classified:
+- First card:
+    - Make sure the "Q" and the total amount never get separated in different lines.
+- Second card:
+    - The "39.5% del total" seems to be inside a circle, it pops out the circle and that looks bad.
+    - For long category names like "Entretenimiento y compras" the complete text doesn't fit the card.
+    - The total amount for this category should have a bigger font size, maybe as big as the total in the first card.
+- Third card:
+    - Since "Suscripciones recurrentes" is composed of two long words, the "0 servicios" gets pushed way to the right.
+
+For the "Distribución del gasto por categoría" panel:
+- Too much redundant info.
+- Keep the bar.
+- Fuse the percentage amount below the bar with the cards, give them enough space so they read nicely. Consider a list instead of a grid, if you keep a grid consider a max of three cards wide.
+
+For the "Suscripciones Detectadas & Gastos Recurrentes" panel:
+- If the user has no subscriptions, hide this panel.
+
+For the expenses table:
+- Hide the "Origen" column
+
+---

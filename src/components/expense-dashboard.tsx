@@ -67,18 +67,14 @@ export function ExpenseDashboard({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Total Spending KPI Card */}
         <div className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="flex items-center justify-between">
+          <div>
             <span className="text-2xs font-semibold tracking-wider text-zinc-500 uppercase">
               Total de gastos del mes
-            </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-              <Icons.CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-              <span>100% clasificado</span>
             </span>
           </div>
 
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-zinc-900 dark:text-zinc-50">
+            <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-zinc-900 dark:text-zinc-50 whitespace-nowrap">
               {formatCurrency(metrics.totalSpend)}
             </span>
           </div>
@@ -141,7 +137,7 @@ export function ExpenseDashboard({
                   {metrics.topCategory.category}
                 </span>
               </div>
-              <p className="mt-1 text-sm font-semibold font-mono text-zinc-800 dark:text-zinc-200">
+              <p className="mt-1 text-sm font-semibold font-mono text-zinc-800 dark:text-zinc-200 whitespace-nowrap">
                 {formatCurrency(metrics.topCategory.total)}
               </p>
               <p className="mt-1 text-2xs text-zinc-500 dark:text-zinc-400">
@@ -181,7 +177,7 @@ export function ExpenseDashboard({
           </div>
 
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-indigo-950 dark:text-indigo-100">
+            <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-indigo-950 dark:text-indigo-100 whitespace-nowrap">
               {formatCurrency(subscriptionSummary.totalMonthlyCommitment)}
             </span>
           </div>
