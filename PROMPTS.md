@@ -79,3 +79,43 @@ Work autonomously end-to-end:
     Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
 
 Only stop when User Story #5 is fully verified, then report what was done.
+
+---
+
+Execute User Story #6 from USER_STORIES.md.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    Only the anonymized data is sent to the LLM. Make a clear prompt so it understands what the data is and how to process it. The LLM should send us a JSON file, in the same format that the one we got from the CSV or PDF parser.
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+    Let me test the changes manually before staging and commiting.
+
+Only stop when User Story #6 is fully verified, then report what was done.
+
+---
+
+Execute User Story #7 from USER_STORIES.md.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    Classify expenses into categories. Take categories should not be hardcoded, they should be configurable from some file on the server.
+
+    Consider that some vendors might have variants, such as "La Torre Zona 10", "La Torre Zona 4", "La Torre Zona 14", etc. All of them should be classified as "Supermercado".
+
+    Try to classify as much as possible, but if you're not sure about the category, you can use the "Pendiente" category. Consider the US-009, at a later time we will give the user the option to customize their categories and categorize the pending expenses if they are few.
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+    Let me test the changes manually before staging and commiting.
+
+Only stop when User Story #7 is fully verified, then report what was done.

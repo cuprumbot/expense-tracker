@@ -102,23 +102,23 @@ This document outlines the user stories, implementation phases, and testable acc
   - [x] The user can review the redacted text, manually redact additional sensitive words if needed, and must click an explicit confirmation button ("Confirmar y procesar") before proceeding.
   - [x] If the user cancels, no external request is made and the user can enter expenses manually or use a CSV.
 
-### [ ] US-006: LLM-Assisted Transaction Extraction for Unsupported Banks
+### [x] US-006: LLM-Assisted Transaction Extraction for Unsupported Banks
 - **As a** user with an unsupported bank statement,
 - **I want** the system to extract structured transaction data from the sanitized text using Gemini Pro,
 - **So that** my statement is parsed accurately even without a pre-built bank parser.
 - **Split-Brain Boundary:** Split-Brain Hybrid. Server Route Handler calls Gemini Pro with sanitized text only. API keys are kept secure on the server.
 - **Acceptance Criteria:**
-  - [ ] Next.js Server Route Handler (`POST /api/extract-transactions`) receives only the user-confirmed sanitized text.
-  - [ ] Validates that no unredacted account numbers or raw identity markers are present in the payload.
-  - [ ] Calls Google Gemini Pro using `@google/genai` with a structured prompt requesting strict JSON output matching the canonical schema:
+  - [x] Next.js Server Route Handler (`POST /api/extract-transactions`) receives only the user-confirmed sanitized text.
+  - [x] Validates that no unredacted account numbers or raw identity markers are present in the payload.
+  - [x] Calls Google Gemini Pro using `@google/genai` with a structured prompt requesting strict JSON output matching the canonical schema:
     ```json
     [
       { "date": "YYYY-MM-DD", "description": "string", "amount": 0.00 }
     ]
     ```
-  - [ ] System prompt instructs the model to return amounts in numbers and text in Spanish, extracting only debits/expenses.
-  - [ ] Validates and parses the LLM JSON response on the server, assigning unique client IDs.
-  - [ ] If the LLM request fails (network error, rate limit, invalid key), returns an informative Spanish error message with an option to enter transactions manually or upload CSV.
+  - [x] System prompt instructs the model to return amounts in numbers and text in Spanish, extracting only debits/expenses.
+  - [x] Validates and parses the LLM JSON response on the server, assigning unique client IDs.
+  - [x] If the LLM request fails (network error, rate limit, invalid key), returns an informative Spanish error message with an option to enter transactions manually or upload CSV.
 
 ---
 
