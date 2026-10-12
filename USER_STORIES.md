@@ -26,19 +26,19 @@ This document outlines the user stories, implementation phases, and testable acc
 
 ## Phase 1: Project Initialization & Technical Foundation
 
-### [ ] US-001: Project Setup and Tech Stack Initialization
+### [x] US-001: Project Setup and Tech Stack Initialization
 - **As a** developer,
 - **I want to** initialize the Next.js project with App Router, Tailwind CSS, TypeScript, and the `@google/genai` SDK,
 - **So that** the project has a solid, standardized foundation following the team guidelines.
 - **Split-Brain Boundary:** Local only (environment configuration for server route handlers).
 - **Acceptance Criteria:**
-  - [ ] A Next.js project using App Router and TypeScript is initialized using `npm`.
-  - [ ] Tailwind CSS is configured and verified with base utilities.
-  - [ ] `@google/genai` SDK is installed as a dependency for server-side route handlers.
-  - [ ] Simple SVG icon system (e.g., Lucide React or standard SVG icons) is configured without emoji dependencies.
-  - [ ] Currency formatting utility for Guatemalan Quetzales (`GTQ` / `Q`) is created and unit-tested (`formatCurrency(amount)`).
-  - [ ] Environment variable configuration (`.env.example` and `.env.local`) includes `GEMINI_API_KEY`.
-  - [ ] Base layout and styling are set up with a clean, modern, responsive theme. All static boilerplate copy is in Spanish.
+  - [x] A Next.js project using App Router and TypeScript is initialized using `npm`.
+  - [x] Tailwind CSS is configured and verified with base utilities.
+  - [x] `@google/genai` SDK is installed as a dependency for server-side route handlers.
+  - [x] Simple SVG icon system (e.g., Lucide React or standard SVG icons) is configured without emoji dependencies.
+  - [x] Currency formatting utility for Guatemalan Quetzales (`GTQ` / `Q`) is created and unit-tested (`formatCurrency(amount)`).
+  - [x] Environment variable configuration (`.env.example` and `.env.local`) includes `GEMINI_API_KEY`.
+  - [x] Base layout and styling are set up with a clean, modern, responsive theme. All static boilerplate copy is in Spanish.
 
 ---
 
