@@ -6,6 +6,7 @@ import {
   classifyTransaction,
   classifyTransactions,
   getClassificationStats,
+  getSubscriptionSummary,
   MerchantCatalog,
 } from "./expense-classifier";
 import { Transaction } from "@/types/transaction";
@@ -155,5 +156,61 @@ describe("expense-classifier unit tests", () => {
     assert.equal(stats.pendingCount, 1);
     assert.equal(stats.categoryBreakdown["Supermercado"].totalAmount, 200);
     assert.equal(stats.categoryBreakdown["Restaurantes y Cafés"].totalAmount, 150);
+  });
+
+  it("detects all US-008 digital subscription services and calculates total monthly commitment", () => {
+    const subscriptionServices = [
+      { desc: "Netflix Guatemala", amount: 85 },
+      { desc: "Spotify Premium Mensual", amount: 55 },
+      { desc: "Disney Plus Subscripcion", amount: 65 },
+      { desc: "HBO Max Mensual", amount: 50 },
+      { desc: "Amazon Prime Video", amount: 50 },
+      { desc: "YouTube Premium Familiar", amount: 95 },
+      { desc: "Apple Services iCloud 200GB", amount: 25 },
+      { desc: "Google One 100GB Storage", amount: 18 },
+      { desc: "ChatGPT Subscription OpenAI", amount: 160 },
+      { desc: "PlayStation Plus Anual Mensualizado", amount: 75 },
+      { desc: "Xbox Game Pass Ultimate", amount: 110 },
+    ];
+
+    const rawTxs: Transaction[] = subscriptionServices.map((sub, i) => ({
+      id: `sub-${i}`,
+      date: `2026-10-${String(i + 1).padStart(2, "0")}`,
+      description: sub.desc,
+      amount: sub.amount,
+      currency: "GTQ",
+    }));
+
+    // Add a normal non-subscription expense as control
+    rawTxs.push({
+      id: "grocery-1",
+      date: "2026-10-15",
+      description: "Supermercados La Torre Zona 14",
+      amount: 450,
+      currency: "GTQ",
+    });
+
+    const classified = classifyTransactions(rawTxs);
+
+    // Verify all 11 subscriptions are flagged with category and isSubscription
+    for (let i = 0; i < subscriptionServices.length; i++) {
+      assert.equal(classified[i].category, "Suscripciones", `Failed category for ${subscriptionServices[i].desc}`);
+      assert.equal(classified[i].isSubscription, true, `Failed isSubscription for ${subscriptionServices[i].desc}`);
+      assert.equal(classified[i].classificationSource, "local");
+    }
+
+    // Verify control transaction
+    const groceryTx = classified[classified.length - 1];
+    assert.equal(groceryTx.category, "Supermercado");
+    assert.equal(groceryTx.isSubscription, undefined);
+
+    // Verify getSubscriptionSummary calculation
+    const summary = getSubscriptionSummary(classified);
+    assert.equal(summary.count, 11);
+    const expectedTotal = subscriptionServices.reduce((acc, s) => acc + s.amount, 0); // 788
+    assert.equal(summary.totalMonthlyCommitment, expectedTotal);
+    assert.equal(summary.services.length, 11);
+    assert.equal(summary.services[0].name, "Netflix Guatemala");
+    assert.equal(summary.services[0].amount, 85);
   });
 });

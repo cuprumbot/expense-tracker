@@ -189,3 +189,44 @@ export function getClassificationStats(
 
   return stats;
 }
+
+export interface SubscriptionSummary {
+  transactions: Transaction[];
+  count: number;
+  totalMonthlyCommitment: number;
+  services: {
+    name: string;
+    amount: number;
+    date: string;
+  }[];
+}
+
+/**
+ * Calculates recurring subscriptions and total monthly financial commitment.
+ * Operates purely locally with zero external LLM invocations.
+ */
+export function getSubscriptionSummary(
+  transactions: Transaction[]
+): SubscriptionSummary {
+  const subscriptions = transactions.filter(
+    (tx) => tx.isSubscription === true || tx.category === "Suscripciones"
+  );
+
+  const totalMonthlyCommitment = subscriptions.reduce(
+    (acc, tx) => acc + (tx.amount || 0),
+    0
+  );
+
+  const services = subscriptions.map((tx) => ({
+    name: tx.description,
+    amount: tx.amount,
+    date: tx.date,
+  }));
+
+  return {
+    transactions: subscriptions,
+    count: subscriptions.length,
+    totalMonthlyCommitment: Math.round(totalMonthlyCommitment * 100) / 100,
+    services,
+  };
+}

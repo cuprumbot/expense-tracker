@@ -141,17 +141,17 @@ This document outlines the user stories, implementation phases, and testable acc
   - [x] Categorized items are tagged with `classificationSource: 'local'`.
   - [x] Unmatched items are tagged as `unclassified` with `category: null` or default category "Pendiente".
 
-### [ ] US-008: Local Recurring Subscription Detection
+### [x] US-008: Local Recurring Subscription Detection
 - **As a** user,
 - **I want** recurring digital and service subscriptions to be identified locally,
 - **So that** I am alerted to recurring charges that I might want to audit or cancel.
 - **Split-Brain Boundary:** 100% Local rule-based identification.
 - **Acceptance Criteria:**
-  - [ ] A local subscription directory contains popular digital subscription services:
+  - [x] A local subscription directory contains popular digital subscription services:
     - Netflix, Spotify, Disney+, Max (HBO), Amazon Prime, YouTube Premium, Apple Services/iCloud, Google One, ChatGPT/OpenAI, PlayStation Plus, Xbox Game Pass.
-  - [ ] Transactions matching subscription patterns are flagged with `isSubscription: true` and assigned to category "Suscripciones".
-  - [ ] Calculates the total monthly commitment represented by detected subscriptions.
-  - [ ] Operates purely locally with zero LLM invocations.
+  - [x] Transactions matching subscription patterns are flagged with `isSubscription: true` and assigned to category "Suscripciones".
+  - [x] Calculates the total monthly commitment represented by detected subscriptions.
+  - [x] Operates purely locally with zero LLM invocations.
 
 ---
 

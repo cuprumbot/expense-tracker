@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { Transaction, CSVParsingSummary } from "@/types/transaction";
 import { formatCurrency } from "@/lib/currency";
+import { getSubscriptionSummary } from "@/lib/expense-classifier";
 import { Icons } from "@/components/icons";
 
 interface TransactionTableProps {
@@ -136,6 +137,10 @@ export function TransactionTable({
     });
   }, [stats.categoryTotals]);
 
+  const subscriptionSummary = useMemo(() => {
+    return getSubscriptionSummary(transactions);
+  }, [transactions]);
+
   return (
     <div className="space-y-6">
       {/* Summary KPI Cards */}
@@ -176,6 +181,64 @@ export function TransactionTable({
           </p>
         </div>
       </div>
+
+      {/* Subscriptions Audit Banner (US-008) */}
+      {subscriptionSummary.count > 0 && (
+        <div className="p-4 rounded-xl border border-indigo-200/90 bg-indigo-50/50 dark:border-indigo-900/50 dark:bg-indigo-950/20 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center dark:bg-indigo-900/70 dark:text-indigo-300">
+                <Icons.CreditCard className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-indigo-950 dark:text-indigo-200">
+                  Suscripciones recurrentes detectadas
+                </span>
+                <span className="ml-2 text-2xs font-mono px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300">
+                  {subscriptionSummary.count} {subscriptionSummary.count === 1 ? "servicio" : "servicios"}
+                </span>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <span className="text-2xs text-indigo-700/80 dark:text-indigo-300/80 block">
+                Compromiso mensual estimado:
+              </span>
+              <span className="text-sm font-semibold font-mono text-indigo-950 dark:text-indigo-100">
+                {formatCurrency(subscriptionSummary.totalMonthlyCommitment)}
+              </span>
+            </div>
+          </div>
+
+          <p className="text-xs text-indigo-900/80 dark:text-indigo-300/80 leading-relaxed">
+            Se identificaron cargos automáticos en servicios digitales. Audita estas suscripciones para evaluar si deseas mantenerlas activas o cancelar servicios no utilizados.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-indigo-200/60 dark:border-indigo-900/40">
+            {subscriptionSummary.services.map((sub, idx) => (
+              <span
+                key={`${sub.name}-${idx}`}
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-2xs font-medium bg-white border border-indigo-200 text-indigo-900 dark:bg-zinc-900 dark:border-indigo-800 dark:text-indigo-300 shadow-2xs"
+              >
+                <span>{sub.name}</span>
+                <span className="font-mono text-indigo-600 dark:text-indigo-400">
+                  {formatCurrency(sub.amount)}
+                </span>
+              </span>
+            ))}
+
+            {selectedCategory !== "Suscripciones" && (
+              <button
+                type="button"
+                onClick={() => setSelectedCategory("Suscripciones")}
+                className="text-2xs font-medium text-indigo-700 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 underline ml-auto cursor-pointer"
+              >
+                Filtrar solo suscripciones
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Category Pills Filter */}
       {uniqueCategories.length > 0 && (
@@ -284,7 +347,17 @@ export function TransactionTable({
                       {tx.date}
                     </td>
                     <td className="px-4 py-2.5 text-zinc-900 dark:text-zinc-100 font-medium">
-                      {tx.description}
+                      <div className="flex items-center gap-2">
+                        <span>{tx.description}</span>
+                        {tx.isSubscription && (
+                          <span
+                            className="inline-flex items-center px-1.5 py-0.2 rounded text-3xs font-mono font-normal bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
+                            title="Suscripción recurrente detectada"
+                          >
+                            Recurrente
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap">
                       <span
