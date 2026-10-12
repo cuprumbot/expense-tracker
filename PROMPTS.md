@@ -21,3 +21,20 @@ Work autonomously end-to-end:
     Once all acceptance criteria pass, stage and commit the changes using the Conventional Commits format specified in AGENTS.md.
 
 Only stop when User Story #1 is fully verified, then report what was done. Wait for user approval before commiting changes.
+
+---
+
+Execute User Story #3 from USER_STORIES.md.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    Create some CSV in the `demo` folder so we can test this item from the user story:
+        If automatic detection is ambiguous, displays a column mapping modal in Spanish allowing the user to select the appropriate columns.
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+Only stop when User Story #3 is fully verified, then report what was done.

@@ -56,18 +56,18 @@ This document outlines the user stories, implementation phases, and testable acc
   - [x] Provides options to cancel or replace the uploaded file before processing.
   - [x] Routes `.csv` uploads to the CSV parser (US-003) and `.pdf` uploads to the bank detection engine (US-004).
 
-### [ ] US-003: Local CSV Parsing and Column Mapping
+### [x] US-003: Local CSV Parsing and Column Mapping
 - **As a** user,
 - **I want to** upload a CSV file containing my expenses and have the columns automatically detected or manually mapped,
 - **So that** my transactions are normalized into a standard format without sending raw files to an external service.
 - **Split-Brain Boundary:** 100% Local (Client / Local Server).
 - **Acceptance Criteria:**
-  - [ ] The system parses CSV content locally using a reliable parsing library (e.g., `papaparse`).
-  - [ ] Automatically detects common column names for Date (`fecha`, `date`), Description (`descripcion`, `concepto`, `description`), and Amount (`monto`, `importe`, `debito`, `amount`).
-  - [ ] If automatic detection is ambiguous, displays a column mapping modal in Spanish allowing the user to select the appropriate columns.
-  - [ ] Normalizes amounts into numbers formatted in Quetzales (handles negative signs, debit/credit indicators, currency symbols `Q`, commas, and dots).
-  - [ ] Outputs canonical transaction JSON: `Array<{ id: string, date: string, description: string, amount: number, currency: 'GTQ' }>`.
-  - [ ] Discards empty rows, headers, and invalid records with summary validation feedback.
+  - [x] The system parses CSV content locally using a reliable parsing library (e.g., `papaparse`).
+  - [x] Automatically detects common column names for Date (`fecha`, `date`), Description (`descripcion`, `concepto`, `description`), and Amount (`monto`, `importe`, `debito`, `amount`).
+  - [x] If automatic detection is ambiguous, displays a column mapping modal in Spanish allowing the user to select the appropriate columns.
+  - [x] Normalizes amounts into numbers formatted in Quetzales (handles negative signs, debit/credit indicators, currency symbols `Q`, commas, and dots).
+  - [x] Outputs canonical transaction JSON: `Array<{ id: string, date: string, description: string, amount: number, currency: 'GTQ' }>`.
+  - [x] Discards empty rows, headers, and invalid records with summary validation feedback.
 
 ### [ ] US-004: Local PDF Text Extraction & G&T Continental Bank Parser
 - **As a** user with a G&T Continental bank account,
