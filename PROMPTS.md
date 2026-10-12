@@ -1,0 +1,3 @@
+Use SPEC.md to create USER_STORIES.md
+
+Read DESCRIPTION.md and SPEC.md. Ask clarifying questions if needed befor proceeding. Based on all these sources, generate a comprehensive USER_STORIES.md file. Break the project down into small, sequential phases. Make the project initialization the first User Story. Every user story must include specific, testable acceptance criteria that strictly adhere to the split-brain architecture.
