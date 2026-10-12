@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Icons } from "@/components/icons";
 import { FileUpload } from "@/components/file-upload";
 import { ColumnMappingModal } from "@/components/column-mapping-modal";
@@ -17,6 +17,14 @@ import {
   ClassifyExpensesPayload,
   ClassifiedExpenseItem,
 } from "@/lib/llm-classifier";
+import {
+  saveStoredSession,
+  loadStoredSession,
+  clearStoredSession,
+  saveStoredCategories,
+  loadStoredCategories,
+  StoredSession,
+} from "@/lib/storage";
 import {
   Transaction,
   CSVParsingSummary,
@@ -35,6 +43,11 @@ export default function Home() {
   const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
   const [rawCSVText, setRawCSVText] = useState<string | null>(null);
   const [bankName, setBankName] = useState<string | null>(null);
+
+  const [savedSession, setSavedSession] = useState<StoredSession | null>(null);
+  const [hasHydratedStorage, setHasHydratedStorage] = useState(false);
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+  const [storageNotification, setStorageNotification] = useState<string | null>(null);
 
   const [isProcessingPDF, setIsProcessingPDF] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
@@ -62,6 +75,77 @@ export default function Home() {
     headers: [],
     rawRows: [],
   });
+
+  // Hydrate stored data from localStorage on mount
+  useEffect(() => {
+    const storedCats = loadStoredCategories();
+    if (storedCats.length > 0) {
+      setCustomCategories(storedCats);
+    }
+    const session = loadStoredSession();
+    if (session && session.transactions?.length > 0) {
+      setSavedSession(session);
+    }
+    setHasHydratedStorage(true);
+  }, []);
+
+  // Auto-persist active session to localStorage
+  useEffect(() => {
+    if (!hasHydratedStorage) return;
+    if (transactions && transactions.length > 0 && summary) {
+      saveStoredSession({
+        transactions,
+        summary,
+        customCategories,
+        bankName,
+        sourceLabel: bankName
+          ? `${bankName} · ${routedFile?.file.name || "Archivo de movimientos"}`
+          : routedFile?.file.name || "Archivo de movimientos",
+      });
+    }
+  }, [
+    transactions,
+    summary,
+    customCategories,
+    bankName,
+    routedFile,
+    hasHydratedStorage,
+  ]);
+
+  // Auto-persist custom categories independently
+  useEffect(() => {
+    if (!hasHydratedStorage) return;
+    if (customCategories.length > 0) {
+      saveStoredCategories(customCategories);
+    }
+  }, [customCategories, hasHydratedStorage]);
+
+  const handleResumeSession = () => {
+    if (!savedSession) return;
+    setTransactions(savedSession.transactions);
+    setSummary(savedSession.summary);
+    if (savedSession.customCategories?.length > 0) {
+      setCustomCategories(savedSession.customCategories);
+    }
+    setBankName(savedSession.bankName || null);
+    setSavedSession(null);
+  };
+
+  const handleStartFresh = () => {
+    setSavedSession(null);
+  };
+
+  const handleConfirmClearData = () => {
+    clearStoredSession();
+    handleReset();
+    setCustomCategories([]);
+    setSavedSession(null);
+    setIsClearConfirmOpen(false);
+    setStorageNotification("Se han borrado todos los datos guardados en este navegador.");
+    setTimeout(() => {
+      setStorageNotification(null);
+    }, 5000);
+  };
 
   const classifyPendingWithLLM = async (
     pendingItems: Transaction[],
@@ -257,6 +341,24 @@ export default function Home() {
           : null
       );
       return next;
+    });
+  };
+
+  const handleToggleSubscription = (transactionId: string) => {
+    setTransactions((prev) => {
+      if (!prev) return null;
+      return prev.map((tx) => {
+        if (tx.id === transactionId) {
+          const isCurrentlySub =
+            tx.isSubscription === true ||
+            (tx.isSubscription !== false && tx.category === "Suscripciones");
+          return {
+            ...tx,
+            isSubscription: !isCurrentlySub,
+          };
+        }
+        return tx;
+      });
     });
   };
 
@@ -489,6 +591,85 @@ export default function Home() {
           </p>
         </section>
 
+        {/* Storage Notification Toast */}
+        {storageNotification && (
+          <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 text-xs text-zinc-800 dark:text-zinc-200 flex items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2">
+              <Icons.CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>{storageNotification}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setStorageNotification(null)}
+              className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer p-0.5"
+            >
+              <Icons.X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Saved Session Detection Banner (US-011) */}
+        {savedSession && !transactions && !isProcessingPDF && !unsupportedBank && (
+          <section className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-6 rounded-2xl shadow-xs space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 flex items-center justify-center shrink-0 mt-0.5">
+                <Icons.FileText className="w-5 h-5" />
+              </div>
+              <div className="space-y-1 flex-1">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                      Sesión anterior guardada en el navegador
+                    </h3>
+                    <span className="text-3xs font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                      {savedSession.transactions.length} transacciones
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  {savedSession.sourceLabel ? `${savedSession.sourceLabel} · ` : ""}
+                  Guardado el{" "}
+                  {new Date(savedSession.savedAt).toLocaleDateString("es-GT", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                  . Puedes retomar tu sesión o comenzar una nueva carga.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={handleResumeSession}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-xs cursor-pointer"
+              >
+                <Icons.Check className="w-3.5 h-3.5" />
+                <span>Continuar sesión</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleStartFresh}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+              >
+                <Icons.Upload className="w-3.5 h-3.5" />
+                <span>Nueva carga de estado de cuenta</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsClearConfirmOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-900/60 ml-auto transition-colors cursor-pointer"
+              >
+                <Icons.Trash2 className="w-3.5 h-3.5" />
+                <span>Borrar mis datos</span>
+              </button>
+            </div>
+          </section>
+        )}
+
         {/* Dynamic Processing States */}
         {isProcessingPDF && (
           <section className="border border-zinc-200 rounded-xl bg-zinc-50/50 p-8 dark:border-zinc-800 dark:bg-zinc-900/40 text-center space-y-4">
@@ -720,6 +901,8 @@ export default function Home() {
             onDeleteTransaction={handleDeleteTransaction}
             onBulkAssignCategory={handleBulkAssignCategory}
             onBulkDeleteTransactions={handleBulkDeleteTransactions}
+            onToggleSubscription={handleToggleSubscription}
+            onClearData={() => setIsClearConfirmOpen(true)}
             onClassifyPendingWithLLM={() => {
               if (transactions) {
                 const pending = transactions.filter(
@@ -734,6 +917,47 @@ export default function Home() {
           />
         )}
       </main>
+
+      {/* Clear Data Confirmation Modal (US-011) */}
+      {isClearConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 mt-0.5">
+                <Icons.Trash2 className="w-5 h-5" />
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  ¿Borrar todos mis datos?
+                </h3>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  Esta acción eliminará de forma permanente todas las transacciones, categorías personalizadas y preferencias almacenadas localmente en este navegador.
+                </p>
+                <p className="text-2xs text-red-600 dark:text-red-400 font-medium">
+                  No se puede deshacer esta operación.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setIsClearConfirmOpen(false)}
+                className="px-3 py-2 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmClearData}
+                className="px-3.5 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-xs cursor-pointer"
+              >
+                Borrar mis datos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ambiguous Column Mapping Modal */}
       <ColumnMappingModal

@@ -29,6 +29,12 @@ import {
   Plus,
   Pencil,
   Palette,
+  File,
+  Search,
+  BarChart3,
+  Bell,
+  Filter,
+  Calendar,
 } from "lucide-react";
 
 export const Icons = {
@@ -63,4 +69,9 @@ export const Icons = {
   Plus,
   Pencil,
   Palette,
+  Search,
+  BarChart3,
+  Bell,
+  Filter,
+  Calendar,
 };

@@ -189,44 +189,44 @@ This document outlines the user stories, implementation phases, and testable acc
   - [x] User can bulk-assign categories to multiple selected transactions.
   - [x] All UI labels and actions are in Spanish ("Categoría", "Origen", "Editar", "Guardar", "Nueva categoría").
 
-### [ ] US-011: Local Storage Persistence
+### [x] US-011: Local Storage Persistence
 - **As a** user,
 - **I want** my processed expenses, custom categories, and preferences to be saved in my browser,
 - **So that** I don't lose my data if I refresh the page or return later, without needing a backend database or user account.
 - **Split-Brain Boundary:** 100% Local (`window.localStorage`).
 - **Acceptance Criteria:**
-  - [ ] Saves the normalized transaction list, active categories, and custom merchant rules to `localStorage` under a dedicated key namespace.
-  - [ ] On page reload, detects existing local data and provides options to resume session or start fresh ("Nueva carga de estado de cuenta").
-  - [ ] Includes a "Borrar mis datos" (Clear Data) button in Spanish that clears all stored records from `localStorage` upon confirmation.
-  - [ ] Gracefully handles `localStorage` quotas and corrupted storage states with clean fallbacks.
+  - [x] Saves the normalized transaction list, active categories, and custom merchant rules to `localStorage` under a dedicated key namespace.
+  - [x] On page reload, detects existing local data and provides options to resume session or start fresh ("Nueva carga de estado de cuenta").
+  - [x] Includes a "Borrar mis datos" (Clear Data) button in Spanish that clears all stored records from `localStorage` upon confirmation.
+  - [x] Gracefully handles `localStorage` quotas and corrupted storage states with clean fallbacks.
 
 ---
 
 ## Phase 7: Financial Reporting & Subscription Alerts
 
-### [ ] US-012: Expense Reporting Dashboard & Category Visualizations
+### [x] US-012: Expense Reporting Dashboard & Category Visualizations
 - **As a** user,
 - **I want to** view an interactive dashboard showing my total expenses and category breakdowns in Guatemalan Quetzales,
 - **So that** I can understand where my money is going.
 - **Split-Brain Boundary:** 100% Local calculation and visualization.
 - **Acceptance Criteria:**
-  - [ ] Displays aggregate monthly spending KPI card formatted in Quetzales (e.g., `Q 12,450.00`).
-  - [ ] Displays category breakdown cards and charts (e.g., bar chart / percentage breakdown) using SVG/CSS or lightweight chart components.
-  - [ ] Shows comparison across categories (amount spent, percentage of total spend).
-  - [ ] Filters transactions by category and search term.
-  - [ ] Design is responsive, modern, clean, and avoids excessive animations or emojis.
+  - [x] Displays aggregate monthly spending KPI card formatted in Quetzales (e.g., `Q 12,450.00`).
+  - [x] Displays category breakdown cards and charts (e.g., bar chart / percentage breakdown) using SVG/CSS or lightweight chart components.
+  - [x] Shows comparison across categories (amount spent, percentage of total spend).
+  - [x] Filters transactions by category and search term.
+  - [x] Design is responsive, modern, clean, and avoids excessive animations or emojis.
 
-### [ ] US-013: Active Subscriptions Alert & Recurring Spend Panel
+### [x] US-013: Active Subscriptions Alert & Recurring Spend Panel
 - **As a** user,
 - **I want** to see a dedicated panel listing all detected subscriptions and their total monthly cost,
 - **So that** I can evaluate whether I am paying for recurring services I no longer use.
 - **Split-Brain Boundary:** 100% Local computation based on subscription tags.
 - **Acceptance Criteria:**
-  - [ ] Displays an alert banner and card section: "Suscripciones Detectadas".
-  - [ ] Lists each identified subscription with merchant name, date charged, and amount in Quetzales.
-  - [ ] Displays total monthly subscription spend in Quetzales (e.g., `Total en suscripciones: Q 350.00`).
-  - [ ] Includes an informational badge reminding the user to check if any subscription is unused.
-  - [ ] Allows the user to toggle subscription status on or off for any transaction.
+  - [x] Displays an alert banner and card section: "Suscripciones Detectadas".
+  - [x] Lists each identified subscription with merchant name, date charged, and amount in Quetzales.
+  - [x] Displays total monthly subscription spend in Quetzales (e.g., `Total en suscripciones: Q 350.00`).
+  - [x] Includes an informational badge reminding the user to check if any subscription is unused.
+  - [x] Allows the user to toggle subscription status on or off for any transaction.
 
 ---
 

@@ -202,6 +202,7 @@ export interface SubscriptionSummary {
   count: number;
   totalMonthlyCommitment: number;
   services: {
+    id: string;
     name: string;
     amount: number;
     date: string;
@@ -216,7 +217,9 @@ export function getSubscriptionSummary(
   transactions: Transaction[]
 ): SubscriptionSummary {
   const subscriptions = transactions.filter(
-    (tx) => tx.isSubscription === true || tx.category === "Suscripciones"
+    (tx) =>
+      tx.isSubscription === true ||
+      (tx.isSubscription !== false && tx.category === "Suscripciones")
   );
 
   const totalMonthlyCommitment = subscriptions.reduce(
@@ -225,6 +228,7 @@ export function getSubscriptionSummary(
   );
 
   const services = subscriptions.map((tx) => ({
+    id: tx.id,
     name: tx.description,
     amount: tx.amount,
     date: tx.date,

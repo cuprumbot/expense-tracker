@@ -12,8 +12,13 @@ import {
   UNCLASSIFIED_THRESHOLD,
   AVAILABLE_CATEGORIES,
 } from "@/lib/expense-classifier";
+import {
+  calculateReportingMetrics,
+  filterTransactions,
+} from "@/lib/reporting";
 import { Icons } from "@/components/icons";
 import { CustomCategoryModal } from "@/components/custom-category-modal";
+import { ExpenseDashboard } from "@/components/expense-dashboard";
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -32,6 +37,8 @@ interface TransactionTableProps {
   onDeleteTransaction?: (transactionId: string) => void;
   onBulkAssignCategory?: (transactionIds: string[], newCategory: string) => void;
   onBulkDeleteTransactions?: (transactionIds: string[]) => void;
+  onToggleSubscription?: (transactionId: string) => void;
+  onClearData?: () => void;
   onClassifyPendingWithLLM?: () => void;
   isClassifyingWithLLM?: boolean;
   llmClassificationError?: string | null;
@@ -136,12 +143,15 @@ export function TransactionTable({
   onDeleteTransaction,
   onBulkAssignCategory,
   onBulkDeleteTransactions,
+  onToggleSubscription,
+  onClearData,
   onClassifyPendingWithLLM,
   isClassifyingWithLLM = false,
   llmClassificationError = null,
   llmSuccessMessage = null,
 }: TransactionTableProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -153,7 +163,14 @@ export function TransactionTable({
     description: string;
     amount: string;
     category: string;
-  }>({ date: "", description: "", amount: "", category: "Pendiente" });
+    isSubscription?: boolean;
+  }>({
+    date: "",
+    description: "",
+    amount: "",
+    category: "Pendiente",
+    isSubscription: false,
+  });
   const [deletingTxId, setDeletingTxId] = useState<string | null>(null);
 
   const [batchCategoryPrompt, setBatchCategoryPrompt] = useState<{
@@ -162,44 +179,28 @@ export function TransactionTable({
     matchingTransactions: Transaction[];
   } | null>(null);
 
-  // Metrics calculation
-  const stats = useMemo(() => {
-    let classified = 0;
-    let pending = 0;
-    const categoryTotals: Record<string, { count: number; total: number }> = {};
-
-    for (const tx of transactions) {
-      const cat = tx.category || "Pendiente";
-      const isPending = cat === "Pendiente";
-
-      if (isPending) {
-        pending++;
-      } else {
-        classified++;
-      }
-
-      if (!categoryTotals[cat]) {
-        categoryTotals[cat] = { count: 0, total: 0 };
-      }
-      categoryTotals[cat].count++;
-      categoryTotals[cat].total += tx.amount;
-    }
-
-    return {
-      classified,
-      pending,
-      categoryTotals,
-    };
+  // Financial reporting metrics (US-012)
+  const reportingMetrics = useMemo(() => {
+    return calculateReportingMetrics(transactions);
   }, [transactions]);
 
-  // Unique categories from transactions + custom
+  // Compatibility stats for triage
+  const stats = useMemo(() => {
+    const categoryTotals: Record<string, { count: number; total: number }> = {};
+    for (const cat of reportingMetrics.categories) {
+      categoryTotals[cat.category] = { count: cat.count, total: cat.total };
+    }
+    return {
+      classified: reportingMetrics.classifiedCount,
+      pending: reportingMetrics.pendingCount,
+      categoryTotals,
+    };
+  }, [reportingMetrics]);
+
+  // Unique categories from reporting metrics
   const uniqueCategories = useMemo(() => {
-    return Object.keys(stats.categoryTotals).sort((a, b) => {
-      if (a === "Pendiente") return 1;
-      if (b === "Pendiente") return -1;
-      return stats.categoryTotals[b].count - stats.categoryTotals[a].count;
-    });
-  }, [stats.categoryTotals]);
+    return reportingMetrics.categories.map((c) => c.category);
+  }, [reportingMetrics.categories]);
 
   // All available categories list for selects
   const availableCategoriesList = useMemo(() => {
@@ -211,13 +212,13 @@ export function TransactionTable({
     return Array.from(set);
   }, [customCategories, uniqueCategories]);
 
-  // Filtered transactions
+  // Filtered transactions by category AND search term (US-012)
   const filteredTransactions = useMemo(() => {
-    if (selectedCategory === "all") return transactions;
-    return transactions.filter(
-      (tx) => (tx.category || "Pendiente") === selectedCategory
-    );
-  }, [transactions, selectedCategory]);
+    return filterTransactions(transactions, {
+      category: selectedCategory,
+      searchTerm,
+    });
+  }, [transactions, selectedCategory, searchTerm]);
 
   // Sorted transactions
   const sortedTransactions = useMemo(() => {
@@ -396,6 +397,9 @@ export function TransactionTable({
       description: tx.description,
       amount: tx.amount.toString(),
       category: tx.category || "Pendiente",
+      isSubscription:
+        tx.isSubscription === true ||
+        (tx.isSubscription !== false && tx.category === "Suscripciones"),
     });
   };
 
@@ -405,8 +409,10 @@ export function TransactionTable({
       return;
     }
     const isSub =
-      editForm.category.toLowerCase() === "suscripciones" ||
-      (tx.isSubscription && editForm.category !== "Pendiente");
+      editForm.isSubscription !== undefined
+        ? editForm.isSubscription
+        : editForm.category.toLowerCase() === "suscripciones" ||
+          (tx.isSubscription && editForm.category !== "Pendiente");
 
     onEditTransaction?.({
       ...tx,
@@ -415,7 +421,7 @@ export function TransactionTable({
       amount: Number(amt.toFixed(2)),
       category: editForm.category,
       classificationSource: "manual",
-      isSubscription: isSub ? true : undefined,
+      isSubscription: isSub ? true : false,
     });
     setEditingTxId(null);
   };
@@ -426,100 +432,214 @@ export function TransactionTable({
 
   return (
     <div className="space-y-6">
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-          <p className="text-2xs font-medium text-zinc-500 uppercase tracking-wider">
-            Total de gastos
-          </p>
-          <p className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mt-1">
-            {formatCurrency(summary.totalAmount)}
-          </p>
-          <p className="text-2xs text-zinc-400 mt-1">
-            {transactions.length} transacciones
-          </p>
-        </div>
-
-        <div className="p-4 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-          <p className="text-2xs font-medium text-zinc-500 uppercase tracking-wider">
-            Clasificados localmente
-          </p>
-          <p className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
-            {stats.classified} de {transactions.length}
-          </p>
-          <p className="text-2xs text-zinc-400 mt-1">
-            {Math.round((stats.classified / (transactions.length || 1)) * 100)}% categorizados
-          </p>
-        </div>
-
-        <div className="p-4 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-          <p className="text-2xs font-medium text-zinc-500 uppercase tracking-wider">
-            Gastos pendientes
-          </p>
-          <p className="text-xl font-semibold text-zinc-700 dark:text-zinc-300 mt-1">
-            {stats.pending}
-          </p>
-          <p className="text-2xs text-zinc-400 mt-1">
-            {stats.pending > 0 ? "Requieren revisión o IA" : "Todos categorizados"}
-          </p>
-        </div>
-      </div>
-
-      {/* Subscriptions Audit Banner (US-008) */}
-      {subscriptionSummary.count > 0 && (
-        <div className="p-4 rounded-xl border border-indigo-200/90 bg-indigo-50/50 dark:border-indigo-900/50 dark:bg-indigo-950/20 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center dark:bg-indigo-900/70 dark:text-indigo-300">
-                <Icons.CreditCard className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <span className="text-xs font-semibold text-indigo-950 dark:text-indigo-200">
-                  Suscripciones recurrentes detectadas
-                </span>
-                <span className="ml-2 text-2xs font-mono px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300">
-                  {subscriptionSummary.count} {subscriptionSummary.count === 1 ? "servicio" : "servicios"}
-                </span>
-              </div>
+      {/* Top Section: Aggregated Dashboard (when fully classified) or Triage Cards (when pending) */}
+      {stats.pending === 0 ? (
+        <ExpenseDashboard
+          metrics={reportingMetrics}
+          subscriptionSummary={subscriptionSummary}
+          customCategories={customCategories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={(cat) => setSelectedCategory(cat)}
+          onToggleSubscription={onToggleSubscription}
+        />
+      ) : (
+        <div className="space-y-4">
+          {/* Prominent Attention Callout for Unclassified Expenses */}
+          <div className="p-4 rounded-2xl border-2 border-amber-300 bg-amber-50/80 dark:border-amber-700 dark:bg-amber-950/40 flex items-start gap-3 shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-900 dark:bg-amber-900/80 dark:text-amber-200 flex items-center justify-center shrink-0 mt-0.5">
+              <Icons.AlertCircle className="w-4 h-4" />
             </div>
-
-            <div className="text-right">
-              <span className="text-2xs text-indigo-700/80 dark:text-indigo-300/80 block">
-                Compromiso mensual estimado:
-              </span>
-              <span className="text-sm font-semibold font-mono text-indigo-950 dark:text-indigo-100">
-                {formatCurrency(subscriptionSummary.totalMonthlyCommitment)}
-              </span>
+            <div className="flex-1 space-y-1">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-bold text-amber-950 dark:text-amber-100">
+                  ¡Atención requerida! Tienes {stats.pending}{" "}
+                  {stats.pending === 1
+                    ? "gasto pendiente de clasificar"
+                    : "gastos pendientes de clasificar"}
+                </h3>
+                <span className="text-2xs font-mono px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200 font-semibold">
+                  Acción requerida
+                </span>
+              </div>
+              <p className="text-xs text-amber-900/90 dark:text-amber-200/90 leading-relaxed">
+                Clasifica todos los gastos pendientes para desbloquear el reporte financiero consolidado, los gráficos de distribución por categoría y la auditoría completa de suscripciones.
+              </p>
             </div>
           </div>
 
-          <p className="text-xs text-indigo-900/80 dark:text-indigo-300/80 leading-relaxed">
-            Se identificaron cargos automáticos en servicios digitales. Audita estas suscripciones para evaluar si deseas mantenerlas activas o cancelar servicios no utilizados.
-          </p>
+          {/* Summary Triage KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+              <p className="text-2xs font-medium text-zinc-500 uppercase tracking-wider">
+                Total de gastos
+              </p>
+              <p className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mt-1">
+                {formatCurrency(summary.totalAmount)}
+              </p>
+              <p className="text-2xs text-zinc-400 mt-1">
+                {transactions.length} transacciones
+              </p>
+            </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-indigo-200/60 dark:border-indigo-900/40">
-            {subscriptionSummary.services.map((sub, idx) => (
-              <span
-                key={`${sub.name}-${idx}`}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-2xs font-medium bg-white border border-indigo-200 text-indigo-900 dark:bg-zinc-900 dark:border-indigo-800 dark:text-indigo-300 shadow-2xs"
-              >
-                <span>{sub.name}</span>
-                <span className="font-mono text-indigo-600 dark:text-indigo-400">
-                  {formatCurrency(sub.amount)}
-                </span>
-              </span>
-            ))}
+            <div className="p-4 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+              <p className="text-2xs font-medium text-zinc-500 uppercase tracking-wider">
+                Clasificados localmente
+              </p>
+              <p className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+                {stats.classified} de {transactions.length}
+              </p>
+              <p className="text-2xs text-zinc-400 mt-1">
+                {Math.round((stats.classified / (transactions.length || 1)) * 100)}% categorizados
+              </p>
+            </div>
 
-            {selectedCategory !== "Suscripciones" && (
-              <button
-                type="button"
-                onClick={() => setSelectedCategory("Suscripciones")}
-                className="text-2xs font-medium text-indigo-700 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 underline ml-auto cursor-pointer"
-              >
-                Filtrar solo suscripciones
-              </button>
-            )}
+            <div className="p-4 rounded-xl border-2 border-amber-400 bg-amber-50/30 dark:border-amber-600 dark:bg-amber-950/30">
+              <p className="text-2xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider">
+                Gastos pendientes
+              </p>
+              <p className="text-xl font-bold text-amber-900 dark:text-amber-100 mt-1">
+                {stats.pending}
+              </p>
+              <p className="text-2xs text-amber-700/80 dark:text-amber-300/80 mt-1">
+                Requieren revisión para completar el reporte
+              </p>
+            </div>
           </div>
+
+          {/* Subscriptions Audit Banner Preview (US-008) */}
+          {subscriptionSummary.count > 0 && (
+            <div className="p-4 rounded-xl border border-indigo-200/90 bg-indigo-50/50 dark:border-indigo-900/50 dark:bg-indigo-950/20 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center dark:bg-indigo-900/70 dark:text-indigo-300">
+                    <Icons.CreditCard className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-indigo-950 dark:text-indigo-200">
+                      Suscripciones recurrentes detectadas
+                    </span>
+                    <span className="ml-2 text-2xs font-mono px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300">
+                      {subscriptionSummary.count} {subscriptionSummary.count === 1 ? "servicio" : "servicios"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-2xs text-indigo-700/80 dark:text-indigo-300/80 block">
+                    Compromiso mensual estimado:
+                  </span>
+                  <span className="text-sm font-semibold font-mono text-indigo-950 dark:text-indigo-100">
+                    {formatCurrency(subscriptionSummary.totalMonthlyCommitment)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-indigo-200/60 dark:border-indigo-900/40">
+                {subscriptionSummary.services.map((sub, idx) => (
+                  <span
+                    key={`${sub.name}-${idx}`}
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-2xs font-medium bg-white border border-indigo-200 text-indigo-900 dark:bg-zinc-900 dark:border-indigo-800 dark:text-indigo-300 shadow-2xs"
+                  >
+                    <span>{sub.name}</span>
+                    <span className="font-mono text-indigo-600 dark:text-indigo-400">
+                      {formatCurrency(sub.amount)}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* AI Classification Banner (> 5 pending, US-009) */}
+          {stats.pending > UNCLASSIFIED_THRESHOLD && (
+            <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 flex items-center justify-center shrink-0">
+                    <Icons.Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-amber-950 dark:text-amber-200">
+                      {stats.pending === 1
+                        ? "Tienes 1 gasto pendiente de clasificar, espera mientras la IA lo clasifica..."
+                        : `Tienes ${stats.pending} gastos pendientes de clasificar, espera mientras la IA los clasifica...`}
+                    </h4>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {onClassifyPendingWithLLM && (
+                    <button
+                      type="button"
+                      disabled={isClassifyingWithLLM}
+                      onClick={onClassifyPendingWithLLM}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 rounded-lg dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-xs cursor-pointer"
+                    >
+                      {isClassifyingWithLLM ? (
+                        <>
+                          <Icons.RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Clasificando con IA...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Icons.Sparkles className="w-3.5 h-3.5" />
+                          <span>Clasificar con IA (Gemini Pro)</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategory("Pendiente")}
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-amber-900 bg-amber-100/80 hover:bg-amber-200/80 rounded-lg dark:bg-amber-900/40 dark:text-amber-200 dark:hover:bg-amber-900/60 transition-colors cursor-pointer"
+                  >
+                    <span>Ver pendientes ({stats.pending})</span>
+                  </button>
+                </div>
+              </div>
+
+              {llmClassificationError && (
+                <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 text-xs dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200 flex items-start gap-2">
+                  <Icons.AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                  <div className="flex-1 space-y-1">
+                    <p className="font-semibold">No se pudo completar la clasificación con IA</p>
+                    <p className="text-2xs">{llmClassificationError}</p>
+                    <p className="text-2xs text-red-700 dark:text-red-300">
+                      Puedes clasificar los gastos manualmente con los menús desplegables de la tabla.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Manual Categorization Prompt (<= 5 pending, US-009) */}
+          {stats.pending > 0 && stats.pending <= UNCLASSIFIED_THRESHOLD && (
+            <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-900/40 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded-md bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 flex items-center justify-center shrink-0">
+                  <Icons.Tag className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                    {stats.pending === 1
+                      ? "1 gasto pendiente de clasificar, clasifícalo para continuar"
+                      : `${stats.pending} gastos pendientes de clasificar, clasifícalos para continuar`}
+                  </span>
+                </div>
+              </div>
+
+              {selectedCategory !== "Pendiente" && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory("Pendiente")}
+                  className="text-2xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100 underline cursor-pointer"
+                >
+                  Filtrar solo pendientes ({stats.pending})
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -536,125 +656,65 @@ export function TransactionTable({
         </div>
       )}
 
-      {/* AI Classification Banner (> 5 pending, US-009) */}
-      {stats.pending > UNCLASSIFIED_THRESHOLD && (
-        <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 flex items-center justify-center shrink-0">
-                <Icons.Sparkles className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-semibold text-amber-950 dark:text-amber-200">
-                  {stats.pending === 1
-                    ? "Tienes 1 gasto pendiente de clasificar, espera mientras la IA lo clasifica..."
-                    : `Tienes ${stats.pending} gastos pendientes de clasificar, espera mientras la IA los clasifica...`}
-                </h4>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              {onClassifyPendingWithLLM && (
-                <button
-                  type="button"
-                  disabled={isClassifyingWithLLM}
-                  onClick={onClassifyPendingWithLLM}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 rounded-lg dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-xs cursor-pointer"
-                >
-                  {isClassifyingWithLLM ? (
-                    <>
-                      <Icons.RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Clasificando con IA...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Icons.Sparkles className="w-3.5 h-3.5" />
-                      <span>Clasificar con IA (Gemini Pro)</span>
-                    </>
-                  )}
-                </button>
-              )}
+      {/* Category Pills & Search Filter Bar (US-012) */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          {/* Search Input Box */}
+          <div className="relative flex-1 max-w-md">
+            <Icons.Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por descripción, comercio..."
+              aria-label="Buscar transacciones"
+              className="w-full pl-8.5 pr-8 py-1.5 text-xs rounded-lg border border-zinc-200 bg-white placeholder-zinc-400 text-zinc-900 focus:outline-hidden focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:ring-zinc-100"
+            />
+            {searchTerm && (
               <button
                 type="button"
-                onClick={() => setSelectedCategory("Pendiente")}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-amber-900 bg-amber-100/80 hover:bg-amber-200/80 rounded-lg dark:bg-amber-900/40 dark:text-amber-200 dark:hover:bg-amber-900/60 transition-colors cursor-pointer"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer p-0.5"
+                title="Limpiar búsqueda"
               >
-                <span>Ver pendientes ({stats.pending})</span>
+                <Icons.X className="w-3 h-3" />
               </button>
-            </div>
+            )}
           </div>
 
-          {llmClassificationError && (
-            <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 text-xs dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200 flex items-start gap-2">
-              <Icons.AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-              <div className="flex-1 space-y-1">
-                <p className="font-semibold">No se pudo completar la clasificación con IA</p>
-                <p className="text-2xs">{llmClassificationError}</p>
-                <p className="text-2xs text-red-700 dark:text-red-300">
-                  Puedes clasificar los gastos manualmente con los menús desplegables de la tabla.
-                </p>
-              </div>
-            </div>
-          )}
+          {/* Quick Actions & Clear Filter */}
+          <div className="flex items-center gap-3 self-end sm:self-auto text-xs text-zinc-500">
+            {(selectedCategory !== "all" || searchTerm) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory("all");
+                  setSearchTerm("");
+                }}
+                className="text-2xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 underline cursor-pointer"
+              >
+                Limpiar filtros ({filteredTransactions.length} de {transactions.length})
+              </button>
+            )}
+            {onAddCustomCategory && (
+              <button
+                type="button"
+                onClick={() => setIsNewCategoryModalOpen(true)}
+                className="inline-flex items-center gap-1 text-2xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100 underline cursor-pointer"
+              >
+                <Icons.Plus className="w-3 h-3" />
+                <span>Nueva categoría</span>
+              </button>
+            )}
+          </div>
         </div>
-      )}
 
-      {/* Manual Categorization Prompt (<= 5 pending, US-009) */}
-      {stats.pending > 0 && stats.pending <= UNCLASSIFIED_THRESHOLD && (
-        <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-900/40 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-md bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 flex items-center justify-center shrink-0">
-              <Icons.Tag className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
-                {stats.pending === 1
-                  ? "1 gasto pendiente de clasificar, clasifícalo para continuar"
-                  : `${stats.pending} gastos pendientes de clasificar, clasifícalos para continuar`}
-              </span>
-            </div>
-          </div>
-
-          {selectedCategory !== "Pendiente" && (
-            <button
-              type="button"
-              onClick={() => setSelectedCategory("Pendiente")}
-              className="text-2xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100 underline cursor-pointer"
-            >
-              Filtrar solo pendientes ({stats.pending})
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Category Pills Filter & New Category Button */}
-      {uniqueCategories.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs text-zinc-500">
-            <span className="font-medium">Filtrar por categoría:</span>
-            <div className="flex items-center gap-3">
-              {selectedCategory !== "all" && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory("all")}
-                  className="text-2xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 underline"
-                >
-                  Mostrar todos ({transactions.length})
-                </button>
-              )}
-              {onAddCustomCategory && (
-                <button
-                  type="button"
-                  onClick={() => setIsNewCategoryModalOpen(true)}
-                  className="inline-flex items-center gap-1 text-2xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100 underline cursor-pointer"
-                >
-                  <Icons.Plus className="w-3 h-3" />
-                  <span>Nueva categoría</span>
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
+        {/* Category Pills Filter */}
+        {uniqueCategories.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 items-center">
+            <span className="text-2xs font-medium text-zinc-400 mr-1 hidden sm:inline">
+              Categorías:
+            </span>
             <button
               type="button"
               onClick={() => setSelectedCategory("all")}
@@ -669,7 +729,7 @@ export function TransactionTable({
             </button>
 
             {uniqueCategories.map((cat) => {
-              const info = stats.categoryTotals[cat];
+              const info = stats.categoryTotals[cat] || { count: 0, total: 0 };
               const { styleClass, inlineStyle, inlineDotStyle } = getCategoryBadgeStyle(cat);
               const isSelected = selectedCategory === cat;
 
@@ -677,7 +737,7 @@ export function TransactionTable({
                 <button
                   key={cat}
                   type="button"
-                  onClick={() => setSelectedCategory(cat)}
+                  onClick={() => setSelectedCategory(isSelected ? "all" : cat)}
                   style={isSelected && inlineStyle ? inlineStyle : undefined}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                     isSelected
@@ -695,8 +755,8 @@ export function TransactionTable({
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Bulk Actions Floating/Sticky Bar */}
       {selectedIds.size > 0 && (
@@ -804,6 +864,17 @@ export function TransactionTable({
               <Icons.RefreshCw className="w-3.5 h-3.5" />
               <span>Cargar otro archivo</span>
             </button>
+            {onClearData && (
+              <button
+                type="button"
+                onClick={onClearData}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 border border-red-200 hover:bg-red-50 dark:border-red-900/60 dark:text-red-400 dark:hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
+                title="Borrar todos los datos guardados en el navegador"
+              >
+                <Icons.Trash2 className="w-3.5 h-3.5" />
+                <span>Borrar mis datos</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -844,6 +915,7 @@ export function TransactionTable({
                 </th>
                 <th className="px-3 py-2.5 font-medium">Categoría</th>
                 <th className="px-3 py-2.5 font-medium text-center">Origen</th>
+                <th className="px-3 py-2.5 font-medium text-center">Suscripción</th>
                 <th className="px-3 py-2.5 font-medium text-right">
                   <button
                     type="button"
@@ -859,6 +931,24 @@ export function TransactionTable({
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {sortedTransactions.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="px-4 py-8 text-center text-xs text-zinc-500"
+                  >
+                    <div className="flex flex-col items-center justify-center gap-1.5">
+                      <Icons.Search className="w-5 h-5 text-zinc-400" />
+                      <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                        No se encontraron transacciones
+                      </span>
+                      <span className="text-2xs text-zinc-400">
+                        Intenta ajustar los filtros de categoría o el término de búsqueda.
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              )}
               {sortedTransactions.map((tx) => {
                 const category = tx.category || "Pendiente";
                 const isPending = category === "Pendiente";
@@ -927,6 +1017,27 @@ export function TransactionTable({
                           Manual
                         </span>
                       </td>
+                      <td className="px-3 py-2 text-center whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              isSubscription: !prev.isSubscription,
+                            }))
+                          }
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border cursor-pointer ${
+                            editForm.isSubscription
+                              ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
+                              : "bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700"
+                          }`}
+                        >
+                          <Icons.CreditCard className="w-3 h-3" />
+                          <span>
+                            {editForm.isSubscription ? "Recurrente" : "No recurrente"}
+                          </span>
+                        </button>
+                      </td>
                       <td className="px-3 py-2 text-right">
                         <input
                           type="number"
@@ -991,17 +1102,7 @@ export function TransactionTable({
                       {tx.date}
                     </td>
                     <td className="px-3 py-2.5 text-zinc-900 dark:text-zinc-100 font-medium">
-                      <div className="flex items-center gap-2">
-                        <span>{tx.description}</span>
-                        {tx.isSubscription && (
-                          <span
-                            className="inline-flex items-center px-1.5 py-0.2 rounded text-3xs font-mono font-normal bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
-                            title="Suscripción recurrente detectada"
-                          >
-                            Recurrente
-                          </span>
-                        )}
-                      </div>
+                      <span>{tx.description}</span>
                     </td>
                     <td className="px-3 py-2.5 whitespace-nowrap">
                       {onUpdateCategory ? (
@@ -1075,6 +1176,44 @@ export function TransactionTable({
                           title="Asignado manualmente por el usuario"
                         >
                           Manual
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 whitespace-nowrap text-center">
+                      {onToggleSubscription ? (
+                        <button
+                          type="button"
+                          onClick={() => onToggleSubscription(tx.id)}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border transition-colors cursor-pointer ${
+                            tx.isSubscription
+                              ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60"
+                              : "bg-transparent text-zinc-400 border-dashed border-zinc-200 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-800 dark:text-zinc-500 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+                          }`}
+                          title={
+                            tx.isSubscription
+                              ? "Suscripción activa. Clic para desmarcar como suscripción."
+                              : "Clic para marcar como suscripción recurrente."
+                          }
+                        >
+                          <Icons.CreditCard
+                            className={`w-3 h-3 ${
+                              tx.isSubscription
+                                ? "text-indigo-600 dark:text-indigo-400"
+                                : "text-zinc-400"
+                            }`}
+                          />
+                          <span>
+                            {tx.isSubscription ? "Recurrente" : "No recurrente"}
+                          </span>
+                        </button>
+                      ) : tx.isSubscription ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800">
+                          <Icons.CreditCard className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                          <span>Recurrente</span>
+                        </span>
+                      ) : (
+                        <span className="text-zinc-300 dark:text-zinc-700 text-2xs font-mono">
+                          —
                         </span>
                       )}
                     </td>

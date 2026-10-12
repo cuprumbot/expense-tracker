@@ -179,3 +179,64 @@ Work autonomously end-to-end:
     Let me test the changes manually before staging and commiting.
 
 Only stop when User Story #10 is fully verified, then report what was done.
+
+---
+
+Execute User Story #11 from USER_STORIES.md.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+    Let me test the changes manually before staging and commiting.
+
+Only stop when User Story #11 is fully verified, then report what was done.
+
+---
+
+Execute User Story #12 and 13 from USER_STORIES.md.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    Use the `frontend-design` skill to create a nice, compeling interface for the results.
+
+    While there are unclassified expenses, draw attention to that.
+
+    After all the expenses have been classified, put the aggregated data on the top of the page, replacing the current "Total de gastos" / "Clasificados localmente" / "Gastos pendientes".
+
+    Integrate the aggregated data and the subscription data nicely.
+
+    Keep the categories and the list of expenses below the stats.
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+    Let me test the changes manually before staging and commiting.
+
+Only stop when User Story #12 and 13 is fully verified, then report what was done.
+
+---
+
+The UI/UX need several improvements, use the `frontend-design` skill when implementing them:
+
+In general:
+- The page looks nice on portrait mode, but doesn't seem to be optimized for landscape mode. Make it a little bit wider to use the space better, but keep the responsive design.
+
+When we have unclassified expenses:
+- Redundant data: we have the same alert in three places. That info should appear in one place only. If we click it, it should filter and show us only the expenses with "Pendiente" tag.
+    - In the banner: "¡Atención requerida! Tienes 4 gastos pendientes de clasificar"
+    - In the card: "Gastos pendientes"
+    - In the small banner with filter: "4 gastos pendientes de clasificar, clasifícalos para continuar"
+
+---
+
+- The page looks nice on portrait mode, but doesn't seem to be optimized for landscape mode. Make it a little bit wider to use the space better, but keep the responsive design.
+- For the first card:
+    - "Total de gastos del mes" looks 
