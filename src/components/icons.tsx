@@ -21,6 +21,9 @@ import {
   Sliders,
   DollarSign,
   Info,
+  Trash2,
+  X,
+  File,
 } from "lucide-react";
 
 export const Icons = {
@@ -46,4 +49,7 @@ export const Icons = {
   Sliders,
   DollarSign,
   Info,
+  Trash2,
+  X,
+  File,
 };

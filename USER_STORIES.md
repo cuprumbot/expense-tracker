@@ -44,17 +44,17 @@ This document outlines the user stories, implementation phases, and testable acc
 
 ## Phase 2: File Ingestion & Local Parsing (Split-Brain Local Engine)
 
-### [ ] US-002: File Upload Interface & Format Routing
+### [x] US-002: File Upload Interface & Format Routing
 - **As a** user,
 - **I want to** upload my bank statement (single PDF) or a custom CSV file through a drag-and-drop or file picker interface,
 - **So that** the application can begin processing my monthly expenses.
 - **Split-Brain Boundary:** 100% Local (Client). No data is sent over the network during file selection.
 - **Acceptance Criteria:**
-  - [ ] The landing page presents a responsive file upload zone with clear Spanish labels ("Arrastra tu estado de cuenta en PDF o archivo CSV", "Seleccionar archivo").
-  - [ ] Accepts `.pdf` and `.csv` file extensions; rejects unsupported formats with a user-friendly error message in Spanish.
-  - [ ] Displays file metadata upon selection (file name, size, type).
-  - [ ] Provides options to cancel or replace the uploaded file before processing.
-  - [ ] Routes `.csv` uploads to the CSV parser (US-003) and `.pdf` uploads to the bank detection engine (US-004).
+  - [x] The landing page presents a responsive file upload zone with clear Spanish labels ("Arrastra tu estado de cuenta en PDF o archivo CSV", "Seleccionar archivo").
+  - [x] Accepts `.pdf` and `.csv` file extensions; rejects unsupported formats with a user-friendly error message in Spanish.
+  - [x] Displays file metadata upon selection (file name, size, type).
+  - [x] Provides options to cancel or replace the uploaded file before processing.
+  - [x] Routes `.csv` uploads to the CSV parser (US-003) and `.pdf` uploads to the bank detection engine (US-004).
 
 ### [ ] US-003: Local CSV Parsing and Column Mapping
 - **As a** user,
