@@ -262,20 +262,20 @@ This document outlines the user stories, implementation phases, and testable acc
 - **Split-Brain Boundary:** Enforces Split-Brain Resilience.
 - **Acceptance Criteria:**
   - [ ] When Gemini API key is missing or invalid, the app displays a non-blocking banner ("Modo Local Activo") in Spanish.
-  - [ ] G&T Continental PDF statements and CSV files parse and categorize successfully using only local logic.
-  - [ ] Unclassified expenses prompt manual classification in US-010 without throwing unhandled exceptions.
-  - [ ] The dashboard and subscription alerts function completely in offline/local mode.
+  - [x] G&T Continental PDF statements and CSV files parse and categorize successfully using only local logic.
+  - [x] Unclassified expenses prompt manual classification in US-010 without throwing unhandled exceptions.
+  - [x] The dashboard and subscription alerts function completely in offline/local mode.
   - [ ] The AI suggestions card displays a helpful fallback message ("Sugerencias no disponibles sin conexión con el asistente de IA") instead of a broken UI.
 
-### [ ] US-016: UI Polishing, Accessibility & Localization Compliance Audit
+### [x] US-016: UI Polishing, Accessibility & Localization Compliance Audit
 - **As a** user,
 - **I want** an intuitive, accessible, and polished user interface compliant with all style rules,
 - **So that** the experience feels professional, trustworthy, and pleasant.
 - **Split-Brain Boundary:** 100% Local (UI & Presentation).
 - **Acceptance Criteria:**
-  - [ ] 100% of user-facing UI labels, buttons, tooltips, and validation messages are in Spanish.
-  - [ ] All monetary values are consistently formatted with `Q` or `GTQ` and proper comma/period decimal separators.
-  - [ ] Uses standard Tailwind CSS classes with clean responsive layouts (mobile, tablet, desktop).
-  - [ ] No emojis are used in the interface; all icons are simple SVG icons.
-  - [ ] Subtle, modern transitions without excessive animations.
-  - [ ] Semantic HTML and accessible color contrast ratios throughout all pages.
+  - [x] 100% of user-facing UI labels, buttons, tooltips, and validation messages are in Spanish.
+  - [x] All monetary values are consistently formatted with `Q` or `GTQ` and proper comma/period decimal separators.
+  - [x] Uses standard Tailwind CSS classes with clean responsive layouts (mobile, tablet, desktop).
+  - [x] No emojis are used in the interface; all icons are simple SVG icons.
+  - [x] Subtle, modern transitions without excessive animations.
+  - [x] Semantic HTML and accessible color contrast ratios throughout all pages.
