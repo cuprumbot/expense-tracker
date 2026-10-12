@@ -137,3 +137,49 @@ Work autonomously end-to-end:
     Let me test the changes manually before staging and commiting.
 
 Only stop when User Story #8 is fully verified, then report what was done.
+
+---
+
+Execute User Story #9 from USER_STORIES.md.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    If the user has 5 or less "Pendiente" expenses, let them categorize the expenses manually. If the user has more than 5 "Pendiente" expenses, use the LLM to help them categorize the expenses.
+
+    The LLM will be sent the following structured information:
+    - The pending expenses only, not the ones that were already classified.
+    - The list of proposed categories.
+
+    The LLM must answer with structured information, in the same format we are using locally.
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+    Let me test the changes manually before staging and commiting.
+
+Only stop when User Story #9 is fully verified, then report what was done.
+
+---
+
+Improve this message:
+`X gastos pendientes de clasificar(5 o menos: asignación manual directa disponible en la tabla)`
+Use:
+`X gastos pendientes de clasificar, clasifícalos para continuar`
+
+Improve this message:
+`Clasificación con IA disponible (16 gastos pendientes)
+Umbral > 5 superado
+Tienes X gastos sin categorizar. Al superar el límite de 5, puedes solicitar a Gemini Pro que los clasifique automáticamente de forma privada (solo descripciones y montos).`
+Use:
+`Tienes X gastos pendientes de clasificar, espera mientras la IA los clasifica...`
+
+Add the following behaviour:
+Clicking the `Descripción` table header sorts the expenses by name, first A to Z, then if clicked again Z to A
+Add the same behaviour to the `Fecha` table header
+Add the same behaviour to the `Monto` table header
+
+Add the following behaviour:
+When you change some expense category and you have more with the exact same name, it asks you if you want to change the others

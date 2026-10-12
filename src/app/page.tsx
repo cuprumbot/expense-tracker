@@ -8,7 +8,15 @@ import { AnonymizationModal } from "@/components/anonymization-modal";
 import { TransactionTable } from "@/components/transaction-table";
 import { SupportedFileType } from "@/lib/file-validator";
 import { parseCSVContent } from "@/lib/csv-parser";
-import { classifyTransactions } from "@/lib/expense-classifier";
+import {
+  classifyTransactions,
+  UNCLASSIFIED_THRESHOLD,
+  AVAILABLE_CATEGORIES,
+} from "@/lib/expense-classifier";
+import {
+  ClassifyExpensesPayload,
+  ClassifiedExpenseItem,
+} from "@/lib/llm-classifier";
 import {
   Transaction,
   CSVParsingSummary,
@@ -37,6 +45,10 @@ export default function Home() {
   const [isExtractingWithLLM, setIsExtractingWithLLM] = useState(false);
   const [llmExtractionError, setLlmExtractionError] = useState<string | null>(null);
 
+  const [isClassifyingWithLLM, setIsClassifyingWithLLM] = useState(false);
+  const [llmClassificationError, setLlmClassificationError] = useState<string | null>(null);
+  const [llmSuccessMessage, setLlmSuccessMessage] = useState<string | null>(null);
+
   const [mappingModal, setMappingModal] = useState<{
     isOpen: boolean;
     headers: string[];
@@ -48,6 +60,134 @@ export default function Home() {
     headers: [],
     rawRows: [],
   });
+
+  const classifyPendingWithLLM = async (
+    pendingItems: Transaction[],
+    currentTransactions: Transaction[]
+  ) => {
+    if (pendingItems.length === 0) return;
+
+    setIsClassifyingWithLLM(true);
+    setLlmClassificationError(null);
+    setLlmSuccessMessage(null);
+
+    try {
+      const payload: ClassifyExpensesPayload = {
+        unclassifiedTransactions: pendingItems.map((t) => ({
+          id: t.id,
+          description: t.description,
+          amount: t.amount,
+        })),
+        availableCategories: AVAILABLE_CATEGORIES,
+      };
+
+      const res = await fetch("/api/classify-expenses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setLlmClassificationError(
+          data.error || "Ocurrió un error al clasificar los gastos con Gemini Pro."
+        );
+        return;
+      }
+
+      const classMap = new Map<string, ClassifiedExpenseItem>(
+        data.classifications.map((c: ClassifiedExpenseItem) => [c.id, c])
+      );
+
+      setTransactions((prev) => {
+        const base = prev || currentTransactions;
+        return base.map((tx) => {
+          const matched = classMap.get(tx.id);
+          if (matched && matched.category && matched.category !== "Pendiente") {
+            const isSub =
+              matched.isSubscription === true ||
+              matched.category.toLowerCase() === "suscripciones";
+            return {
+              ...tx,
+              category: matched.category,
+              classificationSource: "llm",
+              isSubscription: isSub ? true : tx.isSubscription,
+            };
+          }
+          return tx;
+        });
+      });
+
+      setLlmSuccessMessage(
+        `Se clasificaron ${data.count || data.classifications.length} gastos pendientes con Gemini Pro.`
+      );
+    } catch (err) {
+      console.error("Error al clasificar gastos pendientes:", err);
+      setLlmClassificationError(
+        "No se pudo conectar con el servicio de clasificación por IA. Puedes clasificar los gastos pendientes manualmente."
+      );
+    } finally {
+      setIsClassifyingWithLLM(false);
+    }
+  };
+
+  const handleUpdateCategory = (
+    transactionId: string,
+    newCategory: string,
+    applyToAllWithSameDescription: boolean = false,
+    targetDescription?: string
+  ) => {
+    setTransactions((prev) => {
+      if (!prev) return null;
+      const targetTx = prev.find((t) => t.id === transactionId);
+      const descToMatch = (targetDescription || targetTx?.description || "")
+        .trim()
+        .toLowerCase();
+
+      return prev.map((tx) => {
+        const matches = applyToAllWithSameDescription
+          ? (tx.description || "").trim().toLowerCase() === descToMatch
+          : tx.id === transactionId;
+
+        if (matches) {
+          const isSub =
+            newCategory.toLowerCase() === "suscripciones" ||
+            (tx.isSubscription && newCategory !== "Pendiente");
+          return {
+            ...tx,
+            category: newCategory,
+            classificationSource: "manual" as const,
+            isSubscription: isSub ? true : undefined,
+          };
+        }
+        return tx;
+      });
+    });
+  };
+
+  const processLoadedTransactions = async (
+    rawTransactions: Transaction[],
+    parsedSummary: CSVParsingSummary,
+    detectedBankName: string | null = null
+  ) => {
+    const classified = classifyTransactions(rawTransactions);
+    setTransactions(classified);
+    setSummary(parsedSummary);
+    setBankName(detectedBankName);
+
+    const pending = classified.filter(
+      (tx) => !tx.category || tx.category === "Pendiente"
+    );
+
+    // US-009 Threshold Rule: If pending > 5, trigger LLM assistance.
+    // If <= 5, skip LLM call and allow manual assignment.
+    if (pending.length > UNCLASSIFIED_THRESHOLD) {
+      await classifyPendingWithLLM(pending, classified);
+    }
+  };
 
   const handleFileRouted = async (file: File, type: SupportedFileType) => {
     setRoutedFile({ file, type });
@@ -70,9 +210,7 @@ export default function Home() {
             detectedMapping: result.detectedMapping,
           });
         } else if (result.success) {
-          setTransactions(classifyTransactions(result.transactions));
-          setSummary(result.summary);
-          setBankName(null);
+          processLoadedTransactions(result.transactions, result.summary, null);
         }
       } catch (err) {
         console.error("Error al procesar el archivo CSV:", err);
@@ -126,9 +264,11 @@ export default function Home() {
           );
         }
 
-        setBankName(data.bankName);
-        setTransactions(classifyTransactions(data.transactions));
-        setSummary(data.summary);
+        processLoadedTransactions(
+          data.transactions,
+          data.summary,
+          data.bankName
+        );
       } catch (err) {
         console.error("Error al enviar PDF para procesamiento local:", err);
         setPdfError(
@@ -146,8 +286,7 @@ export default function Home() {
     const result = parseCSVContent(rawCSVText, mapping);
 
     if (result.success && !result.needsMapping) {
-      setTransactions(classifyTransactions(result.transactions));
-      setSummary(result.summary);
+      processLoadedTransactions(result.transactions, result.summary, null);
       setMappingModal((prev) => ({ ...prev, isOpen: false }));
     }
   };
@@ -177,10 +316,12 @@ export default function Home() {
         return;
       }
 
-      setBankName(unsupportedBank?.bankName || "Banco no compatible");
-      setTransactions(classifyTransactions(data.transactions));
-      setSummary(data.summary);
       setUnsupportedBank(null);
+      processLoadedTransactions(
+        data.transactions,
+        data.summary,
+        unsupportedBank?.bankName || "Banco no compatible"
+      );
     } catch (err) {
       console.error("Error al llamar a /api/extract-transactions:", err);
       setLlmExtractionError(
@@ -214,6 +355,9 @@ export default function Home() {
     setConfirmedSanitizedText(null);
     setIsExtractingWithLLM(false);
     setLlmExtractionError(null);
+    setIsClassifyingWithLLM(false);
+    setLlmClassificationError(null);
+    setLlmSuccessMessage(null);
     setMappingModal({
       isOpen: false,
       headers: [],
@@ -477,6 +621,18 @@ export default function Home() {
                 : routedFile?.file.name || "Archivo de movimientos"
             }
             onReset={handleReset}
+            onUpdateCategory={handleUpdateCategory}
+            onClassifyPendingWithLLM={() => {
+              if (transactions) {
+                const pending = transactions.filter(
+                  (t) => !t.category || t.category === "Pendiente"
+                );
+                classifyPendingWithLLM(pending, transactions);
+              }
+            }}
+            isClassifyingWithLLM={isClassifyingWithLLM}
+            llmClassificationError={llmClassificationError}
+            llmSuccessMessage={llmSuccessMessage}
           />
         )}
       </main>

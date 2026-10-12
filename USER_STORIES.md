@@ -157,19 +157,19 @@ This document outlines the user stories, implementation phases, and testable acc
 
 ## Phase 5: LLM-Assisted Expense Classification & Fallback
 
-### [ ] US-009: Hybrid Classification Threshold & Gemini Pro Classification Route
+### [x] US-009: Hybrid Classification Threshold & Gemini Pro Classification Route
 - **As a** user,
 - **I want** the system to classify remaining unknown transactions with Gemini Pro only when there are more than 5 unclassified expenses,
 - **So that** LLM usage and API costs are minimized while maintaining high classification accuracy.
 - **Split-Brain Boundary:** Split-Brain Hybrid. Local decision logic; Server Route Handler sends only descriptions and amounts to Gemini Pro.
 - **Acceptance Criteria:**
-  - [ ] Counts unclassified transactions from US-007.
-  - [ ] If unclassified count is `<= 5` (configurable threshold), skips external LLM call and routes directly to User Confirmation (US-010) with items highlighted as unclassified.
-  - [ ] If unclassified count is `> 5`, calls Next.js Server Route Handler (`POST /api/classify-expenses`).
-  - [ ] Payload to LLM includes ONLY sanitized descriptions, amounts, and the list of available categories. No user identity or raw statement context is included.
-  - [ ] Gemini Pro returns a JSON array mapping transaction IDs to existing categories or suggested new category names in Spanish.
-  - [ ] Items classified by LLM are marked with `classificationSource: 'llm'`.
-  - [ ] If the LLM call fails, the app gracefully falls back to showing items as unclassified for manual assignment without breaking the flow.
+  - [x] Counts unclassified transactions from US-007.
+  - [x] If unclassified count is `<= 5` (configurable threshold), skips external LLM call and routes directly to User Confirmation (US-010) with items highlighted as unclassified.
+  - [x] If unclassified count is `> 5`, calls Next.js Server Route Handler (`POST /api/classify-expenses`).
+  - [x] Payload to LLM includes ONLY sanitized descriptions, amounts, and the list of available categories. No user identity or raw statement context is included.
+  - [x] Gemini Pro returns a JSON array mapping transaction IDs to existing categories or suggested new category names in Spanish.
+  - [x] Items classified by LLM are marked with `classificationSource: 'llm'`.
+  - [x] If the LLM call fails, the app gracefully falls back to showing items as unclassified for manual assignment without breaking the flow.
 
 ---
 

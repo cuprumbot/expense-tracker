@@ -12,7 +12,14 @@ export interface CategoryDefinition {
 export interface MerchantCatalog {
   categories: CategoryDefinition[];
   defaultCategory: string;
+  unclassifiedThreshold?: number;
 }
+
+export const UNCLASSIFIED_THRESHOLD: number =
+  (defaultCatalog as unknown as MerchantCatalog).unclassifiedThreshold ?? 5;
+
+export const AVAILABLE_CATEGORIES: string[] =
+  (defaultCatalog as unknown as MerchantCatalog).categories.map((c) => c.name);
 
 /**
  * Normalizes text for case-insensitive, accent-insensitive, and punctuation-agnostic matching.

@@ -179,5 +179,6 @@
       ]
     }
   ],
-  "defaultCategory": "Pendiente"
+  "defaultCategory": "Pendiente",
+  "unclassifiedThreshold": 5
 }

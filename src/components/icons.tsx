@@ -24,6 +24,9 @@ import {
   Trash2,
   X,
   File,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from "lucide-react";
 
 export const Icons = {
@@ -52,4 +55,7 @@ export const Icons = {
   Trash2,
   X,
   File,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 };

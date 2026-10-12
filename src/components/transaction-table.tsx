@@ -3,7 +3,11 @@
 import React, { useState, useMemo } from "react";
 import { Transaction, CSVParsingSummary } from "@/types/transaction";
 import { formatCurrency } from "@/lib/currency";
-import { getSubscriptionSummary } from "@/lib/expense-classifier";
+import {
+  getSubscriptionSummary,
+  UNCLASSIFIED_THRESHOLD,
+  AVAILABLE_CATEGORIES,
+} from "@/lib/expense-classifier";
 import { Icons } from "@/components/icons";
 
 interface TransactionTableProps {
@@ -11,6 +15,38 @@ interface TransactionTableProps {
   summary: CSVParsingSummary;
   sourceLabel?: string;
   onReset: () => void;
+  onUpdateCategory?: (
+    transactionId: string,
+    newCategory: string,
+    applyToAllWithSameDescription?: boolean,
+    targetDescription?: string
+  ) => void;
+  onClassifyPendingWithLLM?: () => void;
+  isClassifyingWithLLM?: boolean;
+  llmClassificationError?: string | null;
+  llmSuccessMessage?: string | null;
+}
+
+type SortField = "date" | "description" | "amount";
+type SortDirection = "asc" | "desc";
+
+function parseDateForSort(dateStr: string): number {
+  if (!dateStr) return 0;
+  const trimmed = dateStr.trim();
+  // YYYY-MM-DD or YYYY/MM/DD
+  const isoMatch = trimmed.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if (isoMatch) {
+    const [, y, m, d] = isoMatch;
+    return new Date(Number(y), Number(m) - 1, Number(d)).getTime();
+  }
+  // DD/MM/YYYY or DD-MM-YYYY
+  const dmyMatch = trimmed.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+  if (dmyMatch) {
+    const [, d, m, y] = dmyMatch;
+    return new Date(Number(y), Number(m) - 1, Number(d)).getTime();
+  }
+  const timestamp = Date.parse(trimmed);
+  return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
 const CATEGORY_STYLES: Record<
@@ -84,8 +120,20 @@ export function TransactionTable({
   summary,
   sourceLabel = "Archivo de movimientos",
   onReset,
+  onUpdateCategory,
+  onClassifyPendingWithLLM,
+  isClassifyingWithLLM = false,
+  llmClassificationError = null,
+  llmSuccessMessage = null,
 }: TransactionTableProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [batchCategoryPrompt, setBatchCategoryPrompt] = useState<{
+    transaction: Transaction;
+    newCategory: string;
+    matchingTransactions: Transaction[];
+  } | null>(null);
 
   // Metrics calculation
   const stats = useMemo(() => {
@@ -125,6 +173,34 @@ export function TransactionTable({
     );
   }, [transactions, selectedCategory]);
 
+  // Sorted transactions
+  const sortedTransactions = useMemo(() => {
+    if (!sortField) return filteredTransactions;
+
+    const list = [...filteredTransactions];
+    list.sort((a, b) => {
+      let comparison = 0;
+      if (sortField === "description") {
+        comparison = a.description.localeCompare(b.description, "es", {
+          sensitivity: "base",
+        });
+      } else if (sortField === "date") {
+        const timeA = parseDateForSort(a.date);
+        const timeB = parseDateForSort(b.date);
+        comparison = timeA - timeB;
+        if (comparison === 0) {
+          comparison = a.date.localeCompare(b.date);
+        }
+      } else if (sortField === "amount") {
+        comparison = a.amount - b.amount;
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+
+    return list;
+  }, [filteredTransactions, sortField, sortDirection]);
+
   const filteredTotal = useMemo(() => {
     return filteredTransactions.reduce((acc, tx) => acc + tx.amount, 0);
   }, [filteredTransactions]);
@@ -137,9 +213,62 @@ export function TransactionTable({
     });
   }, [stats.categoryTotals]);
 
+  const availableCategoriesList = useMemo(() => {
+    const set = new Set([
+      ...AVAILABLE_CATEGORIES,
+      ...uniqueCategories.filter((c) => c !== "Pendiente"),
+    ]);
+    return Array.from(set);
+  }, [uniqueCategories]);
+
   const subscriptionSummary = useMemo(() => {
     return getSubscriptionSummary(transactions);
   }, [transactions]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const handleCategorySelection = (tx: Transaction, targetCategory: string) => {
+    const currentCategory = tx.category || "Pendiente";
+    if (targetCategory === currentCategory) return;
+    if (!onUpdateCategory) return;
+
+    // Check if other transactions have the exact same name
+    const normalizedName = tx.description.trim().toLowerCase();
+    const otherMatching = transactions.filter(
+      (t) =>
+        t.id !== tx.id && t.description.trim().toLowerCase() === normalizedName
+    );
+
+    if (otherMatching.length > 0) {
+      setBatchCategoryPrompt({
+        transaction: tx,
+        newCategory: targetCategory,
+        matchingTransactions: otherMatching,
+      });
+    } else {
+      onUpdateCategory(tx.id, targetCategory, false);
+    }
+  };
+
+  const renderSortIndicator = (field: SortField) => {
+    if (sortField !== field) {
+      return (
+        <Icons.ArrowUpDown className="w-3 h-3 text-zinc-400 opacity-60 shrink-0" />
+      );
+    }
+    return sortDirection === "asc" ? (
+      <Icons.ArrowUp className="w-3 h-3 text-zinc-900 dark:text-zinc-100 shrink-0" />
+    ) : (
+      <Icons.ArrowDown className="w-3 h-3 text-zinc-900 dark:text-zinc-100 shrink-0" />
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -240,6 +369,110 @@ export function TransactionTable({
         </div>
       )}
 
+      {/* Success Notification */}
+      {llmSuccessMessage && (
+        <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-200 flex items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <Icons.CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="font-medium">{llmSuccessMessage}</span>
+          </div>
+          <span className="text-3xs font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
+            Completado
+          </span>
+        </div>
+      )}
+
+      {/* AI Classification Banner (> 5 pending, US-009) */}
+      {stats.pending > UNCLASSIFIED_THRESHOLD && (
+        <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 flex items-center justify-center shrink-0">
+                <Icons.Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-amber-950 dark:text-amber-200">
+                  {stats.pending === 1
+                    ? "Tienes 1 gasto pendiente de clasificar, espera mientras la IA lo clasifica..."
+                    : `Tienes ${stats.pending} gastos pendientes de clasificar, espera mientras la IA los clasifica...`}
+                </h4>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {onClassifyPendingWithLLM && (
+                <button
+                  type="button"
+                  disabled={isClassifyingWithLLM}
+                  onClick={onClassifyPendingWithLLM}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 rounded-lg dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-xs cursor-pointer"
+                >
+                  {isClassifyingWithLLM ? (
+                    <>
+                      <Icons.RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Clasificando con IA...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Icons.Sparkles className="w-3.5 h-3.5" />
+                      <span>Clasificar con IA (Gemini Pro)</span>
+                    </>
+                  )}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setSelectedCategory("Pendiente")}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-amber-900 bg-amber-100/80 hover:bg-amber-200/80 rounded-lg dark:bg-amber-900/40 dark:text-amber-200 dark:hover:bg-amber-900/60 transition-colors cursor-pointer"
+              >
+                <span>Ver pendientes ({stats.pending})</span>
+              </button>
+            </div>
+          </div>
+
+          {llmClassificationError && (
+            <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 text-xs dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200 flex items-start gap-2">
+              <Icons.AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-1">
+                <p className="font-semibold">No se pudo completar la clasificación con IA</p>
+                <p className="text-2xs">{llmClassificationError}</p>
+                <p className="text-2xs text-red-700 dark:text-red-300">
+                  Puedes clasificar los gastos manualmente con los menús desplegables de la tabla.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Manual Categorization Prompt (<= 5 pending, US-009) */}
+      {stats.pending > 0 && stats.pending <= UNCLASSIFIED_THRESHOLD && (
+        <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-900/40 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-md bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 flex items-center justify-center shrink-0">
+              <Icons.Tag className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                {stats.pending === 1
+                  ? "1 gasto pendiente de clasificar, clasifícalo para continuar"
+                  : `${stats.pending} gastos pendientes de clasificar, clasifícalos para continuar`}
+              </span>
+            </div>
+          </div>
+
+          {selectedCategory !== "Pendiente" && (
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("Pendiente")}
+              className="text-2xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100 underline cursor-pointer"
+            >
+              Filtrar solo pendientes ({stats.pending})
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Category Pills Filter */}
       {uniqueCategories.length > 0 && (
         <div className="space-y-2">
@@ -324,16 +557,46 @@ export function TransactionTable({
 
         <div className="overflow-x-auto max-h-[500px]">
           <table className="min-w-full text-xs text-left">
-            <thead className="bg-zinc-50 sticky top-0 border-b border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 z-10">
+            <thead className="bg-zinc-50 sticky top-0 border-b border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 z-10 select-none">
               <tr>
-                <th className="px-4 py-2.5 font-medium">Fecha</th>
-                <th className="px-4 py-2.5 font-medium">Descripción</th>
+                <th className="px-4 py-2.5 font-medium">
+                  <button
+                    type="button"
+                    onClick={() => handleSort("date")}
+                    className="inline-flex items-center gap-1.5 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer font-medium"
+                    title="Ordenar por fecha"
+                  >
+                    <span>Fecha</span>
+                    {renderSortIndicator("date")}
+                  </button>
+                </th>
+                <th className="px-4 py-2.5 font-medium">
+                  <button
+                    type="button"
+                    onClick={() => handleSort("description")}
+                    className="inline-flex items-center gap-1.5 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer font-medium"
+                    title="Ordenar por descripción"
+                  >
+                    <span>Descripción</span>
+                    {renderSortIndicator("description")}
+                  </button>
+                </th>
                 <th className="px-4 py-2.5 font-medium">Categoría</th>
-                <th className="px-4 py-2.5 font-medium text-right">Monto (GTQ)</th>
+                <th className="px-4 py-2.5 font-medium text-right">
+                  <button
+                    type="button"
+                    onClick={() => handleSort("amount")}
+                    className="inline-flex items-center gap-1.5 justify-end ml-auto hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer font-medium"
+                    title="Ordenar por monto"
+                  >
+                    <span>Monto (GTQ)</span>
+                    {renderSortIndicator("amount")}
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {filteredTransactions.map((tx) => {
+              {sortedTransactions.map((tx) => {
                 const category = tx.category || "Pendiente";
                 const catStyle = CATEGORY_STYLES[category] || DEFAULT_STYLE;
                 const isLocal = tx.classificationSource === "local";
@@ -360,13 +623,61 @@ export function TransactionTable({
                       </div>
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
-                        title={isLocal ? "Clasificado localmente en el dispositivo" : "Pendiente de clasificación"}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${catStyle.dot}`} />
-                        <span>{category}</span>
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {onUpdateCategory ? (
+                          <select
+                            value={category}
+                            aria-label={`Categoría para ${tx.description}`}
+                            onChange={(e) => handleCategorySelection(tx, e.target.value)}
+                            className={`text-2xs font-medium px-2 py-0.5 rounded-full border cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-colors ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
+                            title="Haga clic para cambiar o asignar la categoría manualmente"
+                          >
+                            <option value="Pendiente">Pendiente</option>
+                            {availableCategoriesList.map((c) => (
+                              <option
+                                key={c}
+                                value={c}
+                                className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100"
+                              >
+                                {c}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${catStyle.dot}`} />
+                            <span>{category}</span>
+                          </span>
+                        )}
+
+                        {/* Source Tag */}
+                        {isLocal && (
+                          <span
+                            className="text-3xs font-mono px-1 py-0.2 rounded bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                            title="Clasificado localmente en el dispositivo"
+                          >
+                            Local
+                          </span>
+                        )}
+                        {tx.classificationSource === "llm" && (
+                          <span
+                            className="text-3xs font-mono px-1 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 font-semibold"
+                            title="Clasificado con IA (Gemini Pro)"
+                          >
+                            IA
+                          </span>
+                        )}
+                        {tx.classificationSource === "manual" && (
+                          <span
+                            className="text-3xs font-mono px-1 py-0.2 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 font-semibold"
+                            title="Asignado manualmente por el usuario"
+                          >
+                            Manual
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap text-right font-mono text-zinc-900 dark:text-zinc-100 font-medium">
                       {formatCurrency(tx.amount)}
@@ -378,6 +689,82 @@ export function TransactionTable({
           </table>
         </div>
       </div>
+
+      {/* Batch Category Confirmation Modal */}
+      {batchCategoryPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 flex items-center justify-center shrink-0">
+                <Icons.HelpCircle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  ¿Deseas clasificar también los otros gastos similares?
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Se encontraron{" "}
+                  <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">
+                    {batchCategoryPrompt.matchingTransactions.length}{" "}
+                    {batchCategoryPrompt.matchingTransactions.length === 1
+                      ? "otro gasto"
+                      : "otros gastos"}
+                  </strong>{" "}
+                  con la descripción idéntica:
+                </p>
+                <div className="p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-800 dark:text-zinc-200">
+                  &ldquo;{batchCategoryPrompt.transaction.description}&rdquo;
+                </div>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 pt-1">
+                  Nueva categoría:{" "}
+                  <strong className="text-zinc-900 dark:text-zinc-100">
+                    {batchCategoryPrompt.newCategory}
+                  </strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setBatchCategoryPrompt(null)}
+                className="px-3 py-2 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdateCategory?.(
+                    batchCategoryPrompt.transaction.id,
+                    batchCategoryPrompt.newCategory,
+                    false
+                  );
+                  setBatchCategoryPrompt(null);
+                }}
+                className="px-3 py-2 text-xs font-medium text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+              >
+                Solo este gasto
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdateCategory?.(
+                    batchCategoryPrompt.transaction.id,
+                    batchCategoryPrompt.newCategory,
+                    true,
+                    batchCategoryPrompt.transaction.description
+                  );
+                  setBatchCategoryPrompt(null);
+                }}
+                className="px-3.5 py-2 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-xs cursor-pointer"
+              >
+                Cambiar todos ({batchCategoryPrompt.matchingTransactions.length + 1})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
