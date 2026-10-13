@@ -10,8 +10,6 @@ La arquitectura está construida sobre un modelo moderno de Next.js (App Router)
 
 ![Diagrama de Arquitectura](../architecture-diagram.png)
 
-> **Diagrama Interactivo**: Si deseas explorar los componentes interactivos con detalles de conexión y flujo de datos, abre el archivo [architecture-diagram.html](../architecture-diagram.html) en tu navegador web.
-
 ---
 
 ## 2. División de Responsabilidades por Capas
@@ -62,7 +60,7 @@ Bajo la arquitectura Split-Brain, el modelo en la nube jamás recibe archivos PD
 
 ---
 
-## 3. Pila Tecnológica y Herramientas
+## 3. Stack de Tecnologías
 
 | Tecnología / Herramienta | Versión | Rol en el Proyecto y Justificación |
 | :--- | :--- | :--- |

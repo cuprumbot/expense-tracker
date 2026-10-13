@@ -68,10 +68,6 @@ Edita el archivo `.env.local` con tu editor de preferencia:
 # Clave de API de Google Gemini Pro (obtenida en Google AI Studio)
 # Esta clave es accedida de manera segura ÚNICAMENTE desde el servidor en Route Handlers
 GEMINI_API_KEY=tu_clave_de_gemini_aqui
-
-# (Opcional) Modelo preferido de Gemini
-# Por defecto se utiliza gemini-3.8-flash con fallback a gemini-2.5-flash
-GEMINI_MODEL=gemini-3.8-flash
 ```
 
 > [!IMPORTANT]
@@ -143,7 +139,6 @@ El proyecto está diseñado y optimizado para ser desplegado de manera nativa en
 2. **Framework Preset**: Vercel detectará automáticamente **Next.js**.
 3. **Variables de Entorno**:
    * En la sección de configuración del proyecto en Vercel (*Settings > Environment Variables*), agrega la variable `GEMINI_API_KEY` con tu clave de producción.
-   * Opcionalmente, define `GEMINI_MODEL=gemini-3.8-flash`.
 4. **Desplegar**: Haz clic en **Deploy**. Cada `push` a la rama principal actualizará automáticamente el despliegue en producción.
 
 ---

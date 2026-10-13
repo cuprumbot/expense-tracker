@@ -55,9 +55,3 @@ Expense Tracker is a Next.js (App Router) app deployed on Vercel. It uses a **sp
 
 ## Technologies
 Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS 4, lucide-react, PapaParse, pdf-parse, `@google/genai`, Node test runner with tsx, ESLint, npm, Vercel.
-
-## Diagram
-
-Interactive source: [architecture-diagram.html](architecture-diagram.html)
-
-![Expense Tracker architecture diagram](architecture-diagram.png)

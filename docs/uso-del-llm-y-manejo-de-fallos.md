@@ -57,7 +57,6 @@ Bajo la arquitectura **Split-Brain**, el LLM no es el motor general de la aplica
 * **Salida esperada**: Un objeto estructurado en español con tres dimensiones analíticas:
   1. **Oportunidades Inmediatas**: Acciones directas (e.g., cancelación de suscripciones duplicadas o poco utilizadas) con ahorro mensual estimado en Quetzales.
   2. **Estrategias a Largo Plazo**: Recomendaciones de ajuste presupuestario adaptadas al contexto de consumo en Guatemala.
-  3. **Diagnóstico por Categoría**: Calificación de cada categoría (`óptimo`, `moderado` o `elevado`) con observaciones específicas.
 
 ---
 

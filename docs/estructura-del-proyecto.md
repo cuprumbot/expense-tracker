@@ -10,10 +10,7 @@ Este documento describe la organización de carpetas y archivos en el proyecto *
 expense-tracker/
 ├── .agents/                      # Configuración de habilidades y reglas de agentes
 ├── demo/                         # Archivos de prueba y demostración (PDF y CSV)
-│   ├── demo1.pdf                 # Estado de cuenta real Banco G&T Continental (anonimizado)
-│   ├── demo2.pdf                 # Estado de cuenta real Banco G&T Continental (anonimizado)
-│   ├── sample-expenses.csv       # Archivo CSV de ejemplo con columnas de gastos
-│   └── unsupported-bank-statement.txt # Extracto de texto de banco no soportado
+│   └── *.csv                         # Estados de cuenta de ejemplo
 ├── docs/                         # Documentación completa del proyecto (en español)
 │   ├── arquitectura-split-brain.md
 │   ├── estructura-del-proyecto.md
@@ -77,17 +74,14 @@ expense-tracker/
 │       └── transaction.ts        # Definiciones de tipos canónicos de TypeScript
 ├── .env.example                  # Plantilla de variables de entorno
 ├── .gitignore                    # Reglas de exclusión para Git
+├── AGENTS.md                     # Directrices y configuración del proyecto
 ├── architecture-diagram.html     # Diagrama de arquitectura interactivo (HTML/SVG)
 ├── architecture-diagram.png      # Captura visual del diagrama de arquitectura
-├── ARCHITECTURE_DIAGRAM.md       # Descripción técnica de la arquitectura
-├── DESCRIPTION.md                # Especificaciones funcionales del proyecto
 ├── eslint.config.mjs             # Configuración de ESLint
 ├── next.config.ts                # Configuración de Next.js
 ├── package.json                  # Manifiesto de dependencias y scripts de npm
 ├── README.md                     # Índice principal y resumen del proyecto
-├── SPEC.md                       # Especificación técnica original y flujo de usuario
-├── tsconfig.json                 # Configuración del compilador de TypeScript
-└── USER_STORIES.md               # Historias de usuario y seguimiento de desarrollo
+└── tsconfig.json                 # Configuración del compilador de TypeScript
 ```
 
 ---
