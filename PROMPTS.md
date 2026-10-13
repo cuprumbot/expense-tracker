@@ -338,3 +338,30 @@ Improve the UI/UX for the saving suggestions. Use the `frontend-design` skill.
 - The "+Q X.XX / mes" is confusing, change it for "Ahorro de Q X.XX al mes".
 
 Change the prompt to remove the "Evaluación por categoría" section. There is too much information in the whole response and that is overwhelming. Comment out the current prompt instead of deleting it completely.
+
+---
+
+Create the documentation for this project. The documentation must be in spanish. We will generate the english version at a later time.
+
+`README.md` will contain a summary with the most important details about the project, it will also function as an index that will direct us to some additional files. The additional files should be put in the `docs` folder. Link to them so they are reachable once we push the changes to Github.
+
+Put at least the following details in `README.md`.
+- Explain what the app does.
+- Render a diagram of the Simplified User Flow found in `SPEC.md`.
+- Explain how to install, configure and run the project.
+
+Put the following details in separate files. Make sure they are currently linked from the main `README.md`.
+- Explain how to install, configure and run the project.
+- Explain the project structure.
+- Explain split brain. Include tables to show:
+    - What do we parse and process locally? What do we send to an external LLM?
+    - The reasons for this architecture: Privacy, we don't want sensitive information to be sent to an external LLM. Cost, we can process most of the data locally. Latency, most of the data can be identified with a simple parser that works instantly. Completion, since we can't identify every single expense, we use an LLM to give the user the most complete data possible.
+- Explain the tools and architecture used. Use `SPEC.md` as the main source of truth. There is also `ARCHITECTURE_DIAGRAM.md` anD `architecture-diagram.png`.
+    - Use tables to explain what happens in the browser, what happens in the server, what is sent to an external LLM.
+- Explain what do we use an external LLM for. Explain what happens it the API call to it fails.
+- Explain privacy. Show snippets of code on how we anonymize data before sending it to an external LLM.
+- Explain how to run the unit tests and what do they cover.
+
+Do not modify any code, just modify or create markdown files.
+
+Do not commit any change, I will check the results first.
