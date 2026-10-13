@@ -185,7 +185,7 @@ describe("US-014: Savings Advisor Unit Tests", () => {
     assert.equal(parsed.oportunidadesInmediatas.length, 2);
     assert.equal(parsed.oportunidadesInmediatas[0].title, "Consolidar plataformas de streaming");
     assert.equal(parsed.oportunidadesInmediatas[0].estimatedMonthlySavingsGTQ, 109);
-    assert.equal(parsed.estrategiasLargoPlazo.length, 1);
+    assert.ok(parsed.analisisPorCategoria);
     assert.equal(parsed.analisisPorCategoria.length, 1);
     assert.equal(parsed.analisisPorCategoria[0].status, "elevado");
   });
@@ -210,5 +210,33 @@ describe("US-014: Savings Advisor Unit Tests", () => {
     const parsed = parseSavingsResponse(rawFenced);
     assert.equal(parsed.potencialAhorroMensualTotalGTQ, 200);
     assert.equal(parsed.oportunidadesInmediatas[0].title, "Ajuste en cafés y restaurantes");
+  });
+
+  it("handles response cleanly when analisisPorCategoria is completely omitted", () => {
+    const rawWithoutBenchmarks = JSON.stringify({
+      resumenGeneral: "Buen manejo presupuestario con oportunidades en suscripciones.",
+      potencialAhorroMensualTotalGTQ: 150,
+      oportunidadesInmediatas: [
+        {
+          id: "accion-1",
+          title: "Auditar suscripciones",
+          description: "Desactivar servicios no utilizados.",
+          estimatedMonthlySavingsGTQ: 150,
+        },
+      ],
+      estrategiasLargoPlazo: [
+        {
+          id: "estrategia-1",
+          title: "Presupuesto mensual",
+          description: "Fijar topes por categoría.",
+        },
+      ],
+    });
+
+    const parsed = parseSavingsResponse(rawWithoutBenchmarks);
+    assert.equal(parsed.potencialAhorroMensualTotalGTQ, 150);
+    assert.equal(parsed.oportunidadesInmediatas.length, 1);
+    assert.equal(parsed.estrategiasLargoPlazo.length, 1);
+    assert.equal(parsed.analisisPorCategoria?.length, 0);
   });
 });

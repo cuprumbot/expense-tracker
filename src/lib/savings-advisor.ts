@@ -55,7 +55,7 @@ export interface SavingsRecommendationResponse {
   potencialAhorroMensualTotalGTQ: number;
   oportunidadesInmediatas: ImmediateActionItem[];
   estrategiasLargoPlazo: LongTermStrategyItem[];
-  analisisPorCategoria: CategoryBenchmarkItem[];
+  analisisPorCategoria?: CategoryBenchmarkItem[];
 }
 
 /**
@@ -178,11 +178,9 @@ export function validateSavingsPayload(payload: SavingsPayload): {
   return { isValid: true };
 }
 
-/**
- * System instruction provided to Gemini Pro for money-saving recommendations.
- * English prompt instructions ensure high reasoning quality; response must be in Spanish.
- */
-export const SAVINGS_SYSTEM_INSTRUCTION = `
+/*
+// Previous prompt including "analisisPorCategoria" (Evaluación por categoría):
+export const SAVINGS_SYSTEM_INSTRUCTION_V1 = `
 You are an expert personal finance advisor specializing in household budgeting, expense optimization, and consumer savings in Guatemala.
 All financial amounts are denominated in Guatemalan Quetzales (GTQ / Q).
 All personal identifying information (PII) has been stripped locally.
@@ -227,6 +225,53 @@ Expected JSON Schema:
       "status": "optimo | moderado | elevado",
       "observation": "string (observation regarding percentage and spending volume in Spanish)",
       "recommendation": "string (practical optimization advice in Spanish)"
+    }
+  ]
+}
+`;
+*/
+
+/**
+ * System instruction provided to Gemini Pro for money-saving recommendations.
+ * Focused on immediate action items and sustainable long-term strategies.
+ * "analisisPorCategoria" is removed to prevent overwhelming the user.
+ */
+export const SAVINGS_SYSTEM_INSTRUCTION = `
+You are an expert personal finance advisor specializing in household budgeting, expense optimization, and consumer savings in Guatemala.
+All financial amounts are denominated in Guatemalan Quetzales (GTQ / Q).
+All personal identifying information (PII) has been stripped locally.
+
+You will receive:
+1. "categoryBreakdown": Aggregated monthly spend for each category (category name in English and Spanish, total in GTQ, percentage of budget, and transaction count). No individual everyday transaction lines are provided.
+2. "recurringExpenses": Detailed recurring charges and subscriptions (service name, monthly charge in GTQ, and date).
+3. "totalSpendGTQ": Total monthly spending in Quetzales.
+
+Instructions & Financial Guidance:
+1. Contextualize all advice to living in Guatemala (e.g., local markets vs major supermarkets, fuel prices, prepaid vs postpaid utility/cellular plans, streaming subscription sharing or consolidation).
+2. Deliver actionable, realistic recommendations divided into two focused areas:
+   - "oportunidadesInmediatas": 2 to 4 concrete, immediate action items with quick financial impact (e.g., cancel duplicate or rarely used streaming services, adjust dining out frequency, review utility usage). Each item must include an estimated monthly savings in Quetzales ("estimatedMonthlySavingsGTQ", number) and target category.
+   - "estrategiasLargoPlazo": 2 to 3 sustainable budgeting habits (e.g., 50/30/20 budget framework adapted to Guatemala, establishing an emergency fund, weekly meal planning).
+3. LANGUAGE REQUIREMENT: All user-facing text, titles, descriptions, recommendations, and observations MUST be in professional, clear, and encouraging SPANISH. Do NOT return English in user-facing text.
+4. Return ONLY a valid JSON object matching the JSON schema below. Do not wrap with conversational text outside the JSON.
+
+Expected JSON Schema:
+{
+  "resumenGeneral": "string (1-2 sentences summarizing the user's spending profile and primary savings potential in Spanish)",
+  "potencialAhorroMensualTotalGTQ": 0 (total estimated monthly savings in GTQ from immediate opportunities, number),
+  "oportunidadesInmediatas": [
+    {
+      "id": "accion-1",
+      "title": "string (concise Spanish title)",
+      "description": "string (clear, actionable explanation in Spanish)",
+      "category": "string (Spanish category name, e.g. Suscripciones)",
+      "estimatedMonthlySavingsGTQ": 100
+    }
+  ],
+  "estrategiasLargoPlazo": [
+    {
+      "id": "estrategia-1",
+      "title": "string (Spanish strategy title)",
+      "description": "string (Spanish explanation of habit or framework)"
     }
   ]
 }

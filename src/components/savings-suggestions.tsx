@@ -93,7 +93,7 @@ export function SavingsSuggestions({
               </h3>
             </div>
 
-            <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
               Utiliza Gemini para generar sugerencias de ahorro. Tu información personal (nombre, dirección, banco, etc.) no es enviada al modelo.
             </p>
           </div>
@@ -178,18 +178,12 @@ export function SavingsSuggestions({
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-950 shadow-xs space-y-6">
       {/* Header bar with potential savings KPI and Refresh button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-100 dark:border-zinc-800/80">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-semibold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-              <Icons.Sparkles className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-              <span>Gemini Pro</span>
-            </span>
-            <span className="text-2xs font-semibold uppercase tracking-wider text-zinc-500">
-              Sugerencias de ahorro
-            </span>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
+            <Icons.Sparkles className="w-3.5 h-3.5" />
           </div>
-          <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-50">
-            Recomendaciones para optimizar tus gastos
+          <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">
+            Sugerencias de ahorro
           </h3>
         </div>
 
@@ -233,10 +227,10 @@ export function SavingsSuggestions({
             <Icons.Lightbulb className="w-4 h-4" />
           </div>
           <div className="space-y-0.5 flex-1">
-            <span className="text-2xs font-semibold text-zinc-500 uppercase tracking-wider">
+            <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
               Diagnóstico general
             </span>
-            <p className="text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 leading-relaxed font-medium">
+            <p className="text-sm sm:text-base text-zinc-800 dark:text-zinc-200 leading-relaxed font-medium">
               {recommendations.resumenGeneral}
             </p>
           </div>
@@ -251,41 +245,41 @@ export function SavingsSuggestions({
               <Icons.TrendingDown className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
                 Acciones inmediatas de ahorro
               </h4>
-              <p className="text-3xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 Ajustes directos con impacto rápido en tu presupuesto mensual
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {recommendations.oportunidadesInmediatas.map((action, idx) => (
               <div
                 key={action.id || `action-${idx}`}
-                className="p-4 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800/90 dark:bg-zinc-900/60 shadow-2xs space-y-2 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
+                className="p-4.5 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800/90 dark:bg-zinc-900/60 shadow-2xs space-y-2 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+                  <span className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
                     {action.title}
                   </span>
 
                   {action.estimatedMonthlySavingsGTQ &&
                     action.estimatedMonthlySavingsGTQ > 0 && (
-                      <span className="inline-flex items-center text-3xs font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 shrink-0 whitespace-nowrap">
-                        +{formatCurrency(action.estimatedMonthlySavingsGTQ).replace(" ", "\u00A0")} / mes
+                      <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200 shrink-0 whitespace-nowrap">
+                        Ahorro de {formatCurrency(action.estimatedMonthlySavingsGTQ).replace(" ", "\u00A0")} al mes
                       </span>
                     )}
                 </div>
 
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
                   {action.description}
                 </p>
 
                 {action.category && (
-                  <div className="pt-1.5 flex items-center gap-1.5 text-3xs font-medium text-zinc-500 dark:text-zinc-400">
-                    <Icons.Tag className="w-3 h-3 text-zinc-400" />
+                  <div className="pt-1.5 flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    <Icons.Tag className="w-3.5 h-3.5 text-zinc-400" />
                     <span>Rubro: {action.category}</span>
                   </div>
                 )}
@@ -303,109 +297,34 @@ export function SavingsSuggestions({
               <Icons.Target className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
                 Estrategias de presupuesto a largo plazo
               </h4>
-              <p className="text-3xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 Hábitos y estructura para mantener finanzas saludables
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {recommendations.estrategiasLargoPlazo.map((strat, idx) => (
               <div
                 key={strat.id || `strat-${idx}`}
-                className="p-4 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800/90 dark:bg-zinc-900/60 shadow-2xs space-y-1.5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
+                className="p-4.5 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800/90 dark:bg-zinc-900/60 shadow-2xs space-y-2 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-2xs font-mono font-semibold text-indigo-600 dark:text-indigo-400">
+                  <span className="text-sm font-mono font-bold text-indigo-600 dark:text-indigo-400">
                     0{idx + 1}
                   </span>
-                  <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                  <span className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
                     {strat.title}
                   </span>
                 </div>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
                   {strat.description}
                 </p>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Block 3: Diagnóstico y Benchmarks por Categoría */}
-      {recommendations.analisisPorCategoria?.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0">
-              <Icons.BarChart3 className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-                Evaluación por categoría
-              </h4>
-              <p className="text-3xs text-zinc-500 dark:text-zinc-400">
-                Comparativa de gasto frente a referencias habituales de presupuesto
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {recommendations.analisisPorCategoria.map((catBench, idx) => {
-              const statusStyles = {
-                optimo:
-                  "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800",
-                moderado:
-                  "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800",
-                elevado:
-                  "bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800",
-              };
-
-              const statusLabels = {
-                optimo: "Nivel óptimo",
-                moderado: "Nivel moderado",
-                elevado: "Nivel elevado",
-              };
-
-              return (
-                <div
-                  key={`benchmark-${catBench.category}-${idx}`}
-                  className="p-3.5 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800/90 dark:bg-zinc-900/60 shadow-2xs space-y-2 flex flex-col justify-between"
-                >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                        {catBench.category}
-                      </span>
-                      <span
-                        className={`text-3xs font-semibold px-2 py-0.5 rounded-md border whitespace-nowrap ${
-                          statusStyles[catBench.status] || statusStyles.moderado
-                        }`}
-                      >
-                        {statusLabels[catBench.status] || "Evaluado"}
-                      </span>
-                    </div>
-
-                    {catBench.observation && (
-                      <p className="text-2xs text-zinc-600 dark:text-zinc-400 leading-snug">
-                        {catBench.observation}
-                      </p>
-                    )}
-                  </div>
-
-                  {catBench.recommendation && (
-                    <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/60 flex items-start gap-1.5">
-                      <Icons.Lightbulb className="w-3 h-3 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
-                      <p className="text-2xs text-zinc-700 dark:text-zinc-300 font-medium leading-snug">
-                        {catBench.recommendation.replace(/^[\p{Extended_Pictographic}\uD800-\uDBFF\uDC00-\uDFFF]\s*/u, "")}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
           </div>
         </div>
       )}
