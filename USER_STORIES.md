@@ -232,24 +232,24 @@ This document outlines the user stories, implementation phases, and testable acc
 
 ## Phase 8: AI-Powered Spending Reduction Insights
 
-### [ ] US-014: Gemini-Powered Spending Reduction Suggestions
+### [x] US-014: Gemini-Powered Spending Reduction Suggestions
 - **As a** user,
 - **I want to** receive personalized suggestions on how to reduce my monthly expenses,
 - **So that** I can make concrete adjustments to save money based on my Guatemalan spending context.
 - **Split-Brain Boundary:** Split-Brain Hybrid. Server Route Handler sends only aggregated category totals and high-level summaries to Gemini Pro.
 - **Acceptance Criteria:**
-  - [ ] Next.js Server Route Handler (`POST /api/suggest-savings`) receives ONLY aggregated data:
+  - [x] Next.js Server Route Handler (`POST /api/suggest-savings`) receives ONLY aggregated data:
     - Total monthly spend.
     - Category name, total amount, and percentage of budget.
     - Total subscription spend and subscription count.
     - Zero transaction descriptions, zero bank details, zero PII.
-  - [ ] Calls Gemini Pro via `@google/genai` with a prompt requesting practical, realistic savings advice tailored to Guatemala in Spanish.
-  - [ ] Returns structured recommendations:
+  - [x] Calls Gemini Pro via `@google/genai` with a prompt requesting practical, realistic savings advice tailored to Guatemala in Spanish.
+  - [x] Returns structured recommendations:
     - Immediate savings opportunities (e.g., audit subscriptions, dining out adjustments).
     - Long-term budgeting suggestions.
     - Benchmark comparisons for high spending categories.
-  - [ ] UI displays suggestions in clean, scannable cards with SVG icons and Spanish headings.
-  - [ ] Provides a refresh/regenerate button with loading state.
+  - [x] UI displays suggestions in clean, scannable cards with SVG icons and Spanish headings.
+  - [x] Provides a refresh/regenerate button with loading state.
 
 ---
 

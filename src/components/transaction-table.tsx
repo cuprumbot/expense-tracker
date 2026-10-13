@@ -19,12 +19,17 @@ import {
 import { Icons } from "@/components/icons";
 import { CustomCategoryModal } from "@/components/custom-category-modal";
 import { ExpenseDashboard } from "@/components/expense-dashboard";
+import { SavingsRecommendationResponse } from "@/lib/savings-advisor";
 
 interface TransactionTableProps {
   transactions: Transaction[];
   summary: CSVParsingSummary;
   sourceLabel?: string;
   customCategories?: CustomCategory[];
+  savingsRecommendations?: SavingsRecommendationResponse | null;
+  onSavingsRecommendationsChange?: (
+    recommendations: SavingsRecommendationResponse | null
+  ) => void;
   onReset: () => void;
   onUpdateCategory?: (
     transactionId: string,
@@ -144,6 +149,8 @@ export function TransactionTable({
   onBulkAssignCategory,
   onBulkDeleteTransactions,
   onToggleSubscription,
+  savingsRecommendations = null,
+  onSavingsRecommendationsChange,
   onClearData,
   onClassifyPendingWithLLM,
   isClassifyingWithLLM = false,
@@ -441,6 +448,8 @@ export function TransactionTable({
           selectedCategory={selectedCategory}
           onSelectCategory={(cat) => setSelectedCategory(cat)}
           onToggleSubscription={onToggleSubscription}
+          savingsRecommendations={savingsRecommendations}
+          onSavingsRecommendationsChange={onSavingsRecommendationsChange}
         />
       ) : (
         <div className="space-y-4">
@@ -582,17 +591,36 @@ export function TransactionTable({
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-indigo-200/60 dark:border-indigo-900/40">
-                {subscriptionSummary.services.map((sub, idx) => (
-                  <span
-                    key={`${sub.name}-${idx}`}
-                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-2xs font-medium bg-white border border-indigo-200 text-indigo-900 dark:bg-zinc-900 dark:border-indigo-800 dark:text-indigo-300 shadow-2xs"
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-2 border-t border-indigo-200/60 dark:border-indigo-900/40">
+                {subscriptionSummary.services.map((sub) => (
+                  <div
+                    key={`sub-triage-${sub.id}-${sub.name}`}
+                    className="p-3.5 rounded-xl border border-indigo-200/70 bg-white dark:border-indigo-900/40 dark:bg-zinc-900/90 flex items-center justify-between gap-3 shadow-2xs"
                   >
-                    <span>{sub.name}</span>
-                    <span className="font-mono text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
-                      {formatCurrency(sub.amount)}
-                    </span>
-                  </span>
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 block truncate" title={sub.name}>
+                        {sub.name}
+                      </span>
+                      <div className="flex items-center gap-2 text-2xs text-zinc-500 font-mono">
+                        <span>{sub.date}</span>
+                        <span>·</span>
+                        <span className="font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
+                          {formatCurrency(sub.amount).replace(" ", "\u00A0")}
+                        </span>
+                      </div>
+                    </div>
+
+                    {onToggleSubscription && (
+                      <button
+                        type="button"
+                        onClick={() => onToggleSubscription(sub.id)}
+                        className="text-2xs font-medium px-2.5 py-1 rounded-md text-zinc-600 hover:text-red-600 bg-zinc-100 hover:bg-red-50 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-red-950/40 dark:hover:text-red-300 transition-colors shrink-0 cursor-pointer whitespace-nowrap"
+                        title="Desmarcar esta transacción como suscripción recurrente"
+                      >
+                        Desmarcar
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>

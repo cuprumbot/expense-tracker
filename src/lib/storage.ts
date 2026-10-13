@@ -3,12 +3,14 @@ import {
   CSVParsingSummary,
   CustomCategory,
 } from "@/types/transaction";
+import { SavingsRecommendationResponse } from "@/lib/savings-advisor";
 
 export interface StoredSession {
   version: 1;
   transactions: Transaction[];
   summary: CSVParsingSummary;
   customCategories: CustomCategory[];
+  savingsRecommendations?: SavingsRecommendationResponse | null;
   sourceLabel?: string;
   bankName?: string | null;
   savedAt: string;

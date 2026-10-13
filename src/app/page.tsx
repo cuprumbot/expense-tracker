@@ -25,6 +25,7 @@ import {
   loadStoredCategories,
   StoredSession,
 } from "@/lib/storage";
+import { SavingsRecommendationResponse } from "@/lib/savings-advisor";
 import {
   Transaction,
   CSVParsingSummary,
@@ -41,6 +42,8 @@ export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[] | null>(null);
   const [summary, setSummary] = useState<CSVParsingSummary | null>(null);
   const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
+  const [savingsRecommendations, setSavingsRecommendations] =
+    useState<SavingsRecommendationResponse | null>(null);
   const [rawCSVText, setRawCSVText] = useState<string | null>(null);
   const [bankName, setBankName] = useState<string | null>(null);
 
@@ -97,6 +100,7 @@ export default function Home() {
         transactions,
         summary,
         customCategories,
+        savingsRecommendations,
         bankName,
         sourceLabel: bankName
           ? `${bankName} · ${routedFile?.file.name || "Archivo de movimientos"}`
@@ -107,6 +111,7 @@ export default function Home() {
     transactions,
     summary,
     customCategories,
+    savingsRecommendations,
     bankName,
     routedFile,
     hasHydratedStorage,
@@ -127,6 +132,9 @@ export default function Home() {
     if (savedSession.customCategories?.length > 0) {
       setCustomCategories(savedSession.customCategories);
     }
+    if (savedSession.savingsRecommendations) {
+      setSavingsRecommendations(savedSession.savingsRecommendations);
+    }
     setBankName(savedSession.bankName || null);
     setSavedSession(null);
   };
@@ -139,6 +147,7 @@ export default function Home() {
     clearStoredSession();
     handleReset();
     setCustomCategories([]);
+    setSavingsRecommendations(null);
     setSavedSession(null);
     setIsClearConfirmOpen(false);
     setStorageNotification("Se han borrado todos los datos guardados en este navegador.");
@@ -552,6 +561,7 @@ export default function Home() {
     setIsClassifyingWithLLM(false);
     setLlmClassificationError(null);
     setLlmSuccessMessage(null);
+    setSavingsRecommendations(null);
     setMappingModal({
       isOpen: false,
       headers: [],
@@ -895,6 +905,8 @@ export default function Home() {
             }
             onReset={handleReset}
             customCategories={customCategories}
+            savingsRecommendations={savingsRecommendations}
+            onSavingsRecommendationsChange={setSavingsRecommendations}
             onUpdateCategory={handleUpdateCategory}
             onAddCustomCategory={handleAddCustomCategory}
             onEditTransaction={handleEditTransaction}

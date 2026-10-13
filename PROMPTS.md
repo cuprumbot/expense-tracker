@@ -279,3 +279,62 @@ For the "Suscripciones Destacadas & Gastos Recurrentes" panel:
 While we worked on the previous User Stories, some items from US-015 and US-016 were completed already. Mark those as done with `[x]`.
 
 Do not implement any code for the other ones at this time. I will check them manually at a later time and instruct you to implement them.
+
+---
+
+Execute User Story #14 from USER_STORIES.md.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    After the user has classified all their expenses, show a button so they can send their info to an external LLM to get suggestions to save money. Send aggregated info for most of the categories, except for the recurring expenses. For the recurring expenses send detailed info.
+
+    Make sure no personal information is being sent to the external LLM. Only the info explicitly stated in the previous item.
+
+    The prompt and the category names might be in english for better results, the suggestions must be in spanish.
+
+    After receving the suggestions from the LLM, display them in an appealing way between the recurring expenses and the list of expenses.
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+    Let me test the changes manually before staging and commiting.
+
+Only stop when User Story #14 is fully verified, then report what was done.
+
+---
+
+We need a change in the UI/UX, use the `frontend-design` skill to implement these changes.
+
+- In the "Gastos recurrentes" panel, the chips for each recurring expense lost their button. Put back the button that let's you mark it as non-recurring.
+- Align them nicely in a responsive grid of at most three items wide.
+
+- In the "Inteligencia Financiera" panel, simplify. Change the title to "Sugerencias de ahorro" and the message to "Utiliza Gemini para generar sugerencias de ahorro. Tu información personal (nombre, dirección, banco, etc.) no es enviada al modelo."
+
+Do not perform any test using the browser unless I explicitly ask. Let ME check the result of the changes.
+
+---
+
+Analyze this codebase, the `SPEC.md` file (pay special attention to the `Simplified User Flow` which was written by hand and is the main source of truth for the app's original requirements), and the `DESCRIPTION.md` file. Describe the architecture. Include all major components, how they connect, what technologies they use, and any cloud services or integrations. Format as a list for an architecture diagram. Save the result in `ARCHITECTURE_DIAGRAM.md`
+
+Then use the `architecture-diagram` skill to create an architecture diagram from the description in that file.
+
+Render the diagrams as images.
+
+Check that the images were correctly generated and included, repeat if something failed.
+
+Do not commit the changes. I will review them first.
+
+---
+
+The results are decent. Stage and commit.
+
+Improve the UI/UX for the saving suggestions. Use the `frontend-design` skill.
+
+- Remove the "Gemini Pro" chip.
+- Remove the "Recomendaciones para optimizar tus gastos" subtitle, the title already says "Sugerencias de ahorro".
+- The "+Q X.XX / mes" is confusing, change it for "Ahorro de Q X.XX al mes".
+
+Change the prompt to remove the "Evaluación por categoría" section. There is too much information in the whole response and that is overwhelming. Comment out the current prompt instead of deleting it completely.

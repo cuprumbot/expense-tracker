@@ -6,6 +6,8 @@ import { formatCurrency } from "@/lib/currency";
 import { ReportingMetrics, CategoryReportItem } from "@/lib/reporting";
 import { SubscriptionSummary } from "@/lib/expense-classifier";
 import { CustomCategory } from "@/types/transaction";
+import { SavingsSuggestions } from "@/components/savings-suggestions";
+import { SavingsRecommendationResponse } from "@/lib/savings-advisor";
 
 interface ExpenseDashboardProps {
   metrics: ReportingMetrics;
@@ -14,6 +16,10 @@ interface ExpenseDashboardProps {
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
   onToggleSubscription?: (transactionId: string) => void;
+  savingsRecommendations?: SavingsRecommendationResponse | null;
+  onSavingsRecommendationsChange?: (
+    recommendations: SavingsRecommendationResponse | null
+  ) => void;
 }
 
 const CATEGORY_HEX_COLORS: Record<string, string> = {
@@ -50,6 +56,8 @@ export function ExpenseDashboard({
   selectedCategory,
   onSelectCategory,
   onToggleSubscription,
+  savingsRecommendations = null,
+  onSavingsRecommendationsChange,
 }: ExpenseDashboardProps) {
   const subscriptionPercentage =
     metrics.totalSpend > 0
@@ -359,7 +367,7 @@ export function ExpenseDashboard({
                 className="p-3.5 rounded-xl border border-indigo-200/70 bg-white dark:border-indigo-900/40 dark:bg-zinc-900/90 flex items-center justify-between gap-3 shadow-2xs"
               >
                 <div className="space-y-1 min-w-0 flex-1">
-                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 block leading-snug break-words">
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 block truncate" title={sub.name}>
                     {sub.name}
                   </span>
                   <div className="flex items-center gap-2 text-2xs text-zinc-500 font-mono">
@@ -386,6 +394,15 @@ export function ExpenseDashboard({
           </div>
         </div>
       )}
+
+      {/* Gemini-Powered Spending Reduction Suggestions (US-014) */}
+      <SavingsSuggestions
+        metrics={metrics}
+        subscriptionSummary={subscriptionSummary}
+        customCategories={customCategories}
+        initialRecommendations={savingsRecommendations}
+        onRecommendationsChange={onSavingsRecommendationsChange}
+      />
     </div>
   );
 }

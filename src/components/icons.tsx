@@ -35,6 +35,11 @@ import {
   Bell,
   Filter,
   Calendar,
+  Lightbulb,
+  PiggyBank,
+  Target,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 export const Icons = {
@@ -74,4 +79,9 @@ export const Icons = {
   Bell,
   Filter,
   Calendar,
+  Lightbulb,
+  PiggyBank,
+  Target,
+  ChevronDown,
+  ChevronUp,
 };
