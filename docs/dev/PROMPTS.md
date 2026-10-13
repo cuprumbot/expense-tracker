@@ -365,3 +365,33 @@ Put the following details in separate files. Make sure they are currently linked
 Do not modify any code, just modify or create markdown files.
 
 Do not commit any change, I will check the results first.
+
+---
+
+Write an article in spanish, in specific neutral latinoamerican spanish. The output must be as ready to publish in Medium or Substack as possible. Write it in `article/ARTICLE.md`. Use an engaging tone.
+
+The main idea I want to transmit in the article is:
+
+    Before the era of AI, one of the major pitfalls when developing software was understimating a feature: sometimes we offered a timeframe for a feature, and it took us much longer to implement it.
+
+    Now with AI, the problem might be the opposite. Some problems might look bigger and more challenging than they really are, and that might guide us to take some wrong architecture decisions.
+
+    I thought that that parsing the bank statements and classifying the expenses would be bigger problems, so when designing I took the easy solution of "leave that to an LLM". They turned out to be simpler than I thought so the LLM usage seems unnecessary now.
+
+Include this key ideas when writing the article:
+- Why parsing a PDF was a challenging task before.
+- Why classifying expenses was a challenging task before.
+- Not every problem needs to be solved using an LLM.
+    - Creating a parser for each bank is relatively easy.
+    - Creating a huge list with merchants is also relatively easy.
+    - The saving suggestions could also be made generic and not require an LLM.
+
+Finally, pivot smoothly to this, since it's a different problem: 
+- AI agents still have some limitations when talking about statistics. 
+- When I asked the model to generate code to show useful stats it generated a lot, like really a lot, of stats. 
+- Most of them were unnecesary and verbose, like showing the same information a couple times in different ways. I expected something simpler and more direct.
+- All the code worked and the stats were correct, but they were not useful.
+
+Create an `article` folder and put the result there. Render the Mermaid flowchard from `SPEC.md` as image and put it in that folder.
+
+Do not commit any change, let me review first.
