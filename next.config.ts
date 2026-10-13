@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   serverExternalPackages: ["pdf-parse"],
+  outputFileTracingIncludes: {
+    "/api/**/*": ["./node_modules/pdf-parse/**/*"],
+  },
   turbopack: {
     rules: {
       "*.css": {
