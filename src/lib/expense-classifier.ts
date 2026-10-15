@@ -15,8 +15,30 @@ export interface MerchantCatalog {
   unclassifiedThreshold?: number;
 }
 
-export const UNCLASSIFIED_THRESHOLD: number =
-  (defaultCatalog as unknown as MerchantCatalog).unclassifiedThreshold ?? 5;
+/**
+ * Retrieves the threshold of unclassified expenses before triggering LLM classification.
+ * Reads from the server environment variable `UNCLASSIFIED_EXPENSES_THRESHOLD`.
+ * Falls back to catalog configuration or default 10.
+ */
+export function getUnclassifiedThreshold(): number {
+  const envVal =
+    typeof process !== "undefined" && process.env
+      ? process.env.UNCLASSIFIED_EXPENSES_THRESHOLD
+      : undefined;
+
+  if (envVal !== undefined && envVal !== null) {
+    const parsed = parseInt(String(envVal).trim(), 10);
+    if (!Number.isNaN(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+
+  return (
+    (defaultCatalog as unknown as MerchantCatalog).unclassifiedThreshold ?? 10
+  );
+}
+
+export const UNCLASSIFIED_THRESHOLD: number = getUnclassifiedThreshold();
 
 export const AVAILABLE_CATEGORIES: string[] =
   (defaultCatalog as unknown as MerchantCatalog).categories.map((c) => c.name);

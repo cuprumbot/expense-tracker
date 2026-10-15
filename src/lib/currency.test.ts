@@ -1,6 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { formatCurrency, parseCurrency } from "./currency";
+import {
+  formatCurrency,
+  parseCurrency,
+  getExchangeRate,
+  convertUsdToGtq,
+} from "./currency";
 
 describe("formatCurrency", () => {
   it("formats positive numbers with thousands separators and 2 decimal places", () => {
@@ -47,5 +52,87 @@ describe("parseCurrency", () => {
   it("returns 0 for empty or invalid strings", () => {
     assert.strictEqual(parseCurrency(""), 0);
     assert.strictEqual(parseCurrency("invalid"), 0);
+  });
+});
+
+describe("US-021: getExchangeRate & convertUsdToGtq", () => {
+  it("getExchangeRate returns default rate of 7.85 when env var is not set", () => {
+    const originalEnv = process.env.USD_GTQ_EXCHANGE_RATE;
+    try {
+      delete process.env.USD_GTQ_EXCHANGE_RATE;
+      assert.strictEqual(getExchangeRate(), 7.85);
+    } finally {
+      process.env.USD_GTQ_EXCHANGE_RATE = originalEnv;
+    }
+  });
+
+  it("getExchangeRate respects valid USD_GTQ_EXCHANGE_RATE environment variable", () => {
+    const originalEnv = process.env.USD_GTQ_EXCHANGE_RATE;
+    try {
+      process.env.USD_GTQ_EXCHANGE_RATE = "8.125";
+      assert.strictEqual(getExchangeRate(), 8.125);
+    } finally {
+      process.env.USD_GTQ_EXCHANGE_RATE = originalEnv;
+    }
+  });
+
+  it("getExchangeRate falls back to 7.85 if environment variable is invalid or non-positive", () => {
+    const originalEnv = process.env.USD_GTQ_EXCHANGE_RATE;
+    try {
+      process.env.USD_GTQ_EXCHANGE_RATE = "invalid-number";
+      assert.strictEqual(getExchangeRate(), 7.85);
+
+      process.env.USD_GTQ_EXCHANGE_RATE = "-5.0";
+      assert.strictEqual(getExchangeRate(), 7.85);
+
+      process.env.USD_GTQ_EXCHANGE_RATE = "0";
+      assert.strictEqual(getExchangeRate(), 7.85);
+    } finally {
+      process.env.USD_GTQ_EXCHANGE_RATE = originalEnv;
+    }
+  });
+
+  it("convertUsdToGtq converts amounts accurately at default exchange rate (7.85)", () => {
+    const originalEnv = process.env.USD_GTQ_EXCHANGE_RATE;
+    try {
+      delete process.env.USD_GTQ_EXCHANGE_RATE;
+
+      assert.strictEqual(convertUsdToGtq(1), 7.85);
+      assert.strictEqual(convertUsdToGtq(100), 785);
+      // 24.99 * 7.85 = 196.1715 -> rounds to 196.17
+      assert.strictEqual(convertUsdToGtq(24.99), 196.17);
+      // 6.99 * 7.85 = 54.8715 -> rounds to 54.87
+      assert.strictEqual(convertUsdToGtq(6.99), 54.87);
+    } finally {
+      process.env.USD_GTQ_EXCHANGE_RATE = originalEnv;
+    }
+  });
+
+  it("convertUsdToGtq handles zero and negative numbers properly", () => {
+    assert.strictEqual(convertUsdToGtq(0), 0);
+    // Negative amounts (refunds / debit adjustments)
+    // -15.50 * 7.85 = -121.675 -> rounds to -121.68
+    assert.strictEqual(convertUsdToGtq(-15.5, 7.85), -121.68);
+  });
+
+  it("convertUsdToGtq supports and validates customRate override", () => {
+    // With customRate = 8.00
+    assert.strictEqual(convertUsdToGtq(50, 8.0), 400.0);
+    // Invalid customRate (<= 0 or NaN) falls back to system rate (7.85)
+    assert.strictEqual(convertUsdToGtq(100, -2.5), 785.0);
+    assert.strictEqual(convertUsdToGtq(100, 0), 785.0);
+    assert.strictEqual(convertUsdToGtq(100, NaN), 785.0);
+  });
+
+  it("convertUsdToGtq handles invalid or non-numeric amounts gracefully", () => {
+    assert.strictEqual(convertUsdToGtq(NaN), 0);
+    // @ts-expect-error test invalid types
+    assert.strictEqual(convertUsdToGtq(null), 0);
+    // @ts-expect-error test invalid types
+    assert.strictEqual(convertUsdToGtq(undefined), 0);
+  });
+
+  it("convertUsdToGtq handles large values without precision degradation", () => {
+    assert.strictEqual(convertUsdToGtq(1000000, 7.85), 7850000);
   });
 });

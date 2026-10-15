@@ -48,6 +48,7 @@ interface TransactionTableProps {
   isClassifyingWithLLM?: boolean;
   llmClassificationError?: string | null;
   llmSuccessMessage?: string | null;
+  unclassifiedThreshold?: number;
 }
 
 type SortField = "date" | "description" | "amount";
@@ -156,6 +157,7 @@ export function TransactionTable({
   isClassifyingWithLLM = false,
   llmClassificationError = null,
   llmSuccessMessage = null,
+  unclassifiedThreshold = UNCLASSIFIED_THRESHOLD,
 }: TransactionTableProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -514,14 +516,14 @@ export function TransactionTable({
                 </p>
 
                 <p className="text-2xs text-amber-800/90 dark:text-amber-300/90 mt-1 leading-snug">
-                  {stats.pending > UNCLASSIFIED_THRESHOLD
+                  {stats.pending > unclassifiedThreshold
                     ? `Tienes ${stats.pending} gastos pendientes de clasificar, espera mientras la IA los clasifica...`
                     : "Click aquí para filtrarlos y continuar."}
                 </p>
               </div>
 
-              {/* If > 5 pending, show the AI Classification button inside the card */}
-              {stats.pending > UNCLASSIFIED_THRESHOLD && onClassifyPendingWithLLM && (
+              {/* If > threshold pending, show the AI Classification button inside the card */}
+              {stats.pending > unclassifiedThreshold && onClassifyPendingWithLLM && (
                 <div className="mt-3 pt-2.5 border-t border-amber-200/80 dark:border-amber-900/60">
                   <button
                     type="button"

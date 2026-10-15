@@ -79,6 +79,35 @@ export default function Home() {
     rawRows: [],
   });
 
+  const [unclassifiedThreshold, setUnclassifiedThreshold] =
+    useState<number>(UNCLASSIFIED_THRESHOLD);
+  const [exchangeRate, setExchangeRate] = useState<number>(7.85);
+
+  // Fetch runtime server configuration dynamically (Option A: Server-Driven via API)
+  useEffect(() => {
+    fetch("/api/config")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          if (
+            typeof data.unclassifiedThreshold === "number" &&
+            data.unclassifiedThreshold > 0
+          ) {
+            setUnclassifiedThreshold(data.unclassifiedThreshold);
+          }
+          if (
+            typeof data.exchangeRate?.rate === "number" &&
+            data.exchangeRate.rate > 0
+          ) {
+            setExchangeRate(data.exchangeRate.rate);
+          }
+        }
+      })
+      .catch(() => {
+        // Fallback gracefully to default constants
+      });
+  }, []);
+
   // Hydrate stored data from localStorage on mount
   useEffect(() => {
     const storedCats = loadStoredCategories();
@@ -385,9 +414,9 @@ export default function Home() {
       (tx) => !tx.category || tx.category === "Pendiente"
     );
 
-    // US-009 Threshold Rule: If pending > 5, trigger LLM assistance.
-    // If <= 5, skip LLM call and allow manual assignment.
-    if (pending.length > UNCLASSIFIED_THRESHOLD) {
+    // Threshold Rule: If pending > unclassifiedThreshold, trigger LLM assistance.
+    // If <= threshold, skip LLM call and allow manual assignment.
+    if (pending.length > unclassifiedThreshold) {
       await classifyPendingWithLLM(pending, classified);
     }
   };
@@ -926,6 +955,7 @@ export default function Home() {
             isClassifyingWithLLM={isClassifyingWithLLM}
             llmClassificationError={llmClassificationError}
             llmSuccessMessage={llmSuccessMessage}
+            unclassifiedThreshold={unclassifiedThreshold}
           />
         )}
       </main>

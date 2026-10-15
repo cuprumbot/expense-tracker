@@ -7,6 +7,7 @@ import {
   classifyTransactions,
   getClassificationStats,
   getSubscriptionSummary,
+  getUnclassifiedThreshold,
   MerchantCatalog,
 } from "./expense-classifier";
 import { Transaction } from "@/types/transaction";
@@ -212,5 +213,28 @@ describe("expense-classifier unit tests", () => {
     assert.equal(summary.services.length, 11);
     assert.equal(summary.services[0].name, "Netflix Guatemala");
     assert.equal(summary.services[0].amount, 85);
+  });
+
+  it("getUnclassifiedThreshold reads from environment variables with fallback", () => {
+    const originalEnv = process.env.UNCLASSIFIED_EXPENSES_THRESHOLD;
+    try {
+      delete process.env.UNCLASSIFIED_EXPENSES_THRESHOLD;
+      // Falls back to catalog threshold (5) or 10
+      const defaultThreshold = getUnclassifiedThreshold();
+      assert.ok(defaultThreshold > 0);
+
+      // Respects UNCLASSIFIED_EXPENSES_THRESHOLD
+      process.env.UNCLASSIFIED_EXPENSES_THRESHOLD = "15";
+      assert.equal(getUnclassifiedThreshold(), 15);
+
+      // Falls back on invalid values
+      process.env.UNCLASSIFIED_EXPENSES_THRESHOLD = "invalid";
+      assert.equal(getUnclassifiedThreshold(), defaultThreshold);
+
+      process.env.UNCLASSIFIED_EXPENSES_THRESHOLD = "-5";
+      assert.equal(getUnclassifiedThreshold(), defaultThreshold);
+    } finally {
+      process.env.UNCLASSIFIED_EXPENSES_THRESHOLD = originalEnv;
+    }
   });
 });

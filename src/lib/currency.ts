@@ -62,3 +62,68 @@ export function parseCurrency(value: string | number): number {
 
   return isNegative ? -Math.abs(parsed) : parsed;
 }
+
+/**
+ * Default fallback exchange rate: USD 1.00 = GTQ 7.85.
+ * Strictly conforms to project specifications in SPEC.md.
+ */
+export const DEFAULT_USD_TO_GTQ_RATE = 7.85;
+
+/**
+ * Retrieves the active USD to GTQ exchange rate.
+ * Reads from the server environment variable `USD_GTQ_EXCHANGE_RATE`.
+ * Gracefully falls back to 7.85 if the variable is unset, not a number, or less than or equal to zero.
+ *
+ * @returns Active exchange rate as a positive number.
+ */
+export function getExchangeRate(): number {
+  const envVal =
+    typeof process !== "undefined" && process.env
+      ? process.env.USD_GTQ_EXCHANGE_RATE
+      : undefined;
+
+  if (envVal !== undefined && envVal !== null) {
+    const parsed = parseFloat(String(envVal).trim());
+    if (!Number.isNaN(parsed) && parsed > 0) {
+      return Number(parsed.toFixed(4));
+    }
+  }
+
+  return DEFAULT_USD_TO_GTQ_RATE;
+}
+
+/**
+ * Converts a US Dollar (USD) monetary value to Guatemalan Quetzales (GTQ).
+ * Multiplies by the system exchange rate (or customRate if provided and valid > 0)
+ * and accurately rounds to 2 decimal places.
+ *
+ * @param amountInUsd - The monetary value in USD.
+ * @param customRate - Optional custom exchange rate to override the system default.
+ * @returns Converted amount in GTQ rounded to 2 decimal places.
+ */
+export function convertUsdToGtq(amountInUsd: number, customRate?: number): number {
+  if (typeof amountInUsd !== "number" || Number.isNaN(amountInUsd)) {
+    return 0;
+  }
+
+  if (amountInUsd === 0) {
+    return 0;
+  }
+
+  let rate = getExchangeRate();
+  if (
+    typeof customRate === "number" &&
+    !Number.isNaN(customRate) &&
+    customRate > 0
+  ) {
+    rate = customRate;
+  }
+
+  const converted = amountInUsd * rate;
+  // Accurately round to 2 decimal places
+  const factor = 100;
+  const isNegative = converted < 0;
+  const rounded = Math.round(Math.abs(converted) * factor) / factor;
+
+  return isNegative ? -rounded : rounded;
+}

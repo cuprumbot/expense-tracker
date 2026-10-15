@@ -90,18 +90,18 @@ This document outlines the user stories, implementation phases, and testable acc
 
 ## Phase 11: Foreign Currency (USD) Handling & Exchange Rate Engine (Core Improvements)
 
-### [ ] US-021: Server-Configurable USD-to-GTQ Exchange Rate Service
+### [x] US-021: Server-Configurable USD-to-GTQ Exchange Rate Service
 - **As a** system administrator and developer,
 - **I want** a dedicated exchange rate service that converts USD transactions to Quetzales at a default rate of 7.85 and supports server environment configuration,
 - **So that** all currency conversions are uniform, accurate, and easily updated without modifying code.
 - **Split-Brain Boundary:** Local only (Server / Client utility module).
 - **Acceptance Criteria:**
-  - [ ] An exchange rate service module (`src/lib/currency.ts`) provides a utility function `convertUsdToGtq(amountInUsd: number, customRate?: number): number`.
-  - [ ] Default exchange rate is set to `USD 1.00 = GTQ 7.85`.
-  - [ ] Reads the exchange rate from the server environment variable `USD_GTQ_EXCHANGE_RATE`, falling back to `7.85` if unset or invalid.
-  - [ ] Converts amounts accurately and rounds the resulting Quetzales value to 2 decimal places.
-  - [ ] Provides an endpoint or server helper `getExchangeRate(): number` to supply the active exchange rate to the client.
-  - [ ] Unit tests verify currency conversions, edge cases (zero, negative numbers, extreme values), and fallback defaults.
+  - [x] An exchange rate service module (`src/lib/currency.ts`) provides a utility function `convertUsdToGtq(amountInUsd: number, customRate?: number): number`.
+  - [x] Default exchange rate is set to `USD 1.00 = GTQ 7.85`.
+  - [x] Reads the exchange rate from the server environment variable `USD_GTQ_EXCHANGE_RATE`, falling back to `7.85` if unset or invalid.
+  - [x] Converts amounts accurately and rounds the resulting Quetzales value to 2 decimal places.
+  - [x] Provides an endpoint or server helper `getExchangeRate(): number` to supply the active exchange rate to the client.
+  - [x] Unit tests verify currency conversions, edge cases (zero, negative numbers, extreme values), and fallback defaults.
 
 ### [ ] US-022: Multi-Currency Extraction in Bank Parsers & Data Model Extension
 - **As a** user with expenses billed in US Dollars ($ / USD),
