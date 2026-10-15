@@ -101,43 +101,14 @@ De pronto me encontré frente a mi propia arquitectura y tuve que admitirlo: **h
 
 ---
 
-## La otra cara de la moneda: cuando la IA se ahoga en estadísticas
-
-Esto me lleva a una segunda lección que aprendí durante este desarrollo, y que apunta a una limitación muy real de los agentes y modelos actuales: **su incapacidad para distinguir entre "hacer mucho" y "hacer lo correcto" cuando se trata de métricas y estadísticas.**
-
-En una de las fases del proyecto, le pedí al modelo que generara el código para el panel de estadísticas financieras. La instrucción fue simple: *"Muestra estadísticas útiles sobre los gastos del usuario"*.
-
-El agente de IA se puso manos a la obra. Y vaya que trabajó.
-
-Generó un volumen colosal de estadísticas. No exagero: era una muralla interminable de números, tarjetas y gráficos. Había:
-* Total gastado en la quincena.
-* Total gastado en el mes.
-* Gasto promedio diario.
-* Gasto promedio por transacción.
-* Porcentaje de compras sobre el total.
-* Mediana de consumos.
-* Tres tarjetas distintas que mostraban básicamente lo mismo (el peso relativo de una categoría) pero calculado con fórmulas ligeramente diferentes.
-
-**Todo el código funcionaba a la perfección.** No había errores de TypeScript, las matemáticas eran impecables, los componentes de React renderizaban sin parpadear.
-
-Pero **la interfaz era completamente inútil.**
-
-En lugar de darle al usuario una respuesta clara (*"Este mes gastaste Q 4,500, de los cuales Q 1,200 se fueron en supermercado y tienes Q 300 comprometidos en streaming"*), la pantalla parecía la cabina de un avión comercial en medio de una tormenta. Había tanta información que el cerebro se desconectaba de inmediato.
-
-La IA entendió el concepto de "estadísticas", pero carecía por completo del **criterio de síntesis** y del **buen gusto de producto**. Sabe calcularlo todo, pero no tiene ni la más mínima idea de qué es lo que realmente le importa a un ser humano cuando abre una aplicación para saber si le alcanza el dinero para llegar a fin de mes.
-
-Tuve que intervenir, borrar el 70% de las métricas que el modelo había creado con tanto entusiasmo, y dejar únicamente tres indicadores contundentes y una barra de distribución visual.
-
----
-
 ## Lo que me llevo de esta experiencia
 
-Estamos viviendo una etapa dorada para el desarrollo de software. Los modelos de lenguaje y los agentes de codificación nos permiten construir en un fin de semana lo que antes tomaba meses.
+Estamos viviendo una etapa dorada para el desarrollo de software. Los modelos de lenguaje y las herramientas modernas nos permiten construir a una velocidad impensable hace solo unos años.
 
 Pero esa misma facilidad puede nublar nuestro juicio arquitectónico:
 
-1. **No cambies la complejidad del dominio por complejidad de infraestructura:** Si un problema se resuelve con un parser de 100 líneas o una lista de búsqueda en memoria, no le metas una dependencia de red, un modelo estocástico, un costo de tokens y una política de reintentos solo porque "la IA está de moda".
-2. **Cuidado con la sobreestimación:** Antes le teníamos miedo a problemas que eran difíciles. Ahora asumimos que cualquier problema con texto desordenado requiere magia generativa. La mayoría de las veces, basta un poco de disciplina y lógica básica.
-3. **El código lo puede escribir la IA, pero el criterio de producto sigue siendo tuyo:** Los modelos son generadores hiperactivos. Si les pides estadísticas, te darán cuarenta. Si les pides sugerencias, te escribirán una enciclopedia. Saber qué **no** mostrar, qué **no** construir y qué **no** enviar a la nube sigue siendo el trabajo irremplazable del desarrollador.
+1. **No cambies la complejidad del dominio por complejidad de infraestructura:** Si un problema se resuelve con un parser de 100 líneas o una lista de búsqueda en memoria, no le sumes una dependencia de red, un modelo estocástico, costos de tokens y políticas de reintento solo porque "la IA está de moda".
+2. **Cuidado con la sobreestimación:** Antes le teníamos miedo a problemas difíciles y los subestimábamos. Hoy asumimos que cualquier problema con datos desestructurados requiere magia generativa. La mayoría de las veces, un poco de lógica determinista y sentido común resuelven el 90% del caso de uso.
+3. **La IA ejecuta, pero el criterio sigue siendo tuyo:** Un modelo o agente construirá con gusto cualquier solución que le pidas, por más sobrediseñada que sea. Decidir qué **no** construir, qué **no** delegar a un modelo externo y mantener la simplicidad sigue siendo la responsabilidad irremplazable del ingeniero.
 
-Al final, la mejor arquitectura no es la que usa la tecnología más moderna para resolver un problema, sino la que tiene la madurez de dejar de lado la herramienta brillante cuando un buen script aburrido hace el trabajo cien veces mejor.
+Al final, la mejor arquitectura no es la que usa la tecnología más sofisticada para resolver un problema, sino la que tiene la madurez de dejar de lado la herramienta de moda cuando un script sencillo y predecible hace el trabajo cien veces mejor.

@@ -74,3 +74,36 @@ flowchart TD
 - **Cost Optimization:** To reduce costs when calling LLMs, as much information as possible will be identified locally. The PDF will not be sent to the LLM; instead, lighter structured information will be sent.
 - **Availability:** In case of failure to connect to the LLM, all possible expenses will be classified locally, and the user will be given the option to manually classify the remaining ones.
 - **Performance:** The app should be responsive and the user should not have to wait long for the results. This means we should strive for local processing as much as possible.
+
+---
+
+## Second Iteration
+
+For the second iteration of this project, we will implement the following changes. These changes will be categorized in three categories. The categories are only for internal control in the progress meetings, they have no impact on implementation or on user experience.
+
+### Core improvements
+These changes improve the functionality of the app, but will be almost unnoticeable to the end user. They are mostly related to performance and to reduce costs, and as a base for other features.
+
+- Additional banks will be supported via their own custom parser. We'll start with support for Banco Industrial, Banco Agromercantil, Banrural. The objective is to have support for enough banks, so the LLM call to extract expenses can be removed.
+
+- Expenses in dollars will be considered when generating the expense list. When a transaction in dollars is identified, its amount will be converted to quetzales. The transaction list will have a small indicator to tell if a transaction was originally in quetzales or dollars, but this will have no effect on the calculations. We will use USD 1.00 = GTQ 7.85 as exchange rate. The exchange rate can be configured in the server.
+
+- Add more merchants to the local classification. Increase the amount of merchants in each category so most of the classification is done locally, after enough merchants are added we will remove the LLM call to extract expenses. We will also need to adjust the default threshold for unclassified expenses, it will increase to 10 at this time.
+
+### Quality of life
+These changes improve the user experience but add almost no functionality.
+
+- There will be support for uploading multiple files, either at the same time or one after another. Each new file will automatically be added to the current session. The only way to restart a session is to manually hit the corresponding button. When new files are added, the system will check for repeated transactions in case the user accidentally uploads the same file again. The repeated transactions will be detected based on all data matching (date, description, amount). Repeated transactions will be discarded and the user will be alerted (how many repeats were discarded and a message telling them that it might be a repeated file).
+
+### Product improvements
+These changes directly improve the product functionality and the user experience. When presenting this app as a product in the weekly meetings, this will be the most relevant changes to focus on.
+
+The main feature in this iteration will be presenting the results after categorization as a dashboard.
+
+- Dashboard UI/UX:
+    - The dashboard will take all the screen when viewed in a computer or on a landscape orientation tablet, everything should fit nicely. We will decide later the best approach for smaller or portrait orientation screens.
+    - The transaction list will be hidden once we move to the dashboard, there will be a button to show it again. The transaction list will slide from one side of the screen, and slide back when the user hits the button again.
+
+- Information shown in the dashboard:
+    - Subpanel with line graph showing expenses trend over time, with an option to filter by category.
+    - Subpanel with pie chart showing expenses by category, with an option to filter by month.
