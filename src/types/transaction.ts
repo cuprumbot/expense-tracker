@@ -10,6 +10,9 @@ export interface Transaction {
   classificationSource?: "local" | "llm" | "manual";
   category?: string | null;
   isSubscription?: boolean;
+  originalCurrency?: "GTQ" | "USD";
+  originalAmount?: number;
+  exchangeRateApplied?: number;
 }
 
 export interface CustomCategory {
@@ -22,6 +25,7 @@ export interface CSVColumnMapping {
   dateColumn: string;
   descriptionColumn: string;
   amountColumn: string;
+  currencyColumn?: string;
 }
 
 export interface CSVParsingSummary {

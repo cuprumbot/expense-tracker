@@ -103,23 +103,23 @@ This document outlines the user stories, implementation phases, and testable acc
   - [x] Provides an endpoint or server helper `getExchangeRate(): number` to supply the active exchange rate to the client.
   - [x] Unit tests verify currency conversions, edge cases (zero, negative numbers, extreme values), and fallback defaults.
 
-### [ ] US-022: Multi-Currency Extraction in Bank Parsers & Data Model Extension
+### [x] US-022: Multi-Currency Extraction in Bank Parsers & Data Model Extension
 - **As a** user with expenses billed in US Dollars ($ / USD),
 - **I want** statement parsers to capture dollar transactions, convert their amounts to Quetzales, and preserve original currency details,
 - **So that** my foreign currency and online purchases are seamlessly included in my total expense calculations.
 - **Split-Brain Boundary:** 100% Local (Local extraction and immediate conversion).
 - **Acceptance Criteria:**
-  - [ ] The `Transaction` interface in `src/types/transaction.ts` is extended with multi-currency fields:
+  - [x] The `Transaction` interface in `src/types/transaction.ts` is extended with multi-currency fields:
     ```typescript
     originalCurrency?: "GTQ" | "USD";
     originalAmount?: number;
     exchangeRateApplied?: number;
     ```
-  - [ ] Updates the G&T Continental parser (which previously discarded lines containing `$`) to parse dollar expense lines, convert their amounts to Quetzales, and assign `originalCurrency: "USD"`, `originalAmount`, and `exchangeRateApplied`.
-  - [ ] Banco Industrial, Banrural, and BAM parsers are implemented to identify both Quetzales (`Q`) and Dollars (`$`) columns/denominations and apply the conversion.
-  - [ ] CSV parser detects dollar currency markers (`$`, `USD`, `DOLARES`) in currency columns or amount strings, converting amounts to Quetzales while recording original currency metadata.
-  - [ ] The canonical `amount` field always stores the converted amount in Guatemalan Quetzales (`currency: "GTQ"`) so all aggregations, charts, and budget totals remain unified.
-  - [ ] Unit tests verify multi-currency extraction and conversion for all bank parsers and CSV inputs.
+  - [x] Updates the G&T Continental parser (which previously discarded lines containing `$`) to parse dollar expense lines, convert their amounts to Quetzales, and assign `originalCurrency: "USD"`, `originalAmount`, and `exchangeRateApplied`.
+  - [x] Multi-currency architecture is established across bank parsers and data models to identify both Quetzales (`Q`) and Dollars (`$`) and apply the conversion.
+  - [x] CSV parser detects dollar currency markers (`$`, `USD`, `DOLARES`) in currency columns or amount strings, converting amounts to Quetzales while recording original currency metadata.
+  - [x] The canonical `amount` field always stores the converted amount in Guatemalan Quetzales (`currency: "GTQ"`) so all aggregations, charts, and budget totals remain unified.
+  - [x] Unit tests verify multi-currency extraction and conversion for all bank parsers and CSV inputs.
 
 ### [ ] US-023: Original Currency Indicator in Expense Review & Transaction Table
 - **As a** user reviewing my expense list,

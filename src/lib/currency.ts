@@ -50,9 +50,9 @@ export function parseCurrency(value: string | number): number {
   const isMinusNegative = cleaned.includes("-");
   const isNegative = isParenthesesNegative || isMinusNegative;
 
-  // Remove currency identifiers, minus signs, parentheses, commas, and whitespace
+  // Remove currency identifiers (GTQ, Q, USD, DOLARES, DOLAR, $), minus signs, parentheses, commas, and whitespace
   cleaned = cleaned
-    .replace(/GTQ|Q/gi, "")
+    .replace(/GTQ|Q|USD|DOLARES|DOLAR|\$/gi, "")
     .replace(/[(),\s-]/g, "");
 
   const parsed = parseFloat(cleaned);
@@ -61,6 +61,15 @@ export function parseCurrency(value: string | number): number {
   }
 
   return isNegative ? -Math.abs(parsed) : parsed;
+}
+
+/**
+ * Detects whether a string or column value denotes US Dollars ($ / USD).
+ * Checks for "$", "USD", "dolares", "dolar".
+ */
+export function isDollarCurrency(value?: string | null): boolean {
+  if (!value || typeof value !== "string") return false;
+  return /(?:\$|\bUSD\b|\bDOLARES\b|\bDOLAR\b)/i.test(value);
 }
 
 /**

@@ -1,5 +1,5 @@
 import { createRequire } from "module";
-import { parseCurrency } from "@/lib/currency";
+import { parseCurrency, convertUsdToGtq, getExchangeRate } from "@/lib/currency";
 import { Transaction, CSVParsingSummary } from "@/types/transaction";
 
 interface GlobalWithDOMPolyfills {
@@ -212,31 +212,23 @@ export function parseGyTStatementText(text: string): {
   let skippedRowsCount = 0;
   let totalAmount = 0;
 
-  // Strict regex matching G&T Continental statement Quetzales expense lines:
-  // Date1 (Consumption) | Date2 (Posting) | Description | Q | Amount
-  // Dollar ($) charges are deliberately ignored.
-  const txLineRegex = /^(\d{2}[-/.]\d{2}[-/.]\d{4})\s+(\d{2}[-/.]\w{2,3}[-/.]\d{4}|\d{2}[-/.]\d{2}[-/.]\d{4})\s+(.+?)\s+Q\s+([\d,]+\.\d{2})/;
+  // Regex matching G&T Continental statement expense lines:
+  // Date1 (Consumption) | Date2 (Posting) | Description | Q or $ | Amount
+  const txLineRegex = /^(\d{2}[-/.]\d{2}[-/.]\d{4})\s+(\d{2}[-/.]\w{2,3}[-/.]\d{4}|\d{2}[-/.]\d{2}[-/.]\d{4})\s+(.+?)\s+([Q$])\s+([\d,]+\.\d{2})/;
 
   lines.forEach((line, index) => {
-    // If the line contains a dollar amount ($), skip it
-    if (line.includes("$")) {
-      skippedRowsCount++;
-      console.log(`[Depuración PDF - Entrada en $] ${line}`);
-      return;
-    }
-
     const match = line.match(txLineRegex);
     if (!match) {
       return;
     }
 
-    const [, rawDate, , rawDesc, rawAmount] = match;
+    const [, rawDate, , rawDesc, currencySymbol, rawAmount] = match;
 
     // Filter non-expense lines (payments, credits, refunds, summaries)
     if (isNonExpenseLine(rawDesc)) {
       skippedRowsCount++;
       console.log(
-        `[Depuración PDF - Entrada en Crédito/Pagos] Fecha: ${rawDate} | Descripción: ${rawDesc} | Monto: Q ${rawAmount}`
+        `[Depuración PDF - Entrada en Crédito/Pagos] Fecha: ${rawDate} | Descripción: ${rawDesc} | Monto: ${currencySymbol} ${rawAmount}`
       );
       return;
     }
@@ -249,7 +241,10 @@ export function parseGyTStatementText(text: string): {
       return;
     }
 
-    const normalizedAmount = Math.abs(amountVal);
+    const isDollar = currencySymbol === "$";
+    const rate = getExchangeRate();
+    const finalAmount = isDollar ? convertUsdToGtq(amountVal, rate) : amountVal;
+    const normalizedAmount = Math.abs(finalAmount);
     totalAmount += normalizedAmount;
 
     transactions.push({
@@ -260,6 +255,16 @@ export function parseGyTStatementText(text: string): {
       currency: "GTQ",
       classificationSource: "local",
       category: null,
+      ...(isDollar
+        ? {
+            originalCurrency: "USD" as const,
+            originalAmount: Number(Math.abs(amountVal).toFixed(2)),
+            exchangeRateApplied: rate,
+          }
+        : {
+            originalCurrency: "GTQ" as const,
+            originalAmount: Number(Math.abs(amountVal).toFixed(2)),
+          }),
     });
   });
 
@@ -316,70 +321,50 @@ export async function extractGyTTransactionsFromParser(
       const dateMatch = items[0]?.str.match(/^(\d{2}[-/.]\d{2}[-/.]\d{4})/);
       if (!dateMatch) continue;
 
-      const qIndex = items.findIndex((it) => it.str.trim() === "Q");
-      const dollarIndex = items.findIndex((it) => it.str.trim() === "$");
-
-      // Ignore charges in $ per user request
-      if (dollarIndex !== -1 && (qIndex === -1 || dollarIndex < qIndex)) {
-        skippedRowsCount++;
-        const descItems = items.slice(2, dollarIndex);
-        const rawDesc =
-          descItems.map((i) => i.str).join(" ").trim() ||
-          items.slice(1, dollarIndex).map((i) => i.str).join(" ").trim();
-        const dollarAmountItem = items
-          .slice(dollarIndex + 1)
-          .find((it) => it.str.trim().match(/^[\d,]+\.\d{2}$/));
-        const dollarAmount = dollarAmountItem ? dollarAmountItem.str.trim() : "N/A";
-        const debugLog: PDFDebugLog = {
-          type: "dollar_currency",
-          date: dateMatch[1],
-          description: rawDesc,
-          amount: `$${dollarAmount}`,
-        };
-        debugLogs.push(debugLog);
-        console.log(
-          `[Depuración PDF - Entrada en $] Fecha: ${dateMatch[1]} | Descripción: ${rawDesc} | Monto: $${dollarAmount}`
-        );
-        continue;
-      }
-
-      if (qIndex === -1) {
+      // Locate currency symbol: "Q" or "$"
+      const currencyIndex = items.findIndex(
+        (it) => it.str.trim() === "Q" || it.str.trim() === "$"
+      );
+      if (currencyIndex === -1) {
         skippedRowsCount++;
         continue;
       }
 
-      const qItem = items[qIndex];
+      const currencyItem = items[currencyIndex];
+      const currencySymbol = currencyItem.str.trim();
+      const isDollar = currencySymbol === "$";
+
       // Column separation in G&T layout:
-      // Débito / Compras: Q symbol at x < 460 (centered around x ~ 401)
-      // Crédito / Pagos: Q symbol at x >= 460 (centered around x ~ 505)
-      const isDebit = qItem.x < 460;
+      // Débito / Compras: currency symbol at x < 460 (centered around x ~ 401)
+      // Crédito / Pagos: currency symbol at x >= 460 (centered around x ~ 505)
+      const isDebit = currencyItem.x < 460;
       if (!isDebit) {
         // Payments, cashback, or statement credits -> ignore
         skippedRowsCount++;
-        const descItems = items.slice(2, qIndex);
+        const descItems = items.slice(2, currencyIndex);
         const rawDesc =
           descItems.map((i) => i.str).join(" ").trim() ||
-          items.slice(1, qIndex).map((i) => i.str).join(" ").trim();
+          items.slice(1, currencyIndex).map((i) => i.str).join(" ").trim();
         const creditAmountItem = items
-          .slice(qIndex + 1)
+          .slice(currencyIndex + 1)
           .find((it) => it.str.trim().match(/^[\d,]+\.\d{2}$/));
         const creditAmount = creditAmountItem ? creditAmountItem.str.trim() : "N/A";
         const debugLog: PDFDebugLog = {
           type: "credit_or_payment",
           date: dateMatch[1],
           description: rawDesc,
-          amount: `Q ${creditAmount}`,
+          amount: `${currencySymbol} ${creditAmount}`,
         };
         debugLogs.push(debugLog);
         console.log(
-          `[Depuración PDF - Entrada en Crédito/Pagos] Fecha: ${dateMatch[1]} | Descripción: ${rawDesc} | Monto: Q ${creditAmount}`
+          `[Depuración PDF - Entrada en Crédito/Pagos] Fecha: ${dateMatch[1]} | Descripción: ${rawDesc} | Monto: ${currencySymbol} ${creditAmount}`
         );
         continue;
       }
 
-      // Extract amount item following the Q symbol
+      // Extract amount item following the currency symbol
       const amountItem = items
-        .slice(qIndex + 1)
+        .slice(currencyIndex + 1)
         .find((it) => it.str.trim().match(/^[\d,]+\.\d{2}$/));
       if (!amountItem) {
         skippedRowsCount++;
@@ -392,11 +377,11 @@ export async function extractGyTTransactionsFromParser(
         continue;
       }
 
-      // Description is everything between date2 and the Q symbol
-      const descItems = items.slice(2, qIndex);
+      // Description is everything between date2 and the currency symbol
+      const descItems = items.slice(2, currencyIndex);
       let rawDesc = descItems.map((i) => i.str).join(" ").trim();
       if (!rawDesc) {
-        rawDesc = items.slice(1, qIndex).map((i) => i.str).join(" ").trim();
+        rawDesc = items.slice(1, currencyIndex).map((i) => i.str).join(" ").trim();
       }
 
       const cleanDesc = cleanMerchantDescription(rawDesc);
@@ -406,16 +391,28 @@ export async function extractGyTTransactionsFromParser(
       }
 
       const isoDate = normalizeStatementDate(dateMatch[1]);
-      totalAmount += amountVal;
+      const rate = getExchangeRate();
+      const finalAmount = isDollar ? convertUsdToGtq(amountVal, rate) : amountVal;
+      totalAmount += finalAmount;
 
       transactions.push({
         id: `tx_gyt_p${p}_${transactions.length + 1}`,
         date: isoDate,
         description: cleanDesc,
-        amount: Number(amountVal.toFixed(2)),
+        amount: Number(finalAmount.toFixed(2)),
         currency: "GTQ",
         classificationSource: "local",
         category: null,
+        ...(isDollar
+          ? {
+              originalCurrency: "USD" as const,
+              originalAmount: Number(amountVal.toFixed(2)),
+              exchangeRateApplied: rate,
+            }
+          : {
+              originalCurrency: "GTQ" as const,
+              originalAmount: Number(amountVal.toFixed(2)),
+            }),
       });
     }
   }

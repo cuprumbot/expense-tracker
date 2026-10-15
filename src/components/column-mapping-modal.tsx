@@ -30,6 +30,9 @@ export function ColumnMappingModal({
   const [amountCol, setAmountCol] = useState<string>(
     initialMapping?.amountColumn || ""
   );
+  const [currencyCol, setCurrencyCol] = useState<string>(
+    initialMapping?.currencyColumn || ""
+  );
   const [validationError, setValidationError] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -52,6 +55,7 @@ export function ColumnMappingModal({
       dateColumn: dateCol,
       descriptionColumn: descCol,
       amountColumn: amountCol,
+      currencyColumn: currencyCol || undefined,
     });
   };
 
@@ -149,7 +153,7 @@ export function ColumnMappingModal({
                 htmlFor="select-amount-col"
                 className="block text-xs font-medium text-zinc-700 dark:text-zinc-300"
               >
-                Columna de Monto / Gasto (GTQ) <span className="text-red-500">*</span>
+                Columna de Monto / Gasto <span className="text-red-500">*</span>
               </label>
               <select
                 id="select-amount-col"
@@ -160,6 +164,32 @@ export function ColumnMappingModal({
                 <option value="">-- Selecciona columna para Monto --</option>
                 {headers.map((h) => (
                   <option key={`amount-${h}`} value={h}>
+                    {h}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Currency Select (Optional) */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="select-currency-col"
+                  className="block text-xs font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  Columna de Moneda
+                </label>
+                <span className="text-2xs text-zinc-400">Opcional (Q / $)</span>
+              </div>
+              <select
+                id="select-currency-col"
+                value={currencyCol}
+                onChange={(e) => setCurrencyCol(e.target.value)}
+                className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+              >
+                <option value="">-- Sin columna de moneda (detectar en monto) --</option>
+                {headers.map((h) => (
+                  <option key={`currency-${h}`} value={h}>
                     {h}
                   </option>
                 ))}

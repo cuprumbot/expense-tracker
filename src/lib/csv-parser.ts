@@ -1,5 +1,10 @@
 import Papa from "papaparse";
-import { parseCurrency } from "@/lib/currency";
+import {
+  parseCurrency,
+  convertUsdToGtq,
+  getExchangeRate,
+  isDollarCurrency,
+} from "@/lib/currency";
 import {
   Transaction,
   CSVColumnMapping,
@@ -45,6 +50,16 @@ const AMOUNT_KEYWORDS = [
   "debito q",
 ];
 
+const CURRENCY_KEYWORDS = [
+  "moneda",
+  "currency",
+  "tipo_moneda",
+  "divisa",
+  "tipo moneda",
+  "tipo de moneda",
+  "curr",
+];
+
 /**
  * Normalizes text for keyword comparison (lowercase, trims, removes diacritics).
  */
@@ -84,11 +99,13 @@ export function detectColumnMapping(headers: string[]): {
   const dateCandidates = findCandidateColumns(headers, DATE_KEYWORDS);
   const descCandidates = findCandidateColumns(headers, DESCRIPTION_KEYWORDS);
   const amountCandidates = findCandidateColumns(headers, AMOUNT_KEYWORDS);
+  const currencyCandidates = findCandidateColumns(headers, CURRENCY_KEYWORDS);
 
   const detected: Partial<CSVColumnMapping> = {
     dateColumn: dateCandidates.length === 1 ? dateCandidates[0] : undefined,
     descriptionColumn: descCandidates.length === 1 ? descCandidates[0] : undefined,
     amountColumn: amountCandidates.length === 1 ? amountCandidates[0] : undefined,
+    currencyColumn: currencyCandidates.length === 1 ? currencyCandidates[0] : undefined,
   };
 
   const reasons: string[] = [];
@@ -222,6 +239,7 @@ export function parseCSVContent(
         dateColumn: detection.detected.dateColumn!,
         descriptionColumn: detection.detected.descriptionColumn!,
         amountColumn: detection.detected.amountColumn!,
+        currencyColumn: detection.detected.currencyColumn,
       };
     }
   }
@@ -254,6 +272,9 @@ export function parseCSVContent(
     const rawDate = row[mappingToUse!.dateColumn];
     const rawDesc = row[mappingToUse!.descriptionColumn];
     const rawAmount = row[mappingToUse!.amountColumn];
+    const rawCurrency = mappingToUse?.currencyColumn
+      ? row[mappingToUse.currencyColumn]
+      : undefined;
 
     if (!rawDesc && !rawAmount && !rawDate) {
       skippedRowsCount++;
@@ -269,8 +290,13 @@ export function parseCSVContent(
       return;
     }
 
-    // Treat expenses as positive expenditure values
-    const normalizedAmount = Math.abs(amountVal);
+    // Detect if currency is USD either via currency column or inline symbol/text in amount
+    const isDollar =
+      isDollarCurrency(rawCurrency) || isDollarCurrency(rawAmount);
+
+    const rate = getExchangeRate();
+    const finalAmount = isDollar ? convertUsdToGtq(amountVal, rate) : amountVal;
+    const normalizedAmount = Math.abs(finalAmount);
     totalAmount += normalizedAmount;
 
     transactions.push({
@@ -281,6 +307,16 @@ export function parseCSVContent(
       currency: "GTQ",
       classificationSource: "local",
       category: null,
+      ...(isDollar
+        ? {
+            originalCurrency: "USD" as const,
+            originalAmount: Number(Math.abs(amountVal).toFixed(2)),
+            exchangeRateApplied: rate,
+          }
+        : {
+            originalCurrency: "GTQ" as const,
+            originalAmount: Number(Math.abs(amountVal).toFixed(2)),
+          }),
     });
   });
 

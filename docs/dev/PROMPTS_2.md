@@ -14,8 +14,6 @@ Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run a
 
 Work autonomously end-to-end:
 
-    Put the exchange rate and the unclassified expenses threshold in .env variables for ease of configuration.
-
     Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
 
     Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
@@ -23,3 +21,17 @@ Work autonomously end-to-end:
 Only stop when User Story #21 is fully verified, then report what was done.
 
 ---
+
+Execute User Story #22 from `USER_STORIES_2.md`.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    Update the current code so the transaction in dollars found in G&T bank statements and CSV files can be processed..
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+Only stop when User Story #22 is fully verified, then report what was done.

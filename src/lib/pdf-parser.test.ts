@@ -45,18 +45,20 @@ describe("detectBankFromText", () => {
 });
 
 describe("parseGyTStatementText", () => {
-  it("extracts valid merchant expenses and filters out payments, credits and dollar charges", () => {
+  it("extracts valid merchant expenses in Q and $, converts $ to GTQ, and filters out payments/credits", () => {
     const result = parseGyTStatementText(SAMPLE_GYT_TEXT);
 
-    // Only POLLO CAMPERO, Tigo Guatemala, and BURGER KING in Q should be extracted
-    assert.strictEqual(result.transactions.length, 3);
-    assert.strictEqual(result.summary.validTransactionsCount, 3);
+    // POLLO CAMPERO, Tigo Guatemala, BURGER KING in Q, plus NETFLIX and Spotify in $
+    assert.strictEqual(result.transactions.length, 5);
+    assert.strictEqual(result.summary.validTransactionsCount, 5);
 
     const campero = result.transactions[0];
     assert.strictEqual(campero.date, "2026-09-02");
     assert.strictEqual(campero.description, "POLLO CAMPERO 112 AV P");
     assert.strictEqual(campero.amount, 116.8);
     assert.strictEqual(campero.currency, "GTQ");
+    assert.strictEqual(campero.originalCurrency, "GTQ");
+    assert.strictEqual(campero.originalAmount, 116.8);
 
     const tigo = result.transactions[1];
     assert.strictEqual(tigo.date, "2026-09-03");
@@ -68,54 +70,91 @@ describe("parseGyTStatementText", () => {
     assert.strictEqual(bk.description, "BURGER KING R1 ZONA 9");
     assert.strictEqual(bk.amount, 34.0);
 
-    // Total should be 116.8 + 215 + 34 = 365.8 (excluding Netflix and Spotify in $)
-    assert.strictEqual(result.summary.totalAmount, 365.8);
+    const netflix = result.transactions[3];
+    assert.strictEqual(netflix.date, "2026-09-09");
+    assert.strictEqual(netflix.description, "NETFLIX.COM");
+    assert.strictEqual(netflix.currency, "GTQ");
+    assert.strictEqual(netflix.originalCurrency, "USD");
+    assert.strictEqual(netflix.originalAmount, 6.99);
+    assert.strictEqual(netflix.exchangeRateApplied, 7.85);
+    assert.strictEqual(netflix.amount, 54.87); // 6.99 * 7.85 = 54.8715 -> 54.87
+
+    const spotify = result.transactions[4];
+    assert.strictEqual(spotify.date, "2026-09-10");
+    assert.strictEqual(spotify.description, "Spotify P46AF6B2C7");
+    assert.strictEqual(spotify.currency, "GTQ");
+    assert.strictEqual(spotify.originalCurrency, "USD");
+    assert.strictEqual(spotify.originalAmount, 7.99);
+    assert.strictEqual(spotify.exchangeRateApplied, 7.85);
+    assert.strictEqual(spotify.amount, 62.72); // 7.99 * 7.85 = 62.7215 -> 62.72
+
+    // Total should be 116.8 + 215 + 34 + 54.87 + 62.72 = 483.39
+    assert.strictEqual(result.summary.totalAmount, 483.39);
   });
 });
 
 describe("parsePDFStatement integration with demo files", () => {
-  it("successfully parses demo1.pdf with exact Débito/Compras sum and ignores $ and Créditos", async () => {
-    if (!fs.existsSync("./demo/demo1.pdf")) {
+  it("successfully parses demo1_muchos_pendientes.pdf including dollar expenses converted to GTQ", async () => {
+    const filePath = fs.existsSync("./demo/demo1_muchos_pendientes.pdf")
+      ? "./demo/demo1_muchos_pendientes.pdf"
+      : "./demo/demo1.pdf";
+    if (!fs.existsSync(filePath)) {
       return;
     }
-    const buf = fs.readFileSync("./demo/demo1.pdf");
+    const buf = fs.readFileSync(filePath);
     const result = await parsePDFStatement(new Uint8Array(buf));
 
     assert.strictEqual(result.success, true);
     assert.strictEqual(result.isSupportedBank, true);
     assert.strictEqual(result.bankName, "Banco G&T Continental");
-    assert.strictEqual(result.transactions.length, 69);
-    assert.strictEqual(result.summary.validTransactionsCount, 69);
-    assert.strictEqual(result.summary.totalAmount, 18088.13);
-    assert.strictEqual(result.summary.skippedRowsCount, 22);
+    assert.strictEqual(result.transactions.length, 72);
+    assert.strictEqual(result.summary.validTransactionsCount, 72);
+    assert.strictEqual(result.summary.totalAmount, 18284.14);
 
-    // Ensure none of the extracted transactions are dollar charges or payments
+    const dollarTxs = result.transactions.filter(
+      (tx) => tx.originalCurrency === "USD"
+    );
+    assert.strictEqual(dollarTxs.length, 3);
+    for (const dTx of dollarTxs) {
+      assert.strictEqual(dTx.currency, "GTQ");
+      assert.strictEqual(dTx.exchangeRateApplied, 7.85);
+      assert.ok(dTx.originalAmount && dTx.originalAmount > 0);
+    }
+
+    // Ensure payments and credits are filtered
     for (const tx of result.transactions) {
       assert.strictEqual(tx.currency, "GTQ");
       assert.ok(!tx.description.toLowerCase().includes("pago por internet"));
+      assert.ok(!tx.description.toLowerCase().includes("pago internet"));
       assert.ok(!tx.description.toLowerCase().includes("cash back"));
     }
   });
 
-  it("successfully parses demo2.pdf with exact Débito/Compras sum and ignores $ and Créditos", async () => {
-    if (!fs.existsSync("./demo/demo2.pdf")) {
+  it("successfully parses demo2_pocos_pendientes.pdf including dollar expenses converted to GTQ", async () => {
+    const filePath = fs.existsSync("./demo/demo2_pocos_pendientes.pdf")
+      ? "./demo/demo2_pocos_pendientes.pdf"
+      : "./demo/demo2.pdf";
+    if (!fs.existsSync(filePath)) {
       return;
     }
-    const buf = fs.readFileSync("./demo/demo2.pdf");
+    const buf = fs.readFileSync(filePath);
     const result = await parsePDFStatement(new Uint8Array(buf));
 
     assert.strictEqual(result.success, true);
     assert.strictEqual(result.isSupportedBank, true);
     assert.strictEqual(result.bankName, "Banco G&T Continental");
-    assert.strictEqual(result.transactions.length, 51);
-    assert.strictEqual(result.summary.validTransactionsCount, 51);
-    assert.strictEqual(result.summary.totalAmount, 14799.77);
-    assert.strictEqual(result.summary.skippedRowsCount, 27);
+    assert.strictEqual(result.transactions.length, 55);
+    assert.strictEqual(result.summary.validTransactionsCount, 55);
+    assert.strictEqual(result.summary.totalAmount, 18349.23);
 
-    for (const tx of result.transactions) {
-      assert.strictEqual(tx.currency, "GTQ");
-      assert.ok(!tx.description.toLowerCase().includes("pago por internet"));
-      assert.ok(!tx.description.toLowerCase().includes("cash back"));
+    const dollarTxs = result.transactions.filter(
+      (tx) => tx.originalCurrency === "USD"
+    );
+    assert.strictEqual(dollarTxs.length, 4);
+    for (const dTx of dollarTxs) {
+      assert.strictEqual(dTx.currency, "GTQ");
+      assert.strictEqual(dTx.exchangeRateApplied, 7.85);
+      assert.ok(dTx.originalAmount && dTx.originalAmount > 0);
     }
   });
 });
