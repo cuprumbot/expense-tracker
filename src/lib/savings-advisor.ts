@@ -69,6 +69,10 @@ export const CATEGORY_NAME_EN_MAP: Record<string, string> = {
   "Salud y Farmacia": "Healthcare, Medicines & Pharmacy",
   "Entretenimiento y Compras": "Shopping, Recreation & Entertainment",
   Suscripciones: "Digital Subscriptions & Recurring Memberships",
+  "Tecnología y Computación": "Technology, Hardware & Cloud Services",
+  "Hogar y Mascotas": "Home Improvement, Pets & Hardware",
+  "Educación y Librerías": "Education, Books & Learning",
+  "Cuidado Personal y Belleza": "Personal Care, Grooming & Beauty",
   Pendiente: "Unclassified",
 };
 

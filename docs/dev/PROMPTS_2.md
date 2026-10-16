@@ -121,3 +121,31 @@ Only stop when User Story #26 is fully verified, then report what was done.
 Do not commit, I will check the functionality manually before staging and committing.
 
 After finishing execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.
+
+---
+
+Execute User Story #24 from `USER_STORIES_2.md`.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    We want to ensure there are enough categories to cover most common types of expenses.
+        - Have around 8-12 categories. Each will have its own color on the frontend files.
+        - Each category will have between 15-50 keywords.
+        - Most categories will have vendors from Guatemala.
+        - It is acceptable to have some categories dedicated to international vendors (such as Netflix and other subscriptions, and Amazon and other web shops).
+    
+    Use the `2026-XX.pdf` files and your own investigation to populate the categories in `merchant-catalog.json`. Do not use the `BI-2025-XX.pdf` files yet.
+
+    Additionally, create a new file in `data` called `unsure.md`. There you will put vendors which you are unsure which category to assign to, or you think might fit more than one category. For those vendors, you should also put keywords you would assign to them.
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+Only stop when User Story #24 is fully verified, then report what was done.
+
+Do not commit, I will check the files manually before staging and committing.
+
+After finishing execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.

@@ -129,6 +129,30 @@ const CATEGORY_STYLES: Record<
     border: "border-indigo-200 dark:border-indigo-800",
     dot: "bg-indigo-500",
   },
+  "Tecnología y Computación": {
+    bg: "bg-cyan-50 dark:bg-cyan-950/40",
+    text: "text-cyan-700 dark:text-cyan-300",
+    border: "border-cyan-200 dark:border-cyan-800",
+    dot: "bg-cyan-500",
+  },
+  "Hogar y Mascotas": {
+    bg: "bg-lime-50 dark:bg-lime-950/40",
+    text: "text-lime-700 dark:text-lime-300",
+    border: "border-lime-200 dark:border-lime-800",
+    dot: "bg-lime-500",
+  },
+  "Educación y Librerías": {
+    bg: "bg-rose-50 dark:bg-rose-950/40",
+    text: "text-rose-700 dark:text-rose-300",
+    border: "border-rose-200 dark:border-rose-800",
+    dot: "bg-rose-500",
+  },
+  "Cuidado Personal y Belleza": {
+    bg: "bg-fuchsia-50 dark:bg-fuchsia-950/40",
+    text: "text-fuchsia-700 dark:text-fuchsia-300",
+    border: "border-fuchsia-200 dark:border-fuchsia-800",
+    dot: "bg-fuchsia-500",
+  },
   Pendiente: {
     bg: "bg-amber-50 dark:bg-amber-950/40",
     text: "text-amber-800 dark:text-amber-200 font-medium",

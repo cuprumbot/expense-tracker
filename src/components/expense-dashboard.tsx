@@ -31,6 +31,10 @@ const CATEGORY_HEX_COLORS: Record<string, string> = {
   "Salud y Farmacia": "#14b8a6", // Teal
   "Entretenimiento y Compras": "#8b5cf6", // Violet
   Suscripciones: "#6366f1", // Indigo
+  "Tecnología y Computación": "#06b6d4", // Cyan
+  "Hogar y Mascotas": "#84cc16", // Lime
+  "Educación y Librerías": "#f43f5e", // Rose
+  "Cuidado Personal y Belleza": "#d946ef", // Fuchsia
   Pendiente: "#94a3b8", // Slate
 };
 
