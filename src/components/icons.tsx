@@ -40,6 +40,7 @@ import {
   Target,
   ChevronDown,
   ChevronUp,
+  Globe,
 } from "lucide-react";
 
 export const Icons = {
@@ -84,4 +85,5 @@ export const Icons = {
   Target,
   ChevronDown,
   ChevronUp,
+  Globe,
 };

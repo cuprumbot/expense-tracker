@@ -160,6 +160,7 @@ export function TransactionTable({
   unclassifiedThreshold = UNCLASSIFIED_THRESHOLD,
 }: TransactionTableProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCurrency, setSelectedCurrency] = useState<"all" | "GTQ" | "USD">("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -221,13 +222,14 @@ export function TransactionTable({
     return Array.from(set);
   }, [customCategories, uniqueCategories]);
 
-  // Filtered transactions by category AND search term (US-012)
+  // Filtered transactions by category, search term, and currency (US-012, US-023)
   const filteredTransactions = useMemo(() => {
     return filterTransactions(transactions, {
       category: selectedCategory,
       searchTerm,
+      currency: selectedCurrency,
     });
-  }, [transactions, selectedCategory, searchTerm]);
+  }, [transactions, selectedCategory, searchTerm, selectedCurrency]);
 
   // Sorted transactions
   const sortedTransactions = useMemo(() => {
@@ -671,12 +673,13 @@ export function TransactionTable({
 
           {/* Quick Actions & Clear Filter */}
           <div className="flex items-center gap-3 self-end sm:self-auto text-xs text-zinc-500">
-            {(selectedCategory !== "all" || searchTerm) && (
+            {(selectedCategory !== "all" || searchTerm || selectedCurrency !== "all") && (
               <button
                 type="button"
                 onClick={() => {
                   setSelectedCategory("all");
                   setSearchTerm("");
+                  setSelectedCurrency("all");
                 }}
                 className="text-2xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 underline cursor-pointer"
               >
@@ -693,6 +696,53 @@ export function TransactionTable({
                 <span>Nueva categoría</span>
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Currency Filter Bar (US-023) */}
+        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+          <span className="text-2xs font-medium text-zinc-500 dark:text-zinc-400 mr-1">
+            Moneda:
+          </span>
+          <div
+            role="group"
+            aria-label="Filtrar por moneda"
+            className="inline-flex p-0.5 rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/60 text-xs"
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedCurrency("all")}
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                selectedCurrency === "all"
+                  ? "bg-white text-zinc-900 shadow-2xs dark:bg-zinc-800 dark:text-zinc-100 font-semibold"
+                  : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              }`}
+            >
+              Todas
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCurrency("GTQ")}
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                selectedCurrency === "GTQ"
+                  ? "bg-white text-zinc-900 shadow-2xs dark:bg-zinc-800 dark:text-zinc-100 font-semibold"
+                  : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              }`}
+            >
+              Solo Quetzales (GTQ)
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCurrency("USD")}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                selectedCurrency === "USD"
+                  ? "bg-white text-zinc-900 shadow-2xs dark:bg-zinc-800 dark:text-zinc-100 font-semibold"
+                  : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              }`}
+            >
+              <Icons.Globe className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <span>Solo Dólares (USD)</span>
+            </button>
           </div>
         </div>
 
@@ -1017,19 +1067,29 @@ export function TransactionTable({
                         </button>
                       </td>
                       <td className="px-3 py-2 text-right">
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0.01"
-                          value={editForm.amount}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              amount: e.target.value,
-                            }))
-                          }
-                          className="w-24 px-2 py-1 text-xs font-mono text-right border rounded border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-1 focus:ring-zinc-900"
-                        />
+                        <div className="inline-flex items-center justify-end gap-1.5">
+                          {tx.originalCurrency === "USD" && (
+                            <span
+                              className="px-1.5 py-0.5 rounded text-3xs font-sans font-semibold tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60"
+                              title={`Original: $${(tx.originalAmount ?? 0).toFixed(2)} USD`}
+                            >
+                              USD
+                            </span>
+                          )}
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            value={editForm.amount}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                amount: e.target.value,
+                              }))
+                            }
+                            className="w-24 px-2 py-1 text-xs font-mono text-right border rounded border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-1 focus:ring-zinc-900"
+                          />
+                        </div>
                       </td>
                       <td className="px-3 py-2 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1.5">
@@ -1161,7 +1221,34 @@ export function TransactionTable({
                       )}
                     </td>
                     <td className="px-3 py-2.5 whitespace-nowrap text-right font-mono text-zinc-900 dark:text-zinc-100 font-medium">
-                      {formatCurrency(tx.amount)}
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        {tx.originalCurrency === "USD" && (
+                          <div className="relative group/usd inline-flex items-center">
+                            <span
+                              tabIndex={0}
+                              role="note"
+                              aria-label={`Monto original: $${(tx.originalAmount ?? 0).toFixed(2)} USD | Tipo de cambio: Q ${(tx.exchangeRateApplied ?? 7.85).toFixed(2)}`}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-3xs font-sans font-semibold tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60 cursor-help transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-900/50 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                            >
+                              <Icons.Globe className="w-2.5 h-2.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                              <span>USD</span>
+                            </span>
+                            {/* Tooltip on hover/focus/tap */}
+                            <div
+                              role="tooltip"
+                              className="absolute right-0 bottom-full mb-1.5 hidden group-hover/usd:flex group-focus-within/usd:flex flex-col z-30 px-2.5 py-1.5 rounded-lg bg-zinc-900 text-white text-2xs font-sans whitespace-nowrap shadow-lg dark:bg-zinc-100 dark:text-zinc-900 pointer-events-none"
+                            >
+                              <span className="font-semibold">
+                                Monto original: ${(tx.originalAmount ?? 0).toFixed(2)} USD
+                              </span>
+                              <span className="text-3xs text-zinc-300 dark:text-zinc-600">
+                                Tipo de cambio: Q {(tx.exchangeRateApplied ?? 7.85).toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        <span>{formatCurrency(tx.amount)}</span>
+                      </div>
                     </td>
                     <td className="px-3 py-2.5 whitespace-nowrap text-center">
                       {isDeleting ? (

@@ -124,4 +124,64 @@ describe("US-012 & US-013: Reporting & Visualizations Unit Tests", () => {
     });
     assert.equal(results.length, 4);
   });
+
+  it("filters transactions by currency accurately (all, GTQ, USD)", () => {
+    const mixedTransactions: Transaction[] = [
+      {
+        id: "tx-gtq-1",
+        date: "2026-10-01",
+        description: "Supermercado La Torre",
+        amount: 400.0,
+        currency: "GTQ",
+        originalCurrency: "GTQ",
+      },
+      {
+        id: "tx-gtq-default",
+        date: "2026-10-02",
+        description: "Gasolinera Shell",
+        amount: 250.0,
+        currency: "GTQ",
+      },
+      {
+        id: "tx-usd-1",
+        date: "2026-10-03",
+        description: "Netflix Subscription",
+        amount: 54.87,
+        currency: "GTQ",
+        originalCurrency: "USD",
+        originalAmount: 6.99,
+        exchangeRateApplied: 7.85,
+      },
+      {
+        id: "tx-usd-2",
+        date: "2026-10-04",
+        description: "Spotify Premium",
+        amount: 62.72,
+        currency: "GTQ",
+        originalCurrency: "USD",
+        originalAmount: 7.99,
+        exchangeRateApplied: 7.85,
+      },
+    ];
+
+    // Filter "all"
+    const allResults = filterTransactions(mixedTransactions, { currency: "all" });
+    assert.equal(allResults.length, 4);
+
+    // Filter "Solo Quetzales (GTQ)"
+    const gtqResults = filterTransactions(mixedTransactions, { currency: "GTQ" });
+    assert.equal(gtqResults.length, 2);
+    assert.deepEqual(
+      gtqResults.map((t) => t.id),
+      ["tx-gtq-1", "tx-gtq-default"]
+    );
+
+    // Filter "Solo Dólares (USD)"
+    const usdResults = filterTransactions(mixedTransactions, { currency: "USD" });
+    assert.equal(usdResults.length, 2);
+    assert.deepEqual(
+      usdResults.map((t) => t.id),
+      ["tx-usd-1", "tx-usd-2"]
+    );
+  });
 });

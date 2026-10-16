@@ -98,15 +98,24 @@ export function filterTransactions(
   filters: {
     category?: string;
     searchTerm?: string;
+    currency?: "all" | "GTQ" | "USD" | string;
   }
 ): Transaction[] {
-  const { category, searchTerm } = filters;
+  const { category, searchTerm, currency } = filters;
   const normalizedSearch = searchTerm?.trim().toLowerCase();
 
   return transactions.filter((tx) => {
     if (category && category !== "all") {
       const txCat = tx.category || "Pendiente";
       if (txCat !== category) return false;
+    }
+
+    if (currency && currency !== "all") {
+      if (currency === "USD") {
+        if (tx.originalCurrency !== "USD") return false;
+      } else if (currency === "GTQ") {
+        if (tx.originalCurrency === "USD") return false;
+      }
     }
 
     if (normalizedSearch) {

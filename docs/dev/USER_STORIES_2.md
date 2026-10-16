@@ -121,18 +121,18 @@ This document outlines the user stories, implementation phases, and testable acc
   - [x] The canonical `amount` field always stores the converted amount in Guatemalan Quetzales (`currency: "GTQ"`) so all aggregations, charts, and budget totals remain unified.
   - [x] Unit tests verify multi-currency extraction and conversion for all bank parsers and CSV inputs.
 
-### [ ] US-023: Original Currency Indicator in Expense Review & Transaction Table
+### [x] US-023: Original Currency Indicator in Expense Review & Transaction Table
 - **As a** user reviewing my expense list,
 - **I want to** see a clear visual indicator for transactions that were originally billed in US Dollars,
 - **So that** I can distinguish foreign currency purchases while all calculations and totals remain in Quetzales.
 - **Split-Brain Boundary:** 100% Local (UI & Presentation).
 - **Acceptance Criteria:**
-  - [ ] The transaction table displays an original currency badge (e.g., a subtle `USD` pill badge with an SVG globe or currency icon) next to the amount for dollar-converted transactions.
-  - [ ] Quetzales transactions display standard formatting without visual clutter.
-  - [ ] Hovering over or tapping the `USD` badge reveals a tooltip showing the original amount and the applied exchange rate in Spanish (e.g., `Monto original: $25.00 USD | Tipo de cambio: Q 7.85`).
-  - [ ] All table totals, summary cards, and category sums strictly calculate and display in Guatemalan Quetzales (`Q`).
-  - [ ] Filter options in the transaction table allow filtering by currency: "Todas", "Solo Quetzales (GTQ)", and "Solo Dólares (USD)".
-  - [ ] UI labels and tooltips are 100% in Spanish, with no emojis used.
+  - [x] The transaction table displays an original currency badge (e.g., a subtle `USD` pill badge with an SVG globe or currency icon) next to the amount for dollar-converted transactions.
+  - [x] Quetzales transactions display standard formatting without visual clutter.
+  - [x] Hovering over or tapping the `USD` badge reveals a tooltip showing the original amount and the applied exchange rate in Spanish (e.g., `Monto original: $25.00 USD | Tipo de cambio: Q 7.85`).
+  - [x] All table totals, summary cards, and category sums strictly calculate and display in Guatemalan Quetzales (`Q`).
+  - [x] Filter options in the transaction table allow filtering by currency: "Todas", "Solo Quetzales (GTQ)", and "Solo Dólares (USD)".
+  - [x] UI labels and tooltips are 100% in Spanish, with no emojis used.
 
 ---
 
