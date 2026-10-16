@@ -144,15 +144,7 @@ This document outlines the user stories, implementation phases, and testable acc
 - **So that** the vast majority of my expenses are categorized locally without calling external LLM APIs.
 - **Split-Brain Boundary:** 100% Local rule-based catalog matching.
 - **Acceptance Criteria:**
-  - [ ] Significantly expands `src/data/merchant-catalog.json` with an extensive directory of Guatemalan businesses:
-    - **Supermercado:** Super Mayoreo, Pricesmart, Pasaje Naranjo, Super 24, Pronto, Shell Select, Tiendas Oxxo, Carnicería Toledo, Carnes San Martín, Perry, La Charcutería.
-    - **Restaurantes y Cafés:** Tre Fratelli, Skillets, Los Cebollines, Rincón del Steak, Anafres, La Estancia, Applebee's, Nais, Helados Sarita, Pops, McCafé, Barista, El Injerto, Café Gitane, Saúl E. Méndez, PedidosYa, Uber Eats.
-    - **Servicios Básicos:** Deocsa, Deorsa, Interconsumo, Telgua, Cable DX, Tigo Star, Isertec, colegiaturas/universidades (UVG, URL, USAC, UFM, Galileo).
-    - **Transporte y Combustible:** Gasolineras Don Arturo, Pacific Oil, Delta, Yango, Vía 5, peajes (VAS, Autopista Palín-Escuintla), talleres mecánicos (Cofiño Stahl, Siebold, Continental Motores, Didea).
-    - **Salud y Farmacia:** Farmacias del Ahorro, Farmacias Similares, Centro Médico, Hospital Herrera Llerandi, Hospital El Pilar, Laboratorios Herrera Croft, Blue Medical, Tecniscan.
-    - **Entretenimiento y Compras:** Zara, Bershka, Pull&Bear, H&M, De Museo, MAX Distelsa, El Duende, EPA, Novex, Ferretería El Globo, Maycom (emisión de licencias).
-    - **Suscripciones:** Canva, Adobe Creative Cloud, Claude/Anthropic, Notion, LinkedIn Premium, Duolingo, Strava, Audible, iCloud+.
-  - [ ] Local keyword matching supports brand variations, common OCR/PDF typos, and location suffixes (e.g., `ZONA 10`, `C.C. OAKLAND`, `AGENCIA SAN CRISTOBAL`).
+  - [ ] Significantly expands `src/data/merchant-catalog.json` with an extensive directory of Guatemalan businesses.
   - [ ] Benchmark test suite confirms that over 85% of standard Guatemalan bank statement test transactions are categorized locally.
 
 ### [x] US-025: Unclassified Expenses Threshold Increase & Pipeline Tuning
@@ -173,18 +165,18 @@ This document outlines the user stories, implementation phases, and testable acc
 
 ## Phase 13: Multi-File Ingestion, Session Continuity & Deduplication (Quality of Life)
 
-### [ ] US-026: Multi-File Upload Interface & Batch Ingestion
+### [x] US-026: Multi-File Upload Interface & Batch Ingestion
 - **As a** user with multiple bank accounts or statements across several months,
 - **I want to** select and upload multiple PDF and CSV files at the same time or add more files to an active session,
 - **So that** I can consolidate all my monthly expenses into a single consolidated financial review.
 - **Split-Brain Boundary:** 100% Local (Client-side file ingestion and parsing queue).
 - **Acceptance Criteria:**
-  - [ ] File upload component accepts multiple file selection (`<input type="file" multiple ...>`) and multiple simultaneous drag-and-drop files.
-  - [ ] Supports simultaneous ingestion of mixed formats (e.g., uploading a G&T PDF, a BI PDF, a Banrural PDF, and a CSV in the same action).
-  - [ ] An "Agregar más estados de cuenta" (Add more bank statements) action button is accessible from the transaction review and dashboard views to ingest additional files into the current session.
-  - [ ] Displays a file processing progress indicator showing each file's parsing status (e.g., "Procesando estado_cuenta_bi.pdf...", "Procesando estado_cuenta_gyt.pdf...", "Completado").
-  - [ ] Summarizes the batch upload outcome in Spanish (e.g., "3 archivos procesados exitosamente, 45 transacciones añadidas").
-  - [ ] If an individual file fails to parse, it displays a specific error message for that file while successfully processing the valid files.
+  - [x] File upload component accepts multiple file selection (`<input type="file" multiple ...>`) and multiple simultaneous drag-and-drop files.
+  - [x] Supports simultaneous ingestion of mixed formats (e.g., uploading a G&T PDF, a BI PDF, a Banrural PDF, and a CSV in the same action).
+  - [x] An "Agregar más estados de cuenta" (Add more bank statements) action button is accessible from the transaction review and dashboard views to ingest additional files into the current session.
+  - [x] Displays a file processing progress indicator showing each file's parsing status (e.g., "Procesando estado_cuenta_bi.pdf...", "Procesando estado_cuenta_gyt.pdf...", "Completado").
+  - [x] Summarizes the batch upload outcome in Spanish (e.g., "3 archivos procesados exitosamente, 45 transacciones añadidas").
+  - [x] If an individual file fails to parse, it displays a specific error message for that file while successfully processing the valid files.
 
 ### [ ] US-027: Session State Continuity and Explicit Session Reset
 - **As a** user building up my expense records across multiple uploads,

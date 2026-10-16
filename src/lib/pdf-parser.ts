@@ -248,7 +248,7 @@ export function parseGyTStatementText(text: string): {
     totalAmount += normalizedAmount;
 
     transactions.push({
-      id: `tx_gyt_${index + 1}_${Date.now()}`,
+      id: `tx_gyt_${index + 1}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       date: normalizeStatementDate(rawDate),
       description: cleanDesc,
       amount: Number(normalizedAmount.toFixed(2)),
@@ -396,7 +396,7 @@ export async function extractGyTTransactionsFromParser(
       totalAmount += finalAmount;
 
       transactions.push({
-        id: `tx_gyt_p${p}_${transactions.length + 1}`,
+        id: `tx_gyt_p${p}_${transactions.length + 1}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         date: isoDate,
         description: cleanDesc,
         amount: Number(finalAmount.toFixed(2)),

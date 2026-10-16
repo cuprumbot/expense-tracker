@@ -20,6 +20,7 @@ interface ExpenseDashboardProps {
   onSavingsRecommendationsChange?: (
     recommendations: SavingsRecommendationResponse | null
   ) => void;
+  onAddMoreStatements?: () => void;
 }
 
 const CATEGORY_HEX_COLORS: Record<string, string> = {
@@ -58,6 +59,7 @@ export function ExpenseDashboard({
   onToggleSubscription,
   savingsRecommendations = null,
   onSavingsRecommendationsChange,
+  onAddMoreStatements,
 }: ExpenseDashboardProps) {
   const subscriptionPercentage =
     metrics.totalSpend > 0
@@ -71,6 +73,34 @@ export function ExpenseDashboard({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Add more bank statements CTA in Dashboard (US-026) */}
+      {onAddMoreStatements && (
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/70 dark:border-zinc-800 dark:bg-zinc-900/40">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 flex items-center justify-center shrink-0">
+              <Icons.Plus className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                Consolidación de cuentas y estados de cuenta
+              </p>
+              <p className="text-2xs text-zinc-500 dark:text-zinc-400">
+                Puedes añadir más estados de cuenta o archivos CSV para consolidar todos tus movimientos del mes.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            id="btn-agregar-estados-cuenta-dashboard"
+            onClick={onAddMoreStatements}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-800 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-950/50 dark:border-emerald-800 dark:hover:bg-emerald-900/60 rounded-lg shadow-2xs transition-colors cursor-pointer shrink-0"
+          >
+            <Icons.Plus className="w-3.5 h-3.5" />
+            <span>Agregar más estados de cuenta</span>
+          </button>
+        </div>
+      )}
+
       {/* Hero Overview Cards (US-012 & US-013) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Total Spending KPI Card */}

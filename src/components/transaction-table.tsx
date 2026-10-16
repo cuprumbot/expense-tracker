@@ -51,6 +51,11 @@ interface TransactionTableProps {
   unclassifiedThreshold?: number;
   duplicateNotification?: string | null;
   onDismissDuplicateNotification?: () => void;
+  onAddMoreStatements?: () => void;
+  batchSummaryNotification?: string | null;
+  onDismissBatchSummaryNotification?: () => void;
+  batchErrors?: { fileName: string; error: string }[];
+  onDismissBatchError?: (fileName: string) => void;
 }
 
 type SortField = "date" | "description" | "amount";
@@ -162,6 +167,11 @@ export function TransactionTable({
   unclassifiedThreshold = UNCLASSIFIED_THRESHOLD,
   duplicateNotification = null,
   onDismissDuplicateNotification,
+  onAddMoreStatements,
+  batchSummaryNotification = null,
+  onDismissBatchSummaryNotification,
+  batchErrors = [],
+  onDismissBatchError,
 }: TransactionTableProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedCurrency, setSelectedCurrency] = useState<"all" | "GTQ" | "USD">("all");
@@ -447,6 +457,76 @@ export function TransactionTable({
 
   return (
     <div className="space-y-6">
+      {/* Batch Ingestion Outcome Summary (US-026) */}
+      {batchSummaryNotification && (
+        <div
+          role="status"
+          id="batch-summary-banner"
+          className="p-4 rounded-xl border border-emerald-300 bg-emerald-50 dark:border-emerald-800/80 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 flex items-start justify-between gap-3 shadow-xs animate-in fade-in duration-200"
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+              <Icons.CheckCircle2 className="w-4 h-4" />
+            </div>
+            <div className="space-y-0.5">
+              <h4 className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
+                Lote de archivos procesado
+              </h4>
+              <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed font-medium">
+                {batchSummaryNotification}
+              </p>
+            </div>
+          </div>
+          {onDismissBatchSummaryNotification && (
+            <button
+              type="button"
+              onClick={onDismissBatchSummaryNotification}
+              aria-label="Cerrar notificación de lote"
+              className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200 cursor-pointer p-1 rounded-md hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 transition-colors shrink-0"
+            >
+              <Icons.X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Batch Ingestion Errors (US-026) */}
+      {batchErrors && batchErrors.length > 0 && (
+        <div className="space-y-2">
+          {batchErrors.map((err) => (
+            <div
+              key={`batch-err-${err.fileName}`}
+              role="alert"
+              className="p-4 rounded-xl border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/40 text-red-900 dark:text-red-200 flex items-start justify-between gap-3 shadow-xs animate-in fade-in duration-200"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300 flex items-center justify-center shrink-0 mt-0.5">
+                  <Icons.AlertCircle className="w-4 h-4" />
+                </div>
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-semibold text-red-900 dark:text-red-200">
+                    Error al procesar {err.fileName}
+                  </h4>
+                  <p className="text-xs text-red-800 dark:text-red-300 leading-relaxed font-medium">
+                    {err.error}
+                  </p>
+                </div>
+              </div>
+              {onDismissBatchError && (
+                <button
+                  type="button"
+                  onClick={() => onDismissBatchError(err.fileName)}
+                  aria-label={`Cerrar error de ${err.fileName}`}
+                  className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 cursor-pointer p-1 rounded-md hover:bg-red-100/60 dark:hover:bg-red-900/40 transition-colors shrink-0"
+                >
+                  <Icons.X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Prominent Duplicate Detection Alert Banner (US-028) */}
       {duplicateNotification && (
         <div
@@ -491,6 +571,7 @@ export function TransactionTable({
           onToggleSubscription={onToggleSubscription}
           savingsRecommendations={savingsRecommendations}
           onSavingsRecommendationsChange={onSavingsRecommendationsChange}
+          onAddMoreStatements={onAddMoreStatements}
         />
       ) : (
         <div className="space-y-4">
@@ -919,7 +1000,19 @@ export function TransactionTable({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {onAddMoreStatements && (
+              <button
+                type="button"
+                id="btn-agregar-estados-cuenta"
+                onClick={onAddMoreStatements}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-800 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-950/50 dark:border-emerald-800 dark:hover:bg-emerald-900/60 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                title="Añadir más archivos de estado de cuenta a esta sesión"
+              >
+                <Icons.Plus className="w-3.5 h-3.5" />
+                <span>Agregar más estados de cuenta</span>
+              </button>
+            )}
             {onAddCustomCategory && (
               <button
                 type="button"
@@ -1022,7 +1115,7 @@ export function TransactionTable({
                   </td>
                 </tr>
               )}
-              {sortedTransactions.map((tx) => {
+              {sortedTransactions.map((tx, index) => {
                 const category = tx.category || "Pendiente";
                 const isPending = category === "Pendiente";
                 const { styleClass, inlineStyle, inlineDotStyle } = getCategoryBadgeStyle(category);
@@ -1033,7 +1126,7 @@ export function TransactionTable({
                 if (isEditing) {
                   return (
                     <tr
-                      key={tx.id}
+                      key={`${tx.id}-${index}`}
                       className="bg-amber-50/40 dark:bg-amber-950/20 transition-colors"
                     >
                       <td className="w-10 px-3 py-2.5 text-center">
@@ -1157,7 +1250,7 @@ export function TransactionTable({
 
                 return (
                   <tr
-                    key={tx.id}
+                    key={`${tx.id}-${index}`}
                     className={`transition-colors ${isSelected
                       ? "bg-zinc-100/70 dark:bg-zinc-800/40"
                       : isPending

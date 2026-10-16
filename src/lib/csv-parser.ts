@@ -300,7 +300,7 @@ export function parseCSVContent(
     totalAmount += normalizedAmount;
 
     transactions.push({
-      id: `tx_csv_${index + 1}_${Date.now()}`,
+      id: `tx_csv_${index + 1}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       date: normalizeDate(rawDate),
       description,
       amount: Number(normalizedAmount.toFixed(2)),

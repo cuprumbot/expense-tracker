@@ -6,7 +6,9 @@ import { FileUpload } from "@/components/file-upload";
 import { ColumnMappingModal } from "@/components/column-mapping-modal";
 import { AnonymizationModal } from "@/components/anonymization-modal";
 import { TransactionTable } from "@/components/transaction-table";
-import { SupportedFileType } from "@/lib/file-validator";
+import { BatchProgress } from "@/components/batch-progress";
+import { SupportedFileType, validateUploadedFile } from "@/lib/file-validator";
+import { processBatchFiles, BatchItem } from "@/lib/batch-processor";
 import { parseCSVContent } from "@/lib/csv-parser";
 import {
   classifyTransactions,
@@ -69,6 +71,11 @@ export default function Home() {
   const [llmClassificationError, setLlmClassificationError] = useState<string | null>(null);
   const [llmSuccessMessage, setLlmSuccessMessage] = useState<string | null>(null);
   const [duplicateNotification, setDuplicateNotification] = useState<string | null>(null);
+
+  const [batchItems, setBatchItems] = useState<BatchItem[] | null>(null);
+  const [batchSummaryNotification, setBatchSummaryNotification] = useState<string | null>(null);
+  const [batchErrors, setBatchErrors] = useState<{ fileName: string; error: string }[]>([]);
+  const [isAddMoreModalOpen, setIsAddMoreModalOpen] = useState(false);
 
   const [mappingModal, setMappingModal] = useState<{
     isOpen: boolean;
@@ -157,9 +164,22 @@ export default function Home() {
     }
   }, [customCategories, hasHydratedStorage]);
 
+  const ensureUniqueTransactionIds = (txs: Transaction[]): Transaction[] => {
+    const seen = new Set<string>();
+    return txs.map((tx, idx) => {
+      let id = tx.id;
+      if (!id || seen.has(id)) {
+        id = `${id || "tx"}_${Date.now()}_${idx + 1}_${Math.random().toString(36).substring(2, 7)}`;
+      }
+      seen.add(id);
+      return { ...tx, id };
+    });
+  };
+
   const handleResumeSession = () => {
     if (!savedSession) return;
-    setTransactions(savedSession.transactions);
+    const sanitizedTxs = ensureUniqueTransactionIds(savedSession.transactions);
+    setTransactions(sanitizedTxs);
     setSummary(savedSession.summary);
     if (savedSession.customCategories?.length > 0) {
       setCustomCategories(savedSession.customCategories);
@@ -429,7 +449,20 @@ export default function Home() {
       setDuplicateNotification(null);
     }
 
-    const classifiedUnique = classifyTransactions(dedup.uniqueTransactions);
+    const existingIds = new Set(existing.map((t) => t.id));
+    const uniqueIdTransactions = dedup.uniqueTransactions.map((tx, idx) => {
+      let uniqueId = tx.id;
+      if (!uniqueId || existingIds.has(uniqueId)) {
+        uniqueId = `${uniqueId || "tx"}_${Date.now()}_${idx + 1}_${Math.random().toString(36).substring(2, 7)}`;
+      }
+      existingIds.add(uniqueId);
+      return {
+        ...tx,
+        id: uniqueId,
+      };
+    });
+
+    const classifiedUnique = classifyTransactions(uniqueIdTransactions);
     const combinedTransactions =
       existing.length > 0 ? [...existing, ...classifiedUnique] : classifiedUnique;
 
@@ -455,6 +488,127 @@ export default function Home() {
     // If <= threshold, skip LLM call and allow manual assignment.
     if (shouldTriggerLLMClassification(pending.length, unclassifiedThreshold)) {
       await classifyPendingWithLLM(pending, combinedTransactions);
+    }
+  };
+
+  const handleBatchFilesRouted = async (
+    files: { file: File; type: SupportedFileType }[] | File[]
+  ) => {
+    if (!files || files.length === 0) return;
+
+    setBatchErrors([]);
+    setBatchSummaryNotification(null);
+    setPdfError(null);
+
+    const validEntries: { file: File; type: SupportedFileType }[] = [];
+    const validationErrors: { fileName: string; error: string }[] = [];
+
+    for (const item of files) {
+      if ("type" in item && (item.type === "pdf" || item.type === "csv")) {
+        validEntries.push(item as { file: File; type: SupportedFileType });
+      } else {
+        const file = item as File;
+        const validation = validateUploadedFile(file);
+        if (validation.valid) {
+          validEntries.push({ file, type: validation.fileType });
+        } else {
+          validationErrors.push({
+            fileName: file.name,
+            error:
+              validation.error ||
+              "Archivo no compatible o excede el límite de tamaño.",
+          });
+        }
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      setBatchErrors(validationErrors);
+    }
+
+    if (validEntries.length === 0) {
+      return;
+    }
+
+    const initialBatchItems: BatchItem[] = validEntries.map((entry, idx) => ({
+      id: `batch-item-${idx}-${entry.file.name}`,
+      file: entry.file,
+      type: entry.type,
+      status: "idle",
+      statusMessage: "En espera",
+      transactions: [],
+    }));
+
+    setBatchItems(initialBatchItems);
+
+    try {
+      const outcome = await processBatchFiles(validEntries, {
+        onItemUpdate: (index, updatedItem) => {
+          setBatchItems((prev) => {
+            if (!prev) return null;
+            const copy = [...prev];
+            copy[index] = updatedItem;
+            return copy;
+          });
+        },
+      });
+
+      if (outcome.errors.length > 0) {
+        setBatchErrors((prev) => [...prev, ...outcome.errors]);
+      }
+
+      if (outcome.transactions.length > 0) {
+        const successfulNames = validEntries
+          .filter(
+            (e) => !outcome.errors.some((err) => err.fileName === e.file.name)
+          )
+          .map((e) => e.file.name);
+
+        const sourceLabel =
+          successfulNames.length > 1
+            ? `${successfulNames.length} archivos (${successfulNames.join(", ")})`
+            : successfulNames[0] || "Lote de archivos";
+
+        const totalAmt = Number(
+          outcome.transactions
+            .reduce((acc, t) => acc + t.amount, 0)
+            .toFixed(2)
+        );
+
+        const batchSummary: CSVParsingSummary = {
+          totalRowsProcessed: outcome.transactions.length,
+          validTransactionsCount: outcome.transactions.length,
+          skippedRowsCount: 0,
+          totalAmount: totalAmt,
+        };
+
+        if (validEntries.length === 1) {
+          setRoutedFile(validEntries[0]);
+        }
+
+        await processLoadedTransactions(
+          outcome.transactions,
+          batchSummary,
+          validEntries.length === 1 ? null : "Consolidado multicuenta",
+          sourceLabel
+        );
+      }
+
+      setBatchSummaryNotification(outcome.summaryMessage);
+    } catch (err) {
+      console.error("Error durante el procesamiento por lotes:", err);
+      setBatchErrors((prev) => [
+        ...prev,
+        {
+          fileName: "Lote general",
+          error: "Ocurrió un error inesperado al procesar los archivos.",
+        },
+      ]);
+    } finally {
+      setIsAddMoreModalOpen(false);
+      setTimeout(() => {
+        setBatchItems(null);
+      }, 1200);
     }
   };
 
@@ -631,6 +785,10 @@ export default function Home() {
     setLlmSuccessMessage(null);
     setSavingsRecommendations(null);
     setDuplicateNotification(null);
+    setBatchItems(null);
+    setBatchSummaryNotification(null);
+    setBatchErrors([]);
+    setIsAddMoreModalOpen(false);
     setMappingModal({
       isOpen: false,
       headers: [],
@@ -991,7 +1149,44 @@ export default function Home() {
                 </div>
               </div>
 
-              <FileUpload onFileRouted={handleFileRouted} />
+              {batchErrors.length > 0 && !transactions && (
+                <div className="space-y-2">
+                  {batchErrors.map((err) => (
+                    <div
+                      key={`main-batch-err-${err.fileName}`}
+                      role="alert"
+                      className="p-3.5 rounded-xl border border-red-200 bg-red-50 text-red-900 text-xs dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200 flex items-start justify-between gap-3 shadow-xs"
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <Icons.AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold">Error al procesar {err.fileName}</p>
+                          <p className="text-2xs text-red-700 dark:text-red-300 mt-0.5">{err.error}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setBatchErrors((prev) => prev.filter((e) => e.fileName !== err.fileName))
+                        }
+                        aria-label="Cerrar aviso"
+                        className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-200 cursor-pointer p-0.5"
+                      >
+                        <Icons.X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {batchItems && batchItems.length > 0 ? (
+                <BatchProgress items={batchItems} />
+              ) : (
+                <FileUpload
+                  onFileRouted={handleFileRouted}
+                  onFilesRouted={handleBatchFilesRouted}
+                />
+              )}
             </section>
           )
         ) : (
@@ -1000,12 +1195,19 @@ export default function Home() {
             summary={summary}
             sourceLabel={
               bankName
-                ? `${bankName} · ${routedFile?.file.name}`
+                ? `${bankName} · ${routedFile?.file.name || "Múltiples archivos"}`
                 : routedFile?.file.name || "Archivo de movimientos"
             }
             onReset={handleReset}
             duplicateNotification={duplicateNotification}
             onDismissDuplicateNotification={() => setDuplicateNotification(null)}
+            onAddMoreStatements={() => setIsAddMoreModalOpen(true)}
+            batchSummaryNotification={batchSummaryNotification}
+            onDismissBatchSummaryNotification={() => setBatchSummaryNotification(null)}
+            batchErrors={batchErrors}
+            onDismissBatchError={(fileName) =>
+              setBatchErrors((prev) => prev.filter((e) => e.fileName !== fileName))
+            }
             customCategories={customCategories}
             savingsRecommendations={savingsRecommendations}
             onSavingsRecommendationsChange={setSavingsRecommendations}
@@ -1094,6 +1296,65 @@ export default function Home() {
           onConfirm={handleConfirmAnonymization}
           onCancel={handleCancelAnonymization}
         />
+      )}
+
+      {/* Add More Bank Statements Modal (US-026) */}
+      {isAddMoreModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-more-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
+        >
+          <div className="w-full max-w-2xl bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden p-6 space-y-5 animate-in zoom-in-95 duration-150">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+                  <Icons.Plus className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h3
+                    id="add-more-title"
+                    className="text-sm font-semibold text-zinc-900 dark:text-zinc-100"
+                  >
+                    Agregar más estados de cuenta a la sesión
+                  </h3>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    Selecciona o arrastra archivos PDF o CSV adicionales. Los nuevos movimientos se sumarán a los actuales y los duplicados serán omitidos automáticamente.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                id="btn-close-add-more-modal"
+                onClick={() => setIsAddMoreModalOpen(false)}
+                aria-label="Cerrar ventana"
+                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer shrink-0"
+              >
+                <Icons.X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {batchItems && batchItems.length > 0 ? (
+              <BatchProgress items={batchItems} />
+            ) : (
+              <FileUpload
+                onFilesRouted={handleBatchFilesRouted}
+                onFileRouted={(file, type) => handleBatchFilesRouted([{ file, type }])}
+              />
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setIsAddMoreModalOpen(false)}
+                className="px-3.5 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -103,3 +103,21 @@ Only stop when User Story #25 is fully verified, then report what was done.
 Since this is a simple user story, stage and commit after verifying.
 
 After finishing execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.
+
+---
+
+Execute User Story #26 from `USER_STORIES_2.md`.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+Only stop when User Story #26 is fully verified, then report what was done.
+
+Do not commit, I will check the functionality manually before staging and committing.
+
+After finishing execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.
