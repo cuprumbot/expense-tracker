@@ -38,6 +38,20 @@ export function FileUpload({ onFileRouted }: FileUploadProps) {
     setFileMeta(validation);
   };
 
+  const handleLoadDemoFile = async (fileName: string) => {
+    try {
+      const res = await fetch(`/demo/${fileName}`);
+      if (!res.ok) throw new Error("No se pudo cargar el archivo demo");
+      const blob = await res.blob();
+      const file = new File([blob], fileName, {
+        type: fileName.endsWith(".csv") ? "text/csv" : "application/pdf",
+      });
+      handleProcessFile(file);
+    } catch (err) {
+      console.error("Error al cargar archivo demo:", err);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -189,6 +203,35 @@ export function FileUpload({ onFileRouted }: FileUploadProps) {
             <Icons.FileText className="w-3.5 h-3.5" />
             <span>Seleccionar archivo</span>
           </button>
+
+          {/* Quick Demo Loaders */}
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+            <span className="text-2xs text-zinc-400 dark:text-zinc-500 mr-1">
+              O prueba con un archivo demo:
+            </span>
+            <button
+              type="button"
+              id="btn-demo-duplicados"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLoadDemoFile("gastos_con_duplicados.csv");
+              }}
+              className="px-2.5 py-1 text-2xs font-medium rounded-md border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 transition-colors cursor-pointer"
+            >
+              CSV con duplicados
+            </button>
+            <button
+              type="button"
+              id="btn-demo-100-duplicados"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLoadDemoFile("gastos_100_duplicados.csv");
+              }}
+              className="px-2.5 py-1 text-2xs font-medium rounded-md border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 transition-colors cursor-pointer"
+            >
+              CSV 100% duplicados
+            </button>
+          </div>
         </div>
       ) : (
         /* File Selected: Metadata Preview & Actions */
@@ -247,8 +290,9 @@ export function FileUpload({ onFileRouted }: FileUploadProps) {
 
             <button
               type="button"
+              id="btn-confirm-routing"
               onClick={handleConfirmRouting}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors cursor-pointer"
             >
               <span>Continuar con {fileMeta.fileType.toUpperCase()}</span>
               <Icons.ArrowRight className="w-3.5 h-3.5" />

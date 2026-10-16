@@ -200,21 +200,21 @@ This document outlines the user stories, implementation phases, and testable acc
   - [ ] Upon confirmation, clears the session transaction list from memory and `localStorage`, returning the user to the initial upload screen.
   - [ ] Provides an optional checkbox in the reset modal to also wipe custom categories if a complete factory reset is desired.
 
-### [ ] US-028: Duplicate Transaction Detection, Discarding & User Notification
+### [x] US-028: Duplicate Transaction Detection, Discarding & User Notification
 - **As a** user who may accidentally upload the same bank statement twice or upload overlapping date statements,
 - **I want** the system to detect identical transactions, automatically discard duplicates, and notify me with a warning banner,
 - **So that** my expense totals and financial summaries are never artificially inflated by duplicate charges.
 - **Split-Brain Boundary:** 100% Local (Deduplication algorithm executed client-side).
 - **Acceptance Criteria:**
-  - [ ] Implements a duplicate detection algorithm comparing incoming transactions against existing transactions and against other items in the current batch.
-  - [ ] Identifies a duplicate when all three core fields match identically:
+  - [x] Implements a duplicate detection algorithm comparing incoming transactions against existing transactions and against other items in the current batch.
+  - [x] Identifies a duplicate when all three core fields match identically:
     - Normalized Date (`date` in `YYYY-MM-DD`).
     - Normalized Description (`description` case-insensitive, punctuation-stripped).
     - Amount (`amount` in Quetzales).
-  - [ ] Automatically discards detected duplicates, preventing them from being added to the active transaction list.
-  - [ ] Displays a prominent, user-friendly alert banner in Spanish when duplicates are discarded:
+  - [x] Automatically discards detected duplicates, preventing them from being added to the active transaction list.
+  - [x] Displays a prominent, user-friendly alert banner in Spanish when duplicates are discarded:
     - Example: "Se detectaron y descartaron 14 transacciones repetidas. Es posible que hayas subido un estado de cuenta duplicado."
-  - [ ] If 100% of the transactions in a newly uploaded file are duplicates, presents a clear notification:
+  - [x] If 100% of the transactions in a newly uploaded file are duplicates, presents a clear notification:
     "Todas las transacciones del archivo 'estado_cuenta_copia.pdf' ya se encontraban registradas y fueron omitidas."
-  - [ ] Discarded duplicates are completely excluded from total spending KPIs, category totals, and subscription aggregations.
-  - [ ] Includes comprehensive unit tests verifying deduplication across multi-file uploads and sequential appends.
+  - [x] Discarded duplicates are completely excluded from total spending KPIs, category totals, and subscription aggregations.
+  - [x] Includes comprehensive unit tests verifying deduplication across multi-file uploads and sequential appends.

@@ -26,6 +26,7 @@ import {
   StoredSession,
 } from "@/lib/storage";
 import { SavingsRecommendationResponse } from "@/lib/savings-advisor";
+import { deduplicateTransactions } from "@/lib/deduplication";
 import {
   Transaction,
   CSVParsingSummary,
@@ -66,6 +67,7 @@ export default function Home() {
   const [isClassifyingWithLLM, setIsClassifyingWithLLM] = useState(false);
   const [llmClassificationError, setLlmClassificationError] = useState<string | null>(null);
   const [llmSuccessMessage, setLlmSuccessMessage] = useState<string | null>(null);
+  const [duplicateNotification, setDuplicateNotification] = useState<string | null>(null);
 
   const [mappingModal, setMappingModal] = useState<{
     isOpen: boolean;
@@ -170,6 +172,7 @@ export default function Home() {
 
   const handleStartFresh = () => {
     setSavedSession(null);
+    setDuplicateNotification(null);
   };
 
   const handleConfirmClearData = () => {
@@ -178,6 +181,7 @@ export default function Home() {
     setCustomCategories([]);
     setSavingsRecommendations(null);
     setSavedSession(null);
+    setDuplicateNotification(null);
     setIsClearConfirmOpen(false);
     setStorageNotification("Se han borrado todos los datos guardados en este navegador.");
     setTimeout(() => {
@@ -403,21 +407,53 @@ export default function Home() {
   const processLoadedTransactions = async (
     rawTransactions: Transaction[],
     parsedSummary: CSVParsingSummary,
-    detectedBankName: string | null = null
+    detectedBankName: string | null = null,
+    sourceFileName?: string | null
   ) => {
-    const classified = classifyTransactions(rawTransactions);
-    setTransactions(classified);
-    setSummary(parsedSummary);
-    setBankName(detectedBankName);
+    const existing = transactions || [];
+    const dedup = deduplicateTransactions(
+      rawTransactions,
+      existing,
+      sourceFileName || routedFile?.file.name
+    );
 
-    const pending = classified.filter(
+    if (dedup.isAllDuplicates) {
+      setDuplicateNotification(dedup.notificationMessage);
+      return;
+    }
+
+    if (dedup.discardedCount > 0) {
+      setDuplicateNotification(dedup.notificationMessage);
+    } else {
+      setDuplicateNotification(null);
+    }
+
+    const classifiedUnique = classifyTransactions(dedup.uniqueTransactions);
+    const combinedTransactions =
+      existing.length > 0 ? [...existing, ...classifiedUnique] : classifiedUnique;
+
+    const combinedTotal = Number(
+      combinedTransactions.reduce((acc, t) => acc + t.amount, 0).toFixed(2)
+    );
+
+    const updatedSummary: CSVParsingSummary = {
+      ...parsedSummary,
+      validTransactionsCount: combinedTransactions.length,
+      totalAmount: combinedTotal,
+    };
+
+    setTransactions(combinedTransactions);
+    setSummary(updatedSummary);
+    setBankName(detectedBankName || bankName);
+
+    const pending = combinedTransactions.filter(
       (tx) => !tx.category || tx.category === "Pendiente"
     );
 
     // Threshold Rule: If pending > unclassifiedThreshold, trigger LLM assistance.
     // If <= threshold, skip LLM call and allow manual assignment.
     if (pending.length > unclassifiedThreshold) {
-      await classifyPendingWithLLM(pending, classified);
+      await classifyPendingWithLLM(pending, combinedTransactions);
     }
   };
 
@@ -442,7 +478,7 @@ export default function Home() {
             detectedMapping: result.detectedMapping,
           });
         } else if (result.success) {
-          processLoadedTransactions(result.transactions, result.summary, null);
+          processLoadedTransactions(result.transactions, result.summary, null, file.name);
         }
       } catch (err) {
         console.error("Error al procesar el archivo CSV:", err);
@@ -499,7 +535,8 @@ export default function Home() {
         processLoadedTransactions(
           data.transactions,
           data.summary,
-          data.bankName
+          data.bankName,
+          file.name
         );
       } catch (err) {
         console.error("Error al enviar PDF para procesamiento local:", err);
@@ -518,7 +555,7 @@ export default function Home() {
     const result = parseCSVContent(rawCSVText, mapping);
 
     if (result.success && !result.needsMapping) {
-      processLoadedTransactions(result.transactions, result.summary, null);
+      processLoadedTransactions(result.transactions, result.summary, null, routedFile?.file.name);
       setMappingModal((prev) => ({ ...prev, isOpen: false }));
     }
   };
@@ -552,7 +589,8 @@ export default function Home() {
       processLoadedTransactions(
         data.transactions,
         data.summary,
-        unsupportedBank?.bankName || "Banco no compatible"
+        unsupportedBank?.bankName || "Banco no compatible",
+        routedFile?.file.name
       );
     } catch (err) {
       console.error("Error al llamar a /api/extract-transactions:", err);
@@ -591,6 +629,7 @@ export default function Home() {
     setLlmClassificationError(null);
     setLlmSuccessMessage(null);
     setSavingsRecommendations(null);
+    setDuplicateNotification(null);
     setMappingModal({
       isOpen: false,
       headers: [],
@@ -909,6 +948,37 @@ export default function Home() {
         {!transactions || !summary ? (
           !isProcessingPDF && !pdfError && !unsupportedBank && !isExtractingWithLLM && !llmExtractionError && (
             <section className="border border-zinc-200 rounded-xl bg-zinc-50/50 p-6 sm:p-8 dark:border-zinc-800 dark:bg-zinc-900/40 space-y-6">
+              {/* Standalone duplicate warning banner if all duplicates uploaded without active table */}
+              {duplicateNotification && (
+                <div
+                  role="alert"
+                  id="duplicate-transactions-banner-standalone"
+                  className="p-4 rounded-xl border border-amber-300 bg-amber-50 dark:border-amber-800/80 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 flex items-start justify-between gap-3 shadow-xs animate-in fade-in duration-200"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+                      <Icons.AlertCircle className="w-4 h-4" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <h4 className="text-xs font-semibold text-amber-900 dark:text-amber-200">
+                        Aviso de transacciones duplicadas
+                      </h4>
+                      <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed font-medium">
+                        {duplicateNotification}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDuplicateNotification(null)}
+                    aria-label="Cerrar notificación"
+                    className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 cursor-pointer p-1 rounded-md hover:bg-amber-100/60 dark:hover:bg-amber-900/40 transition-colors shrink-0"
+                  >
+                    <Icons.X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
               <div className="flex items-center justify-between border-b border-zinc-200/80 pb-4 dark:border-zinc-800/80">
                 <span className="text-xs font-medium tracking-tight text-zinc-700 dark:text-zinc-300">
                   Carga de documento
@@ -933,6 +1003,8 @@ export default function Home() {
                 : routedFile?.file.name || "Archivo de movimientos"
             }
             onReset={handleReset}
+            duplicateNotification={duplicateNotification}
+            onDismissDuplicateNotification={() => setDuplicateNotification(null)}
             customCategories={customCategories}
             savingsRecommendations={savingsRecommendations}
             onSavingsRecommendationsChange={setSavingsRecommendations}

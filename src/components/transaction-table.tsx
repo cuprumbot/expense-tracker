@@ -49,6 +49,8 @@ interface TransactionTableProps {
   llmClassificationError?: string | null;
   llmSuccessMessage?: string | null;
   unclassifiedThreshold?: number;
+  duplicateNotification?: string | null;
+  onDismissDuplicateNotification?: () => void;
 }
 
 type SortField = "date" | "description" | "amount";
@@ -158,6 +160,8 @@ export function TransactionTable({
   llmClassificationError = null,
   llmSuccessMessage = null,
   unclassifiedThreshold = UNCLASSIFIED_THRESHOLD,
+  duplicateNotification = null,
+  onDismissDuplicateNotification,
 }: TransactionTableProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedCurrency, setSelectedCurrency] = useState<"all" | "GTQ" | "USD">("all");
@@ -443,6 +447,39 @@ export function TransactionTable({
 
   return (
     <div className="space-y-6">
+      {/* Prominent Duplicate Detection Alert Banner (US-028) */}
+      {duplicateNotification && (
+        <div
+          role="alert"
+          id="duplicate-transactions-banner"
+          className="p-4 rounded-xl border border-amber-300 bg-amber-50 dark:border-amber-800/80 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 flex items-start justify-between gap-3 shadow-xs animate-in fade-in duration-200"
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+              <Icons.AlertCircle className="w-4 h-4" />
+            </div>
+            <div className="space-y-0.5">
+              <h4 className="text-xs font-semibold text-amber-900 dark:text-amber-200">
+                Aviso de transacciones duplicadas
+              </h4>
+              <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed font-medium">
+                {duplicateNotification}
+              </p>
+            </div>
+          </div>
+          {onDismissDuplicateNotification && (
+            <button
+              type="button"
+              onClick={onDismissDuplicateNotification}
+              aria-label="Cerrar notificación"
+              className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 cursor-pointer p-1 rounded-md hover:bg-amber-100/60 dark:hover:bg-amber-900/40 transition-colors shrink-0"
+            >
+              <Icons.X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Top Section: Aggregated Dashboard (when fully classified) or Triage Cards (when pending) */}
       {stats.pending === 0 ? (
         <ExpenseDashboard
