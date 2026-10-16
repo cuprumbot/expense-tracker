@@ -1049,11 +1049,13 @@ export function TransactionTable({
             )}
             <button
               type="button"
+              id="btn-table-reset-session"
               onClick={onReset}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 border border-zinc-200 rounded-lg hover:bg-zinc-50 dark:text-zinc-400 dark:border-zinc-700 dark:hover:text-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+              title="Reiniciar sesión de transacciones"
             >
-              <Icons.RefreshCw className="w-3.5 h-3.5" />
-              <span>Cargar otro archivo</span>
+              <Icons.RotateCcw className="w-3.5 h-3.5" />
+              <span>Reiniciar sesión</span>
             </button>
             {onClearData && (
               <button

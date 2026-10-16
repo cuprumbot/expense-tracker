@@ -127,16 +127,28 @@ export function loadStoredCategories(): CustomCategory[] {
 }
 
 /**
- * Clears all data stored in localStorage under the application namespace.
+ * Clears data stored in localStorage under the application namespace.
+ * @param wipeCategories - If true, wipes custom categories as well (complete factory reset).
+ * Defaults to true for backward compatibility with US-011 (Borrar mis datos).
+ * When false, preserves custom categories in localStorage while clearing the active session (US-027).
  */
-export function clearStoredSession(): boolean {
+export function clearStoredSession(wipeCategories: boolean = true): boolean {
   if (!isStorageAvailable()) return false;
   try {
     window.localStorage.removeItem(STORAGE_KEY_SESSION);
-    window.localStorage.removeItem(STORAGE_KEY_CATEGORIES);
+    if (wipeCategories) {
+      window.localStorage.removeItem(STORAGE_KEY_CATEGORIES);
+    }
     return true;
   } catch (error) {
     console.warn("Error al limpiar datos en localStorage:", error);
     return false;
   }
+}
+
+/**
+ * Convenience helper to clear only transaction session data while strictly preserving custom categories.
+ */
+export function clearStoredSessionOnly(): boolean {
+  return clearStoredSession(false);
 }

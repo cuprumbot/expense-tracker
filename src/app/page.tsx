@@ -54,6 +54,8 @@ export default function Home() {
   const [savedSession, setSavedSession] = useState<StoredSession | null>(null);
   const [hasHydratedStorage, setHasHydratedStorage] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+  const [isResetSessionModalOpen, setIsResetSessionModalOpen] = useState(false);
+  const [wipeCustomCategoriesOnReset, setWipeCustomCategoriesOnReset] = useState(false);
   const [storageNotification, setStorageNotification] = useState<string | null>(null);
 
   const [isProcessingPDF, setIsProcessingPDF] = useState(false);
@@ -192,8 +194,33 @@ export default function Home() {
   };
 
   const handleStartFresh = () => {
+    clearStoredSession(false);
     setSavedSession(null);
     setDuplicateNotification(null);
+  };
+
+  const handleConfirmResetSession = () => {
+    if (wipeCustomCategoriesOnReset) {
+      clearStoredSession(true);
+      setCustomCategories([]);
+      saveStoredCategories([]);
+    } else {
+      clearStoredSession(false);
+    }
+
+    handleReset();
+    setSavedSession(null);
+    setIsResetSessionModalOpen(false);
+    setWipeCustomCategoriesOnReset(false);
+
+    setStorageNotification(
+      wipeCustomCategoriesOnReset
+        ? "Se ha reiniciado la sesión y se han eliminado las categorías personalizadas."
+        : "Se ha reiniciado la sesión. Las categorías personalizadas se han conservado."
+    );
+    setTimeout(() => {
+      setStorageNotification(null);
+    }, 4000);
   };
 
   const handleConfirmClearData = () => {
@@ -810,8 +837,26 @@ export default function Home() {
             </span>
           </div>
 
-          <div className="text-xs text-zinc-500 font-mono tracking-tight dark:text-zinc-400">
-            GTQ · Q
+          <div className="flex items-center gap-3">
+            {((transactions && transactions.length > 0) || savedSession) && (
+              <button
+                type="button"
+                id="btn-reset-session"
+                onClick={() => {
+                  setWipeCustomCategoriesOnReset(false);
+                  setIsResetSessionModalOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 rounded-lg transition-colors cursor-pointer border border-zinc-200/60 dark:border-zinc-700/60"
+                title="Reiniciar sesión de transacciones"
+              >
+                <Icons.RotateCcw className="w-3.5 h-3.5" />
+                <span>Reiniciar sesión</span>
+              </button>
+            )}
+
+            <div className="text-xs text-zinc-500 font-mono tracking-tight dark:text-zinc-400">
+              GTQ · Q
+            </div>
           </div>
         </div>
       </header>
@@ -1198,7 +1243,10 @@ export default function Home() {
                 ? `${bankName} · ${routedFile?.file.name || "Múltiples archivos"}`
                 : routedFile?.file.name || "Archivo de movimientos"
             }
-            onReset={handleReset}
+            onReset={() => {
+              setWipeCustomCategoriesOnReset(false);
+              setIsResetSessionModalOpen(true);
+            }}
             duplicateNotification={duplicateNotification}
             onDismissDuplicateNotification={() => setDuplicateNotification(null)}
             onAddMoreStatements={() => setIsAddMoreModalOpen(true)}
@@ -1351,6 +1399,71 @@ export default function Home() {
                 className="px-3.5 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
               >
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Reset Session Confirmation Modal (US-027) */}
+      {isResetSessionModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reset-session-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
+        >
+          <div className="w-full max-w-md bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden p-6 space-y-5 animate-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+                <Icons.RotateCcw className="w-5 h-5" />
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <h3
+                  id="reset-session-title"
+                  className="text-sm font-semibold text-zinc-900 dark:text-zinc-100"
+                >
+                  ¿Deseas reiniciar la sesión?
+                </h3>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  ¿Deseas reiniciar la sesión? Se eliminarán las transacciones cargadas en esta sesión. Las categorías personalizadas se conservarán.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800">
+              <label className="flex items-start gap-2.5 cursor-pointer text-xs text-zinc-700 dark:text-zinc-300 select-none">
+                <input
+                  type="checkbox"
+                  id="checkbox-wipe-custom-categories"
+                  checked={wipeCustomCategoriesOnReset}
+                  onChange={(e) => setWipeCustomCategoriesOnReset(e.target.checked)}
+                  className="mt-0.5 rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-500 cursor-pointer"
+                />
+                <span>
+                  Eliminar también las categorías personalizadas creadas (restablecimiento total de fábrica).
+                </span>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+              <button
+                type="button"
+                id="btn-cancel-reset-session"
+                onClick={() => {
+                  setIsResetSessionModalOpen(false);
+                  setWipeCustomCategoriesOnReset(false);
+                }}
+                className="px-3 py-2 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                id="btn-confirm-reset-session"
+                onClick={handleConfirmResetSession}
+                className="px-3.5 py-2 text-xs font-medium text-white bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 rounded-lg transition-colors shadow-xs cursor-pointer"
+              >
+                Reiniciar sesión
               </button>
             </div>
           </div>

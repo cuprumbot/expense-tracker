@@ -4,6 +4,7 @@ import {
   saveStoredSession,
   loadStoredSession,
   clearStoredSession,
+  clearStoredSessionOnly,
   saveStoredCategories,
   loadStoredCategories,
   STORAGE_KEY_SESSION,
@@ -156,5 +157,128 @@ describe("US-011: LocalStorage Persistence Unit Tests", () => {
     });
 
     assert.equal(saved, false);
+  });
+
+  describe("US-027: Session State Continuity and Explicit Session Reset Unit Tests", () => {
+    it("clears session transactions from localStorage but strictly preserves custom categories when wipeCategories is false", () => {
+      saveStoredSession({
+        transactions: sampleTransactions,
+        summary: sampleSummary,
+        customCategories: sampleCustomCategories,
+      });
+      saveStoredCategories(sampleCustomCategories);
+
+      assert.ok(mockStore.getItem(STORAGE_KEY_SESSION));
+      assert.ok(mockStore.getItem(STORAGE_KEY_CATEGORIES));
+
+      // US-027 explicit session reset without factory wipe
+      const result = clearStoredSession(false);
+      assert.equal(result, true);
+
+      // Session transactions are removed
+      assert.equal(mockStore.getItem(STORAGE_KEY_SESSION), null);
+      assert.equal(loadStoredSession(), null);
+
+      // Custom categories remain fully intact
+      assert.ok(mockStore.getItem(STORAGE_KEY_CATEGORIES));
+      const preservedCategories = loadStoredCategories();
+      assert.equal(preservedCategories.length, 1);
+      assert.equal(preservedCategories[0].name, "Mascotas");
+    });
+
+    it("clearStoredSessionOnly helper clears session and keeps custom categories intact", () => {
+      saveStoredSession({
+        transactions: sampleTransactions,
+        summary: sampleSummary,
+        customCategories: sampleCustomCategories,
+      });
+      saveStoredCategories(sampleCustomCategories);
+
+      const result = clearStoredSessionOnly();
+      assert.equal(result, true);
+
+      assert.equal(mockStore.getItem(STORAGE_KEY_SESSION), null);
+      assert.equal(loadStoredCategories().length, 1);
+    });
+
+    it("wipes both session and custom categories when wipeCategories is true (factory reset option)", () => {
+      saveStoredSession({
+        transactions: sampleTransactions,
+        summary: sampleSummary,
+        customCategories: sampleCustomCategories,
+      });
+      saveStoredCategories(sampleCustomCategories);
+
+      const result = clearStoredSession(true);
+      assert.equal(result, true);
+
+      assert.equal(mockStore.getItem(STORAGE_KEY_SESSION), null);
+      assert.equal(mockStore.getItem(STORAGE_KEY_CATEGORIES), null);
+      assert.deepEqual(loadStoredCategories(), []);
+    });
+
+    it("preserves customized existing transactions when appending newly uploaded items to session", () => {
+      // Existing session with user custom edits (manual category reassignment and subscription toggle)
+      const existingSessionTransactions: Transaction[] = [
+        {
+          id: "tx-existing-1",
+          date: "2026-08-01",
+          description: "Gasto Especial Modificado",
+          amount: 250.0,
+          currency: "GTQ",
+          category: "Mascotas", // user manual reassignment
+          classificationSource: "manual",
+          isSubscription: true, // user subscription toggle
+        },
+      ];
+
+      // Newly uploaded file incoming transactions
+      const incomingTransactions: Transaction[] = [
+        {
+          id: "tx-incoming-2",
+          date: "2026-08-15",
+          description: "Supermercado Paiz",
+          amount: 180.0,
+          currency: "GTQ",
+          category: "Supermercado",
+          classificationSource: "local",
+        },
+      ];
+
+      // Appending incoming transactions to existing
+      const combined = [...existingSessionTransactions, ...incomingTransactions];
+      const combinedTotal = combined.reduce((acc, t) => acc + t.amount, 0);
+
+      // Verify custom edits on existing transactions remain completely untouched
+      assert.equal(combined.length, 2);
+      assert.equal(combined[0].id, "tx-existing-1");
+      assert.equal(combined[0].category, "Mascotas");
+      assert.equal(combined[0].classificationSource, "manual");
+      assert.equal(combined[0].isSubscription, true);
+
+      // Verify new transaction is appended
+      assert.equal(combined[1].id, "tx-incoming-2");
+      assert.equal(combined[1].category, "Supermercado");
+      assert.equal(combinedTotal, 430.0);
+
+      // Persist combined session to storage
+      saveStoredSession({
+        transactions: combined,
+        summary: {
+          totalRowsProcessed: combined.length,
+          validTransactionsCount: combined.length,
+          skippedRowsCount: 0,
+          totalAmount: combinedTotal,
+        },
+        customCategories: sampleCustomCategories,
+      });
+
+      const loaded = loadStoredSession();
+      assert.ok(loaded);
+      assert.equal(loaded.transactions.length, 2);
+      assert.equal(loaded.transactions[0].category, "Mascotas");
+      assert.equal(loaded.transactions[0].classificationSource, "manual");
+      assert.equal(loaded.transactions[0].isSubscription, true);
+    });
   });
 });

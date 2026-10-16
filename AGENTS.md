@@ -26,6 +26,9 @@
 - Use the Conventional Commits specification for the message (e.g., `feat(auth): add Next.js route handler`, `fix(ui): correct tailwind padding`).
 - Summarize the commit based on the specific user story completed and the actual diff of the code.
 
+## When finishing a task
+- After fully finishing a task (including all the required reviewing) execute `[console]::beep(800, 800)` to notify the user.
+
 
 
 <!-- BEGIN:nextjs-agent-rules -->

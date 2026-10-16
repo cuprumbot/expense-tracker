@@ -178,19 +178,19 @@ This document outlines the user stories, implementation phases, and testable acc
   - [x] Summarizes the batch upload outcome in Spanish (e.g., "3 archivos procesados exitosamente, 45 transacciones añadidas").
   - [x] If an individual file fails to parse, it displays a specific error message for that file while successfully processing the valid files.
 
-### [ ] US-027: Session State Continuity and Explicit Session Reset
+### [x] US-027: Session State Continuity and Explicit Session Reset
 - **As a** user building up my expense records across multiple uploads,
 - **I want** each newly uploaded statement to append to my existing session without erasing my current data or custom edits,
 - **So that** I only reset my session when I explicitly choose to do so.
 - **Split-Brain Boundary:** 100% Local (Client state and `localStorage` persistence).
 - **Acceptance Criteria:**
-  - [ ] Incoming transactions from newly uploaded files are merged and appended to the existing transaction list in application state and `localStorage`.
-  - [ ] User customizations (manual category reassignments, custom categories created, subscription toggles) are preserved intact when new files are appended.
-  - [ ] A dedicated "Reiniciar sesión" (Reset Session) button is clearly visible in the header/navigation bar.
-  - [ ] Clicking "Reiniciar sesión" opens a confirmation modal in Spanish:
+  - [x] Incoming transactions from newly uploaded files are merged and appended to the existing transaction list in application state and `localStorage`.
+  - [x] User customizations (manual category reassignments, custom categories created, subscription toggles) are preserved intact when new files are appended.
+  - [x] A dedicated "Reiniciar sesión" (Reset Session) button is clearly visible in the header/navigation bar.
+  - [x] Clicking "Reiniciar sesión" opens a confirmation modal in Spanish:
     "¿Deseas reiniciar la sesión? Se eliminarán las transacciones cargadas en esta sesión. Las categorías personalizadas se conservarán."
-  - [ ] Upon confirmation, clears the session transaction list from memory and `localStorage`, returning the user to the initial upload screen.
-  - [ ] Provides an optional checkbox in the reset modal to also wipe custom categories if a complete factory reset is desired.
+  - [x] Upon confirmation, clears the session transaction list from memory and `localStorage`, returning the user to the initial upload screen.
+  - [x] Provides an optional checkbox in the reset modal to also wipe custom categories if a complete factory reset is desired.
 
 ### [x] US-028: Duplicate Transaction Detection, Discarding & User Notification
 - **As a** user who may accidentally upload the same bank statement twice or upload overlapping date statements,

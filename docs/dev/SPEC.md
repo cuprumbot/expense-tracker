@@ -100,10 +100,31 @@ These changes directly improve the product functionality and the user experience
 
 The main feature in this iteration will be presenting the results after categorization as a dashboard.
 
+
+
 - Dashboard UI/UX:
     - The dashboard will take all the screen when viewed in a computer or on a landscape orientation tablet, everything should fit nicely. We will decide later the best approach for smaller or portrait orientation screens.
     - The transaction list will be hidden once we move to the dashboard, there will be a button to show it again. The transaction list will slide from one side of the screen, and slide back when the user hits the button again.
+    - The dashboard will be divided in four panels, which are detailed next.
 
-- Information shown in the dashboard:
-    - Subpanel with line graph showing expenses trend over time, with an option to filter by category.
-    - Subpanel with pie chart showing expenses by category, with an option to filter by month.
+- Panel 1: Basic information. Some basic info about the user's spending.
+    - Line graph to show the expenses by category throughout the uploaded months.
+    - One line in the graph for each category, use the designated colors.
+    - Option to filter categories, so they are not shown in the graph.
+
+- Panel 2: Where is my money going? Will help the user visualize where they are spending the most.
+    - Bar graph showing the top vendors.
+    - A selector lets the user switch between two graphs: vendor with the highest amount of money / vendor with the highest amount of transactions.
+
+- Panel 3: Consumption patterns. Will help the user identify patterns in their spending.
+    - A selector lets the user switch between two graphs: day of the week (bar graph, x-axis from Monday to Sunday) / day of the month (bar graph, x-axis from 1 to 31).
+    - Show the user if there was some outlier: a day where significantly more money was spent than the average.
+    - Show the user if there was some outlier throughout the months: Use this example: the user usually spends almost nothing the 15 of each month, but there was a month in particular with a lot of spending that day.
+
+- Panel 4: Transaction age. Help the user visualize when the decision to spend was made.
+    - Pie chart that compares between three aggregated categories:
+        - Visacuotas / Mastercuotas / Extrafinanciamiento: The user is paying for something they bought some time ago. Add a new category for this in `merchant-catalog.json`.
+        - Subscriptions: Recurring expenses that the user is paying each month. Use the already existing category.
+        - Immediate purchases: All other purchases, made in the current month.
+    - Option to filter which months are included in the calculations.
+

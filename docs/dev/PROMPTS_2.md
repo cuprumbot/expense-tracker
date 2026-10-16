@@ -149,3 +149,39 @@ Only stop when User Story #24 is fully verified, then report what was done.
 Do not commit, I will check the files manually before staging and committing.
 
 After finishing execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.
+
+---
+
+Execute User Story #27 from `USER_STORIES_2.md`.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    Some of the features in this user story may have already been implement in some past user story. Do not duplicate work.
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+Only stop when User Story #27 is fully verified, then report what was done.
+
+Do not commit, I will check the functionality manually before staging and committing.
+
+After finishing execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.
+
+---
+
+Read the **Second iteration** section in `SPEC.md` and create `USER_STORIES_2_DASHBOARD.md`. Follow the same format as `USER_STORIES.md`.
+
+Read `DESCRIPTION.md`, `SPEC.md` (**Second iteration** section), and `USER_STORIES.md` to understand the project and the current implementation. Don't modify the existing user stories, use them only as reference. Ask clarifying questions if needed before proceeding. Based on all these sources, generate a comprehensive `USER_STORIES_2.md` file. Continue the numbering from the following files.
+
+Break the iteration down into small, sequential phases. Every user story must include specific, testable acceptance criteria.
+
+Generate user stories for **Product improvements** only (most of the content in **Core improvements** and **Quality of life** have already been implemented).
+
+The **Product improvements** section deals with creating a dashboard. To create it, some of the current visualizations will no longer be shown. Do not delete these files; after completing some user story, add a comment on it explaining which files were deprecated.
+
+The saving suggestions feature will be deprecated when implementing the dashboard.
+
+Generate enough user stories: one to create the dashboard base UI, and then as many as needed for each panel or interactive element the dashboard will have.

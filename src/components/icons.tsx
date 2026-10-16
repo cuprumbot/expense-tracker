@@ -41,6 +41,7 @@ import {
   ChevronDown,
   ChevronUp,
   Globe,
+  RotateCcw,
 } from "lucide-react";
 
 export const Icons = {
@@ -86,4 +87,5 @@ export const Icons = {
   ChevronDown,
   ChevronUp,
   Globe,
+  RotateCcw,
 };
