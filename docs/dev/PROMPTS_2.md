@@ -85,3 +85,21 @@ Quality Gate & Version Control:
     - If and only if `npm run build` succeeds with 0 errors, `npm test` passes, and the browser verification reaches the results screen:
         1. Mark the completed story with `[x]` in `USER_STORIES_2.md`.
         2. Stage and commit all changes.
+
+---
+
+Execute User Story #25 from `USER_STORIES_2.md`.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+Only stop when User Story #25 is fully verified, then report what was done.
+
+Since this is a simple user story, stage and commit after verifying.
+
+After finishing execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.

@@ -40,6 +40,19 @@ export function getUnclassifiedThreshold(): number {
 
 export const UNCLASSIFIED_THRESHOLD: number = getUnclassifiedThreshold();
 
+/**
+ * Evaluates whether unclassified transactions should trigger external LLM classification.
+ * Pipeline decision boundary:
+ * - If unclassified count is <= threshold (e.g. 10), returns false (bypasses LLM, routes directly to user confirmation).
+ * - If unclassified count is > threshold (e.g. 11+), returns true (triggers LLM classification).
+ */
+export function shouldTriggerLLMClassification(
+  unclassifiedCount: number,
+  threshold: number = UNCLASSIFIED_THRESHOLD
+): boolean {
+  return unclassifiedCount > threshold;
+}
+
 export const AVAILABLE_CATEGORIES: string[] =
   (defaultCatalog as unknown as MerchantCatalog).categories.map((c) => c.name);
 

@@ -12,6 +12,7 @@ import {
   classifyTransactions,
   UNCLASSIFIED_THRESHOLD,
   AVAILABLE_CATEGORIES,
+  shouldTriggerLLMClassification,
 } from "@/lib/expense-classifier";
 import {
   ClassifyExpensesPayload,
@@ -450,9 +451,9 @@ export default function Home() {
       (tx) => !tx.category || tx.category === "Pendiente"
     );
 
-    // Threshold Rule: If pending > unclassifiedThreshold, trigger LLM assistance.
+    // Threshold Rule: If pending > unclassifiedThreshold (default: 10), trigger LLM assistance.
     // If <= threshold, skip LLM call and allow manual assignment.
-    if (pending.length > unclassifiedThreshold) {
+    if (shouldTriggerLLMClassification(pending.length, unclassifiedThreshold)) {
       await classifyPendingWithLLM(pending, combinedTransactions);
     }
   };

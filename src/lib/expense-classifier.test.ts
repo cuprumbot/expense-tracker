@@ -8,8 +8,11 @@ import {
   getClassificationStats,
   getSubscriptionSummary,
   getUnclassifiedThreshold,
+  shouldTriggerLLMClassification,
+  UNCLASSIFIED_THRESHOLD,
   MerchantCatalog,
 } from "./expense-classifier";
+import defaultCatalog from "@/data/merchant-catalog.json";
 import { Transaction } from "@/types/transaction";
 
 describe("expense-classifier unit tests", () => {
@@ -236,5 +239,87 @@ describe("expense-classifier unit tests", () => {
     } finally {
       process.env.UNCLASSIFIED_EXPENSES_THRESHOLD = originalEnv;
     }
+  });
+
+  describe("US-025: Unclassified Expenses Threshold Increase & Pipeline Tuning", () => {
+    it("updates the default threshold in merchant-catalog.json to 10", () => {
+      assert.equal(defaultCatalog.unclassifiedThreshold, 10);
+    });
+
+    it("updates UNCLASSIFIED_THRESHOLD export to 10 by default", () => {
+      const originalEnv = process.env.UNCLASSIFIED_EXPENSES_THRESHOLD;
+      try {
+        delete process.env.UNCLASSIFIED_EXPENSES_THRESHOLD;
+        assert.equal(getUnclassifiedThreshold(), 10);
+      } finally {
+        process.env.UNCLASSIFIED_EXPENSES_THRESHOLD = originalEnv;
+      }
+    });
+
+    it("pipeline decision logic: exactly 10 unclassified items bypass LLM classification", () => {
+      const pendingCount = 10;
+      const threshold = 10;
+      const shouldTrigger = shouldTriggerLLMClassification(pendingCount, threshold);
+      assert.equal(
+        shouldTrigger,
+        false,
+        "Exactly 10 unclassified items must bypass external LLM classification"
+      );
+    });
+
+    it("pipeline decision logic: exactly 11 unclassified items trigger LLM classification", () => {
+      const pendingCount = 11;
+      const threshold = 10;
+      const shouldTrigger = shouldTriggerLLMClassification(pendingCount, threshold);
+      assert.equal(
+        shouldTrigger,
+        true,
+        "11 unclassified items must trigger external LLM classification"
+      );
+    });
+
+    it("pipeline boundary integration with transaction collections", () => {
+      const threshold = 10;
+
+      // Collection A: 10 unknown transactions
+      const tenUnclassified: Transaction[] = Array.from({ length: 10 }, (_, i) => ({
+        id: `tx-unknown-${i + 1}`,
+        date: "2026-10-01",
+        description: `COMERCIO DESCONOCIDO ALEATORIO ${i + 1}`,
+        amount: 50 + i * 10,
+        currency: "GTQ",
+      }));
+
+      const classifiedTen = classifyTransactions(tenUnclassified);
+      const pendingTen = classifiedTen.filter(
+        (t) => !t.category || t.category === "Pendiente"
+      );
+      assert.equal(pendingTen.length, 10);
+      assert.equal(
+        shouldTriggerLLMClassification(pendingTen.length, threshold),
+        false,
+        "10 pending items bypass the LLM route"
+      );
+
+      // Collection B: 11 unknown transactions
+      const elevenUnclassified: Transaction[] = Array.from({ length: 11 }, (_, i) => ({
+        id: `tx-unknown-${i + 1}`,
+        date: "2026-10-01",
+        description: `COMERCIO DESCONOCIDO ALEATORIO ${i + 1}`,
+        amount: 50 + i * 10,
+        currency: "GTQ",
+      }));
+
+      const classifiedEleven = classifyTransactions(elevenUnclassified);
+      const pendingEleven = classifiedEleven.filter(
+        (t) => !t.category || t.category === "Pendiente"
+      );
+      assert.equal(pendingEleven.length, 11);
+      assert.equal(
+        shouldTriggerLLMClassification(pendingEleven.length, threshold),
+        true,
+        "11 pending items trigger the LLM route"
+      );
+    });
   });
 });

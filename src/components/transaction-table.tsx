@@ -125,10 +125,10 @@ const CATEGORY_STYLES: Record<
     dot: "bg-indigo-500",
   },
   Pendiente: {
-    bg: "bg-zinc-100 dark:bg-zinc-800/70",
-    text: "text-zinc-600 dark:text-zinc-400",
-    border: "border-zinc-200 dark:border-zinc-700",
-    dot: "bg-zinc-400",
+    bg: "bg-amber-50 dark:bg-amber-950/40",
+    text: "text-amber-800 dark:text-amber-200 font-medium",
+    border: "border-amber-300 dark:border-amber-700",
+    dot: "bg-amber-500",
   },
 };
 
@@ -557,7 +557,9 @@ export function TransactionTable({
                 <p className="text-2xs text-amber-800/90 dark:text-amber-300/90 mt-1 leading-snug">
                   {stats.pending > unclassifiedThreshold
                     ? `Tienes ${stats.pending} gastos pendientes de clasificar, espera mientras la IA los clasifica...`
-                    : "Click aquí para filtrarlos y continuar."}
+                    : stats.pending > 0
+                    ? `Tienes ${stats.pending} ${stats.pending === 1 ? "gasto pendiente" : "gastos pendientes"} de clasificar. Haz clic aquí para filtrarlos y asignarlos rápidamente.`
+                    : "Todos tus gastos están clasificados."}
                 </p>
               </div>
 

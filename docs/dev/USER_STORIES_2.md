@@ -155,19 +155,19 @@ This document outlines the user stories, implementation phases, and testable acc
   - [ ] Local keyword matching supports brand variations, common OCR/PDF typos, and location suffixes (e.g., `ZONA 10`, `C.C. OAKLAND`, `AGENCIA SAN CRISTOBAL`).
   - [ ] Benchmark test suite confirms that over 85% of standard Guatemalan bank statement test transactions are categorized locally.
 
-### [ ] US-025: Unclassified Expenses Threshold Increase & Pipeline Tuning
+### [x] US-025: Unclassified Expenses Threshold Increase & Pipeline Tuning
 - **As a** system architect,
 - **I want** the threshold for triggering Gemini Pro expense classification raised from 5 to 10 unclassified expenses,
 - **So that** external LLM calls are minimized and reserved only for statements with substantial unrecognized volume.
 - **Split-Brain Boundary:** Split-Brain Hybrid Decision Logic.
 - **Acceptance Criteria:**
-  - [ ] Updates the default threshold in `src/data/merchant-catalog.json` (`unclassifiedThreshold: 10`).
-  - [ ] Updates `UNCLASSIFIED_THRESHOLD` export in `src/lib/expense-classifier.ts` to `10`.
-  - [ ] The classification pipeline evaluates:
+  - [x] Updates the default threshold in `src/data/merchant-catalog.json` (`unclassifiedThreshold: 10`).
+  - [x] Updates `UNCLASSIFIED_THRESHOLD` export in `src/lib/expense-classifier.ts` to `10`.
+  - [x] The classification pipeline evaluates:
     - If unclassified expenses count is `<= 10`, bypasses LLM classification and routes directly to User Confirmation (US-010).
     - If unclassified expenses count is `> 10`, sends only the unclassified items to `POST /api/classify-expenses`.
-  - [ ] Unclassified expenses under or equal to 10 are prominently badged in the UI as "Pendiente" with a prompt encouraging quick manual assignment.
-  - [ ] Unit and integration tests verify that exactly 10 unclassified items bypass the LLM, while 11 items trigger the classification route.
+  - [x] Unclassified expenses under or equal to 10 are prominently badged in the UI as "Pendiente" with a prompt encouraging quick manual assignment.
+  - [x] Unit and integration tests verify that exactly 10 unclassified items bypass the LLM, while 11 items trigger the classification route.
 
 ---
 

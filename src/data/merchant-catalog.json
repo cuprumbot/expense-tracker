@@ -180,5 +180,5 @@
     }
   ],
   "defaultCategory": "Pendiente",
-  "unclassifiedThreshold": 5
+  "unclassifiedThreshold": 10
 }
