@@ -23,23 +23,23 @@ It details the transition from the initial reporting cards to a comprehensive, f
 
 ## Phase 14: Dashboard Foundation, Deprecation & Sliding Drawer (Product Improvements)
 
-### [ ] US-029: Dashboard Layout Scaffold, Conditional Routing & Component Deprecation
+### [x] US-029: Dashboard Layout Scaffold, Conditional Routing & Component Deprecation
 - **As a** user who has imported bank statements with 10 or fewer unclassified expenses,
 - **I want to** see a modern, full-screen financial dashboard instead of the previous stat cards and savings suggestions,
 - **So that** I have a high-impact, consolidated command center for analyzing my spending habits.
 - **Split-Brain Boundary:** 100% Local (Client UI and conditional flow).
 - **Acceptance Criteria:**
-  - [ ] When the number of unclassified expenses is `< 10` (or after manual classification reduces pending items below 10), the application automatically routes to the new Dashboard view (`dashboard-view.tsx`).
-  - [ ] If unclassified expenses count is `>= 10`, the application continues to prioritize the Review & Classification screen until resolved.
-  - [ ] The previous stat cards, recurring expenses list, and suggested savings panel in `src/components/expense-dashboard.tsx` and `src/components/savings-suggestions.tsx` are documented with a prominent `@deprecated` JSDoc comment explaining their replacement by the new Dashboard panels, keeping the files intact for historical reference.
-  - [ ] The "Sugerencias de ahorro" (Savings Suggestions) button and modal are safely hidden/disabled in the new dashboard flow.
-  - [ ] The Dashboard container takes 100% of the viewport width and height on desktop displays and landscape-oriented tablets (`min-h-screen`, structured 2x2 grid), with no unnecessary vertical page scrolling required to view the four panels.
-  - [ ] Dashboard header presents a clean bar featuring:
+  - [x] When the number of unclassified expenses is `< 10` (or after manual classification reduces pending items below 10), the application automatically routes to the new Dashboard view (`dashboard-view.tsx`).
+  - [x] If unclassified expenses count is `>= 10`, the application continues to prioritize the Review & Classification screen until resolved.
+  - [x] The previous stat cards, recurring expenses list, and suggested savings panel in `src/components/expense-dashboard.tsx` and `src/components/savings-suggestions.tsx` are documented with a prominent `@deprecated` JSDoc comment explaining their replacement by the new Dashboard panels, keeping the files intact for historical reference.
+  - [x] The "Sugerencias de ahorro" (Savings Suggestions) button and modal are safely hidden/disabled in the new dashboard flow.
+  - [x] The Dashboard container takes 100% of the viewport width and height on desktop displays and landscape-oriented tablets (`min-h-screen`, structured 2x2 grid), with no unnecessary vertical page scrolling required to view the four panels.
+  - [x] Dashboard header presents a clean bar featuring:
     - Period overview title (e.g., "Panel de Control Financiero").
     - "Agregar más estados de cuenta" action button (retaining US-026 batch capability).
     - "Reiniciar sesión" button with confirmation modal (retaining US-027 capability).
     - "Ver transacciones" toggle button with an SVG table/list icon to open the sliding drawer.
-  - [ ] All typography uses standard modern fonts, neutral dark/light theme tokens, and 100% Spanish text with zero emojis.
+  - [x] All typography uses standard modern fonts, neutral dark/light theme tokens, and 100% Spanish text with zero emojis.
 
 ### [ ] US-030: Sliding Transaction Drawer Component
 - **As a** user viewing the financial dashboard,

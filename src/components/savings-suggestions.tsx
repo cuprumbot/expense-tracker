@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * @deprecated Deprecated as part of Iteration 2 (US-029).
+ * The AI savings suggestions feature and its server route `/api/suggest-savings`
+ * have been deprecated in favor of local analytical dashboard panels.
+ * Retained for historical reference and backward compatibility.
+ */
+
 import React, { useState } from "react";
 import { Icons } from "@/components/icons";
 import { formatCurrency } from "@/lib/currency";

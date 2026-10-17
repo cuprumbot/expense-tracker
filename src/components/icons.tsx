@@ -42,9 +42,15 @@ import {
   ChevronUp,
   Globe,
   RotateCcw,
+  Table,
+  LayoutDashboard,
+  List,
 } from "lucide-react";
 
 export const Icons = {
+  Table,
+  LayoutDashboard,
+  List,
   Upload,
   FileText,
   FileSpreadsheet,

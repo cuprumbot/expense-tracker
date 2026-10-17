@@ -56,6 +56,7 @@ interface TransactionTableProps {
   onDismissBatchSummaryNotification?: () => void;
   batchErrors?: { fileName: string; error: string }[];
   onDismissBatchError?: (fileName: string) => void;
+  hideTopDashboard?: boolean;
 }
 
 type SortField = "date" | "description" | "amount";
@@ -196,6 +197,7 @@ export function TransactionTable({
   onDismissBatchSummaryNotification,
   batchErrors = [],
   onDismissBatchError,
+  hideTopDashboard = false,
 }: TransactionTableProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedCurrency, setSelectedCurrency] = useState<"all" | "GTQ" | "USD">("all");
@@ -585,7 +587,8 @@ export function TransactionTable({
       )}
 
       {/* Top Section: Aggregated Dashboard (when fully classified) or Triage Cards (when pending) */}
-      {stats.pending === 0 ? (
+      {!hideTopDashboard && (
+        stats.pending === 0 ? (
         <ExpenseDashboard
           metrics={reportingMetrics}
           subscriptionSummary={subscriptionSummary}
@@ -774,6 +777,7 @@ export function TransactionTable({
             </div>
           )}
         </div>
+      )
       )}
 
       {/* Success Notification */}
@@ -797,6 +801,7 @@ export function TransactionTable({
             <Icons.Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
+              id="search-transactions-input"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar por descripción, comercio..."

@@ -6,6 +6,7 @@ import { FileUpload } from "@/components/file-upload";
 import { ColumnMappingModal } from "@/components/column-mapping-modal";
 import { AnonymizationModal } from "@/components/anonymization-modal";
 import { TransactionTable } from "@/components/transaction-table";
+import { DashboardView } from "@/components/dashboard-view";
 import { BatchProgress } from "@/components/batch-progress";
 import { SupportedFileType, validateUploadedFile } from "@/lib/file-validator";
 import { processBatchFiles, BatchItem } from "@/lib/batch-processor";
@@ -823,10 +824,78 @@ export default function Home() {
     });
   };
 
+  const pendingTransactionsCount = transactions
+    ? transactions.filter((t) => !t.category || t.category === "Pendiente").length
+    : 0;
+  const isDashboardActive = transactions !== null && pendingTransactionsCount < 10;
+
   return (
-    <div className="min-h-screen flex flex-col bg-white text-zinc-900 antialiased selection:bg-zinc-900 selection:text-white dark:bg-zinc-950 dark:text-zinc-100">
-      {/* Minimal Top Header */}
-      <header className="border-b border-zinc-200/80 dark:border-zinc-800/80">
+    <>
+      {isDashboardActive ? (
+        <DashboardView
+          transactions={transactions}
+          summary={summary}
+          bankName={bankName}
+          customCategories={customCategories}
+          onAddMoreStatements={() => setIsAddMoreModalOpen(true)}
+          onResetSession={() => {
+            setWipeCustomCategoriesOnReset(false);
+            setIsResetSessionModalOpen(true);
+          }}
+          onClearData={() => setIsClearConfirmOpen(true)}
+          renderDrawerContent={() => (
+            <TransactionTable
+              transactions={transactions}
+              summary={summary!}
+              sourceLabel={
+                bankName
+                  ? `${bankName} · ${routedFile?.file.name || "Múltiples archivos"}`
+                  : routedFile?.file.name || "Archivo de movimientos"
+              }
+              onReset={() => {
+                setWipeCustomCategoriesOnReset(false);
+                setIsResetSessionModalOpen(true);
+              }}
+              duplicateNotification={duplicateNotification}
+              onDismissDuplicateNotification={() => setDuplicateNotification(null)}
+              onAddMoreStatements={() => setIsAddMoreModalOpen(true)}
+              batchSummaryNotification={batchSummaryNotification}
+              onDismissBatchSummaryNotification={() => setBatchSummaryNotification(null)}
+              batchErrors={batchErrors}
+              onDismissBatchError={(fileName) =>
+                setBatchErrors((prev) => prev.filter((e) => e.fileName !== fileName))
+              }
+              customCategories={customCategories}
+              savingsRecommendations={null}
+              onSavingsRecommendationsChange={setSavingsRecommendations}
+              onUpdateCategory={handleUpdateCategory}
+              onAddCustomCategory={handleAddCustomCategory}
+              onEditTransaction={handleEditTransaction}
+              onDeleteTransaction={handleDeleteTransaction}
+              onBulkAssignCategory={handleBulkAssignCategory}
+              onBulkDeleteTransactions={handleBulkDeleteTransactions}
+              onToggleSubscription={handleToggleSubscription}
+              onClearData={() => setIsClearConfirmOpen(true)}
+              onClassifyPendingWithLLM={() => {
+                if (transactions) {
+                  const pending = transactions.filter(
+                    (t) => !t.category || t.category === "Pendiente"
+                  );
+                  classifyPendingWithLLM(pending, transactions);
+                }
+              }}
+              isClassifyingWithLLM={isClassifyingWithLLM}
+              llmClassificationError={llmClassificationError}
+              llmSuccessMessage={llmSuccessMessage}
+              unclassifiedThreshold={unclassifiedThreshold}
+              hideTopDashboard={true}
+            />
+          )}
+        />
+      ) : (
+        <div className="min-h-screen flex flex-col bg-white text-zinc-900 antialiased selection:bg-zinc-900 selection:text-white dark:bg-zinc-950 dark:text-zinc-100">
+          {/* Minimal Top Header */}
+          <header className="border-b border-zinc-200/80 dark:border-zinc-800/80">
         <div className="max-w-5xl lg:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-md bg-zinc-900 text-white flex items-center justify-center dark:bg-zinc-100 dark:text-zinc-900">
@@ -1282,6 +1351,8 @@ export default function Home() {
           />
         )}
       </main>
+    </div>
+    )}
 
       {/* Clear Data Confirmation Modal (US-011) */}
       {isClearConfirmOpen && (
@@ -1469,6 +1540,6 @@ export default function Home() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

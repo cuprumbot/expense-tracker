@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * @deprecated Deprecated as part of Iteration 2 (US-029).
+ * The initial stat cards and category progress list in this component have been replaced
+ * by the comprehensive 4-panel financial dashboard in `src/components/dashboard-view.tsx`.
+ * Retained for historical reference and backward compatibility.
+ */
+
 import React from "react";
 import { Icons } from "@/components/icons";
 import { formatCurrency } from "@/lib/currency";
