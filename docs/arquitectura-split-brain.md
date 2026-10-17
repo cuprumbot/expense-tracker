@@ -25,19 +25,20 @@ La siguiente tabla resume con precisión qué tareas y datos se procesan de form
 
 | Componente / Tarea | Procesamiento Local (Cliente / Servidor Interno) | Procesamiento Externo (Google Gemini Pro) | Formato de Datos Enviado al LLM |
 | :--- | :--- | :--- | :--- |
-| **Carga y Validación de Archivos** | Sí (100% local). Detección de tipos MIME (`.pdf`, `.csv`), tamaño y codificación UTF-8. | No. | Ninguno. El archivo no sale del entorno local. |
-| **Parsing de CSV** | Sí (100% local). `PapaParse` infiere columnas de fecha, descripción y monto, con mapeo asistido si hay ambigüedad. | No. | Ninguno. |
+| **Carga y Validación de Archivos** | Sí (100% local). Detección de tipos MIME (`.pdf`, `.csv`), tamaño y cola por lotes de múltiples archivos. | No. | Ninguno. El archivo no sale del entorno local. |
+| **Deduplicación de Transacciones** | Sí (100% local). `deduplication.ts` descarta compras exactamente repetidas en lote o sesión activa. | No. | Ninguno. |
+| **Parsing de CSV y Conversión Monetaria** | Sí (100% local). `PapaParse` infiere columnas de fecha, descripción, monto y divisa original (USD/GTQ), convirtiendo a Quetzales si aplica. | No. | Ninguno. |
 | **Extracción de Texto PDF** | Sí (100% local). `pdf-parse` extrae el contenido de texto en el servidor sin servicios externos. | No. | Ninguno. |
-| **Detección de Banco y Parser Especializado** | Sí (100% local). Banco G&T Continental cuenta con un parser algorítmico propio que filtra créditos, pagos y cobros en dólares. | No. | Ninguno. |
+| **Detección de Banco y Parser Especializado** | Sí (100% local). Banco G&T Continental cuenta con parser propio que filtra créditos/pagos y convierte cargos en USD a GTQ (7.85) de forma algorítmica. | No. | Ninguno. |
 | **Anonimización y Redacción de PII** | Sí (100% local). Reglas y expresiones regulares eliminan nombres, direcciones, cuentas, IBAN, DPI, NIT y teléfonos. | No. | Ninguno. La anonimización precede a cualquier comunicación externa. |
 | **Extracción de Transacciones en Bancos No Soportados** | No (solo la anonimización y el prompting ocurren localmente). | Sí. Gemini Pro extrae las transacciones ignorando pagos, créditos y saldos. | Texto plano **sanitizado** con marcadores de redacción (ej. `ACH [NOMBRE_REDACTADO]`, `Q 150.00`). |
-| **Clasificación de Comercios Conocidos** | Sí (100% local). Búsqueda contra `merchant-catalog.json` (comercios populares de Guatemala). | No. | Ninguno. |
-| **Clasificación de Gastos Pendientes (<= 5)** | Sí (100% local). Si quedan 5 o menos gastos sin clasificar, se omite el LLM y el usuario clasifica manualmente. | No. | Ninguno. |
-| **Clasificación de Gastos Pendientes (> 5)** | Validación previa de seguridad local para certificar la ausencia de PII en las descripciones. | Sí. Gemini Pro categoriza las descripciones desconocidas contra una lista cerrada de categorías. | Array JSON ligero: `[{ "id": "tx-1", "description": "Comercio X", "amount": 120.00 }]`. |
+| **Clasificación de Comercios Conocidos** | Sí (100% local). Búsqueda contra `merchant-catalog.json` (11 categorías populares de Guatemala). | No. | Ninguno. |
+| **Clasificación de Gastos Pendientes (<= 10)** | Sí (100% local). Si quedan 10 o menos gastos sin clasificar, se omite el LLM y el usuario clasifica manualmente. | No. | Ninguno. |
+| **Clasificación de Gastos Pendientes (> 10)** | Validación previa de seguridad local para certificar la ausencia de PII en las descripciones. | Sí. Gemini Pro categoriza las descripciones desconocidas contra una lista cerrada de categorías. | Array JSON ligero: `[{ "id": "tx-1", "description": "Comercio X", "amount": 120.00 }]`. |
 | **Identificación de Suscripciones** | Sí (100% local). Detección inmediata de servicios recurrentes (Netflix, Spotify, gimnasios, etc.). | No. | Ninguno. |
-| **Cálculo de Reportes y Gráficos** | Sí (100% local). Agrupación por categorías, cálculo de totales en Quetzales y porcentajes relativos. | No. | Ninguno. |
+| **Cálculo de Reportes y Gráficos** | Sí (100% local). Agrupación por categorías, cálculo de totales en Quetzales, filtros de divisa y porcentajes relativos. | No. | Ninguno. |
 | **Sugerencias de Reducción de Gastos** | Construcción local de payload con totales agregados y servicios de suscripción. | Sí. Genera recomendaciones estratégicas y tácticas de ahorro adaptadas al contexto de Guatemala. | Totales agregados por categoría (`Supermercado: Q 2,500`) y lista de servicios recurrentes (`Netflix: Q 89.00`). |
-| **Persistencia de Sesión** | Sí (100% local). `localStorage` del navegador. Cero bases de datos remotas. | No. | Ninguno. |
+| **Persistencia y Reinicio de Sesión** | Sí (100% local). Continuidad acumulada en `localStorage` y modal de reinicio selectivo o de fábrica. Cero bases de datos remotas. | No. | Ninguno. |
 
 ---
 

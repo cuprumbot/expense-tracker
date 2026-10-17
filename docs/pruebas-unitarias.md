@@ -36,12 +36,12 @@ node --import tsx --test src/lib/pdf-parser.test.ts
 
 ### Resultados de la Suite
 
-La suite completa consta de **12 archivos de prueba**, **18 suites temáticas** y **79 pruebas unitarias**, ejecutándose en aproximadamente 3.5 segundos:
+La suite completa consta de **14 archivos de prueba**, **26 suites temáticas** y **117 pruebas unitarias**, ejecutándose en aproximadamente 2.5 segundos:
 
 ```text
-# tests 79
-# suites 18
-# pass 79
+# tests 117
+# suites 26
+# pass 117
 # fail 0
 # cancelled 0
 # skipped 0
@@ -60,23 +60,27 @@ A continuación se detalla cada uno de los archivos de prueba y los escenarios c
 * **Insensibilidad a mayúsculas**: Comprueba que extensiones como `.PDF` o `.CSV` se reconozcan correctamente.
 * **Rechazo de formatos no permitidos**: Bloquea extensiones no admitidas (ej. `.xlsx`, `.txt`, `.docx`, `.png`) arrojando errores informativos en español.
 
-### 2.2. Formato y Parseo Monetario (`src/lib/currency.test.ts`)
+### 2.2. Formato, Conversión y Parseo Monetario (`src/lib/currency.test.ts`)
 * **Formateo en Quetzales (GTQ / Q)**: Verifica la representación correcta con prefijo `"Q"`, separador de miles con comas y dos decimales (ej. `1500.5` -> `"Q 1,500.50"`).
 * **Manejo de montos negativos**: Comprueba que números negativos adopten el formato `"-Q 45.00"`.
+* **Conversión de divisas (USD a GTQ)**: Valida la conversión matemática precisa de dólares estadounidenses a Quetzales utilizando la tasa configurable (`USD_GTQ_EXCHANGE_RATE`, por defecto 7.85) con redondeo a dos decimales.
+* **Formateo con moneda de origen**: Genera etiquetas explicativas cuando una transacción fue convertida de moneda extranjera (ej. `"Q 78.50 ($10.00)"`).
+* **Extracción de divisa y monto**: Identifica el símbolo de moneda en cadenas de texto (`$` -> `USD`, `Q` -> `GTQ`) y retorna el valor numérico limpio.
 * **Parseo de cadenas monetarias**: Convierte textos contables y variantes con símbolos a números de JavaScript (ej. `"Q 1,234.56"` -> `1234.56`, `"(50.00)"` -> `-50`).
 * **Valores vacíos o inválidos**: Garantiza el retorno seguro de `0` ante valores nulos o no numéricos.
 
 ### 2.3. Parser de Archivos CSV (`src/lib/csv-parser.test.ts`)
-* **Detección automática de encabezados**: Deduce columnas de fecha (`fecha`, `date`), descripción (`descripcion`, `concepto`, `comercio`) y monto (`monto`, `debito`, `monto_gtq`).
+* **Detección automática de encabezados**: Deduce columnas de fecha (`fecha`, `date`), descripción (`descripcion`, `concepto`, `comercio`), monto (`monto`, `debito`, `monto_gtq`) y moneda (`moneda`, `currency`).
 * **Manejo de delimitadores**: Procesa archivos separados por comas y puntos y comas.
 * **Detección de ambigüedad**: Activa el indicador `needsMapping: true` cuando los encabezados son desconocidos o ambiguos para invocar el modal interactivo.
 * **Parseo con mapeo personalizado**: Verifica la conversión correcta de transacciones cuando el usuario asigna manualmente las columnas.
+* **Detección de transacciones en dólares en CSV**: Identifica columnas o montos rotulados en dólares y asigna automáticamente `originalCurrency: "USD"` calculando la conversión a GTQ.
 
 ### 2.4. Parser de PDF y Estados de Cuenta (`src/lib/pdf-parser.test.ts`)
 * **Detección de Banco**: Identifica correctamente **Banco G&T Continental** mediante palabras clave (`g&t continental`, `gtc.com.gt`, `plaza continental`) y clasifica otros bancos como no soportados.
 * **Filtrado de créditos y pagos**: Descarta débitos erróneos, abonos, pagos por internet (`PAGO POR INTERNET`) y créditos de cashback (`CREDITO CASH BACK`).
-* **Filtrado de transacciones en moneda extranjera**: Ignora consumos facturados en dólares estadounidenses (`$`) para concentrarse en la moneda local (`GTQ`).
-* **Prueba de integración con archivos reales**: Ejecuta la extracción completa sobre los documentos de prueba `demo/demo1.pdf` y `demo/demo2.pdf`, verificando que la suma total coincida con la sumatoria real de compras y débitos del estado de cuenta.
+* **Extracción y conversión de consumos en dólares**: Extrae consumos facturados en dólares estadounidenses (`$`), preserva el monto en divisa original (`originalAmount` y `originalCurrency: "USD"`) y los convierte a Quetzales al tipo de cambio oficial.
+* **Prueba de integración con archivos reales**: Ejecuta la extracción completa sobre los documentos de prueba `demo/demo1.pdf` y `demo/demo2.pdf`, verificando que la suma total coincida con la sumatoria real de compras y débitos del estado de cuenta incluyendo transacciones en dólares convertidas.
 
 ### 2.5. Anonimización y Privacidad (`src/lib/anonymizer.test.ts`)
 * **Cuentas bancarias e IBAN**: Reemplaza cuentas bancarias guatemaltecas e IBANs por `[CUENTA_REDACTADA]`.
@@ -88,7 +92,7 @@ A continuación se detalla cada uno de los archivos de prueba y los escenarios c
 * **Palabras personalizadas**: Aplica redacciones de términos específicos ingresados por el usuario como `[DATO_REDACTADO]`.
 
 ### 2.6. Clasificación Local de Comercios (`src/lib/expense-classifier.test.ts`)
-* **Emparejamiento con catálogo**: Asocia descripciones comerciales con sus categorías en `merchant-catalog.json` (ej. `"Supermercados La Torre"` -> `Supermercado`, `"Gasolinera Shell"` -> `Transporte y Combustible`).
+* **Emparejamiento con catálogo (11 categorías)**: Asocia descripciones comerciales con sus categorías en `merchant-catalog.json` (ej. `"Supermercados La Torre"` -> `Supermercado`, `"Gasolinera Shell"` -> `Transporte y Combustible`, `"Cruz Verde"` -> `Salud y Farmacia`, `"Cemaco"` -> `Hogar y Mantenimiento`).
 * **Normalización de texto**: Asegura coincidencia insensible a mayúsculas, tildes y caracteres de puntuación.
 * **Reglas de desempate y puntuación**: Asigna mayor prioridad a palabras clave completas y prefijos de marca sobre coincidencias parciales.
 * **Detección de suscripciones**: Marca automáticamente consumos recurrentes (Netflix, Spotify) e integra el cálculo del compromiso mensual acumulado.
@@ -113,17 +117,33 @@ A continuación se detalla cada uno de los archivos de prueba y los escenarios c
 * **Distribución por categorías**: Calcula el total gastado por categoría y su porcentaje relativo sobre el gasto total.
 * **Detección de estado pendiente**: Identifica cuándo existen gastos sin categorizar en el resumen.
 * **Filtrado combinado**: Comprueba el filtrado simultáneo por término de búsqueda y categoría seleccionada de forma insensible a mayúsculas.
+* **Filtrado por divisa**: Valida el filtrado preciso por moneda (`all`, `GTQ`, `USD`), permitiendo aislar transacciones convertidas de dólares frente a moneda local.
 
 ### 2.11. Asesor de Ahorro y Recomendaciones (`src/lib/savings-advisor.test.ts`)
 * **Construcción del payload agregado (`buildSavingsPayload`)**: Verifica que solo se incluyan totales agregados por categoría y el desglose de suscripciones recurrentes, excluyendo compras individuales.
 * **Rechazo de PII en servicios recurrentes**: Asegura que cualquier mención accidental de datos sensibles en suscripciones sea detectada y rechazada.
 * **Parseo estructurado de recomendaciones**: Convierte la respuesta JSON de Gemini en oportunidades inmediatas, estrategias a largo plazo y diagnóstico por categoría.
 
-### 2.12. Persistencia en LocalStorage (`src/lib/storage.test.ts`)
+### 2.12. Persistencia en LocalStorage y Continuidad (`src/lib/storage.test.ts`)
 * **Guardado y recuperación de sesión**: Valida la serialización y deserialización correcta de `expense_tracker_session_v1`.
+* **Continuidad de sesión incremental**: Comprueba que nuevas transacciones cargadas se anexen preservando los movimientos existentes categorizados previamente.
+* **Reinicio de sesión selectivo**: Verifica que `clearStoredSessionOnly()` elimine los movimientos y transacciones de la sesión pero conserve intactas las categorías personalizadas del usuario.
+* **Reinicio de fábrica total**: Comprueba que al activar la opción de borrado completo (`wipeCategories: true`), se eliminen tanto la sesión como las categorías personalizadas.
 * **Resiliencia ante datos corruptos**: Comprueba que ante un JSON malformado o alterado manualmente en el navegador, la aplicación limpie la clave y se recupere limpiamente sin colapsar.
 * **Persistencia de categorías personalizadas**: Valida que las categorías creadas por el usuario persistan de forma independiente a los estados de cuenta.
 * **Límites de cuota de almacenamiento**: Simula excepciones de tipo `QuotaExceededError` verificando un manejo controlado con alertas informativas.
+
+### 2.13. Orquestador de Carga por Lotes (`src/lib/batch-processor.test.ts`)
+* **Cola de procesamiento secuencial**: Encola múltiples archivos PDF y CSV procesándolos de manera ordenada.
+* **Transición de estados**: Valida el ciclo de vida de cada ítem (`pending` -> `processing` -> `completed` / `error`).
+* **Progreso acumulado**: Comprueba el cálculo porcentual de avance y el reporte reactivo de eventos a la interfaz.
+* **Aislamiento de fallos**: Demuestra que un archivo corrupto o inválido genera un error individual sin abortar el procesamiento de los demás documentos del lote.
+
+### 2.14. Deduplicación de Transacciones (`src/lib/deduplication.test.ts`)
+* **Detección de duplicados exactos**: Identifica y descarta compras que comparten fecha, descripción idéntica y mismo monto.
+* **Preservación de coincidencias parciales**: Protege compras legítimas que comparten solo fecha, solo monto o nombres similares pero montos diferentes.
+* **Deduplicación frente a sesión activa**: Valida que transacciones ya existentes en la sesión no se dupliquen al cargar un segundo archivo con registros solapados.
+* **Conteo y métricas de descarte**: Informa con precisión la cantidad de transacciones omitidas para mantener la transparencia ante el usuario.
 
 ---
 

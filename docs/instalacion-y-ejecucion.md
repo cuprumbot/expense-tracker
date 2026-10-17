@@ -68,6 +68,14 @@ Edita el archivo `.env.local` con tu editor de preferencia:
 # Clave de API de Google Gemini Pro (obtenida en Google AI Studio)
 # Esta clave es accedida de manera segura ÚNICAMENTE desde el servidor en Route Handlers
 GEMINI_API_KEY=tu_clave_de_gemini_aqui
+
+# Tasa de cambio de Dólar estadounidense a Quetzal guatemalteco (opcional, por defecto: 7.85)
+# 1 USD = 7.85 GTQ
+USD_GTQ_EXCHANGE_RATE=7.85
+
+# Umbral de gastos pendientes para clasificar con IA (opcional, por defecto: 10)
+# Si los gastos pendientes > umbral, se invoca a Gemini Pro; si son <= umbral, se clasifican manualmente
+UNCLASSIFIED_EXPENSES_THRESHOLD=10
 ```
 
 > [!IMPORTANT]

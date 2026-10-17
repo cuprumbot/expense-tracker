@@ -8,25 +8,28 @@ La aplicación implementa una arquitectura **Split-Brain (Cerebro Dividido)**: t
 
 ## 1. ¿Qué hace la aplicación?
 
-* **Importación de Estados de Cuenta**:
-  * **Estados de Cuenta en PDF**: Extrae el texto de manera local. Si el documento proviene de un banco con parser propio (**Banco G&T Continental**), procesa los consumos automáticamente filtrando pagos de tarjeta, créditos y cargos en dólares. Si proviene de otro banco, anonimiza localmente el texto y utiliza Gemini Pro para extraer las transacciones en formato estructurado.
-  * **Archivos CSV**: Permite cargar hojas de cálculo de movimientos mediante **PapaParse**. Si las columnas son ambiguas, ofrece un asistente visual para mapear fecha, descripción y monto.
+* **Importación y Carga por Lotes de Estados de Cuenta**:
+  * **Carga Múltiple y Cola por Lotes**: Permite cargar uno o varios archivos simultáneamente (.pdf y .csv). Un modal de gestión muestra la cola de procesamiento, estado individual de cada documento y progreso global acumulado.
+  * **Deduplicación Inteligente**: Descarta de forma automática transacciones exactamente duplicadas (misma fecha, descripción idéntica y mismo monto) tanto dentro del lote como frente a la sesión activa, protegiendo compras legítimas con datos similares y notificando al usuario con transparencia.
+  * **Conversión Multi-Moneda (USD a GTQ)**: Extrae transacciones en dólares estadounidenses (`$`) tanto de estados de cuenta PDF de Banco G&T como de archivos CSV, convirtiéndolas automáticamente a Quetzales según la tasa de cambio oficial (por defecto Q 7.85 por USD) y conservando la divisa original en metadatos para visualización y filtrado.
+  * **Estados de Cuenta en PDF**: Extrae el texto de manera local. Si el documento proviene de un banco con parser propio (**Banco G&T Continental**), procesa los consumos automáticamente filtrando pagos de tarjeta y créditos. Si proviene de otro banco, anonimiza localmente el texto y utiliza Gemini Pro para extraer las transacciones en formato estructurado.
+  * **Archivos CSV**: Permite cargar hojas de cálculo de movimientos mediante **PapaParse**. Si las columnas son ambiguas, ofrece un asistente visual para mapear fecha, descripción, monto y divisa.
 * **Privacidad Estricta (Split-Brain)**:
   * Redacta de forma local nombres del titular, transferencias ACH, números de cuenta, IBAN, números de tarjeta, DPI (CUI), NIT, direcciones físicas, correos electrónicos y teléfonos antes de cualquier llamada externa.
   * Cuenta con un **modal interactivo de censura** donde el usuario valida el texto redactado y puede agregar términos personalizados antes de autorizar su envío al LLM.
 * **Clasificación Inteligente y Adaptativa**:
-  * Cruza las transacciones con un **catálogo local de comercios de Guatemala** (`merchant-catalog.json`), reconociendo de inmediato supermercados, gasolineras, restaurantes, servicios básicos y suscripciones.
-  * Si quedan más de 5 gastos sin categorizar, consulta a Gemini Pro para sugerir categorías. Si son 5 o menos, evita llamadas innecesarias para ahorrar costos y permite clasificación manual.
+  * Cruza las transacciones con un **catálogo local de 11 categorías de comercios de Guatemala** (`merchant-catalog.json`), reconociendo de inmediato supermercados, restaurantes, gasolineras, servicios básicos, salud, hogar, educación, mascotas y suscripciones.
+  * Si quedan más de 10 gastos sin categorizar, consulta a Gemini Pro para sugerir categorías. Si son 10 o menos, evita llamadas innecesarias para ahorrar costos y permite clasificación manual.
 * **Detección Automática de Suscripciones**:
   * Detecta cobros periódicos (Netflix, Spotify, etc.), calcula el compromiso mensual en Quetzales y alerta al usuario sobre servicios activos.
-* **Gestión y Personalización Completa**:
-  * Tabla interactiva con búsqueda en tiempo real, filtros por categoría, edición de montos y fechas, asignación masiva, borrado de movimientos y creación de categorías personalizadas con colores propios.
+* **Gestión, Filtrado y Personalización Completa**:
+  * Tabla interactiva con búsqueda en tiempo real, filtros por categoría y por moneda (Todas, Solo GTQ, Convertidas de USD con badges explicativos), edición de montos y fechas, asignación masiva, borrado de movimientos y creación de categorías personalizadas con colores propios.
 * **Panel de Estadísticas y Reportes**:
   * Visualización de distribución de gastos por categoría, porcentajes del presupuesto total y comparativas financieras.
 * **Sugerencias de Ahorro con IA**:
   * Envía **únicamente** totales consolidados por categoría y el listado de suscripciones para que Gemini Pro genere oportunidades inmediatas de ahorro, estrategias a largo plazo y diagnóstico por categoría adaptadas a Guatemala.
-* **Persistencia Local Segura**:
-  * Guarda automáticamente la sesión activa y las categorías personalizadas en el `localStorage` del navegador. No requiere registro de usuario ni utiliza bases de datos remotas.
+* **Continuidad de Sesión y Reinicio Selectivo**:
+  * Mantiene la sesión activa incremental en el `localStorage` del navegador (nuevos archivos agregan compras sin sobreescribir). Dispone de un modal explícito de reinicio que permite limpiar las transacciones conservando las categorías personalizadas del usuario, o realizar un restablecimiento de fábrica total.
 
 ---
 
@@ -36,35 +39,36 @@ El siguiente diagrama ilustra el flujo de ejecución del sistema:
 
 ```mermaid
 flowchart TD
-    A[Start] --> B[Upload PDF/CSV]
-    B --> |CSV| C[Identify columns]
-    B --> |PDF from known bank| D[Extract data]
-    B --> |PDF from unknown bank| E[Anonymize]
-    E --> F[Extract using LLM]
-    C --> G[Structure data]
-    D --> G
-    F --> G
-    G --> H[Classify expenses locally]
-    H --> |Unclassified <= 5| I[Customization]
-    H --> |Unclassified > 5| J[Classify using LLM]
-    J --> I
-    I --> K[Data reporting]
-    K --> |Aggregated data| L[Get suggestions using LLM]
+    A[Start] --> B[Upload PDF/CSV batch]
+    B --> |Deduplicate| C[Discard exact duplicates]
+    C --> |CSV| D[Identify columns & currency]
+    C --> |PDF from known bank| E[Extract data & convert USD]
+    C --> |PDF from unknown bank| F[Anonymize]
+    F --> G[Extract using LLM]
+    D --> H[Structure data]
+    E --> H
+    G --> H
+    H --> I[Classify expenses locally - 11 categories]
+    I --> |Unclassified <= 10| J[Customization]
+    I --> |Unclassified > 10| K[Classify using LLM]
+    K --> J
+    J --> L[Data reporting]
+    L --> |Aggregated data| M[Get suggestions using LLM]
 ```
 
 ### Descripción del Flujo
 
-1. **Carga**: El usuario sube su estado de cuenta en PDF o un archivo CSV.
-2. **Detección de Formato**:
-   * Si es **CSV**, se identifican las columnas localmente.
-   * Si es **PDF de banco conocido** (Banco G&T), se extraen los consumos de forma local y determinista.
+1. **Carga y Deduplicación**: El usuario sube uno o múltiples estados de cuenta en PDF o archivos CSV. El sistema descarta duplicados exactos frente a compras previas.
+2. **Detección de Formato y Conversión Multi-Moneda**:
+   * Si es **CSV**, se identifican las columnas y la divisa localmente.
+   * Si es **PDF de banco conocido** (Banco G&T), se extraen los consumos en GTQ y se convierten a Quetzales los consumos en USD (7.85) de forma local y determinista.
    * Si es **PDF de banco no soportado**, se ejecuta la anonimización local de PII, el usuario confirma el texto censurado y Gemini Pro extrae las transacciones.
 3. **Estructuración**: Los movimientos se estandarizan en un objeto JSON en memoria; a partir de este punto, el archivo original no se vuelve a utilizar.
-4. **Clasificación Local**: Se categorizan los gastos usando el catálogo de comercios de Guatemala.
+4. **Clasificación Local**: Se categorizan los gastos usando el catálogo de 11 categorías de comercios de Guatemala.
 5. **Evaluación de Pendientes**:
-   * Si quedan `<= 5` gastos sin clasificar, se pasa directo a la personalización manual (ahorro de llamadas de IA).
-   * Si quedan `> 5` gastos sin clasificar, Gemini Pro clasifica los pendientes de forma asistida.
-6. **Revisión y Personalización**: El usuario revisa, ajusta o añade categorías personalizadas.
+   * Si quedan `<= 10` gastos sin clasificar, se pasa directo a la personalización manual (ahorro de llamadas de IA).
+   * Si quedan `> 10` gastos sin clasificar, Gemini Pro clasifica los pendientes de forma asistida.
+6. **Revisión y Personalización**: El usuario revisa, ajusta filtros (categoría, moneda), o añade categorías personalizadas.
 7. **Reportes y Sugerencias**: Se generan gráficos y métricas consolidadas. Opcionalmente, se envían únicamente los totales agregados al LLM para obtener recomendaciones de ahorro.
 
 ---
@@ -134,7 +138,7 @@ La documentación detallada se encuentra organizada en la carpeta [`docs/`](docs
    *Filosofía de privacidad por diseño, fragmentos de código de expresiones regulares, heurística de detección de titular, validación estricta de servidor y censura interactiva.*
 
 7. **[Pruebas Unitarias y Cobertura](docs/pruebas-unitarias.md)**  
-   *Cómo ejecutar las pruebas con Node.js Test Runner y desglose exhaustivo de los 12 archivos de prueba (18 suites, 79 pruebas unitarias).*
+   *Cómo ejecutar las pruebas con Node.js Test Runner y desglose exhaustivo de los 14 archivos de prueba (26 suites, 117 pruebas unitarias).*
 
 ---
 
