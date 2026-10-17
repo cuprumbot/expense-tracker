@@ -129,6 +129,29 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     }
     console.log("[E2E Test] ✓ Panel 1 Category Trend Line Chart verified successfully.");
 
+    // 5.2 Assertions for US-033 & US-034 (Panel 2: Top Vendors Dual-Metric Bar Chart)
+    console.log("[E2E Test] Verifying Panel 2 Top Vendors Bar Chart (US-033 & US-034)...");
+    const panel2 = page.locator("#panel-vendor-concentration");
+    await expect(panel2).toBeVisible();
+
+    const btnSortAmount = page.locator("#btn-vendor-sort-amount");
+    const btnSortFrequency = page.locator("#btn-vendor-sort-frequency");
+    await expect(btnSortAmount).toBeVisible();
+    await expect(btnSortFrequency).toBeVisible();
+
+    // Default is sort by amount: check for Quetzales format in items
+    await expect(panel2.getByText(/Q\s*[\d,]+\.\d{2}/).first()).toBeVisible();
+
+    // Toggle to sort by frequency
+    await btnSortFrequency.click();
+    await expect(btnSortFrequency).toHaveClass(/bg-white/);
+    await expect(panel2.getByText(/compras?/i).first()).toBeVisible();
+
+    // Toggle back to amount
+    await btnSortAmount.click();
+    await expect(btnSortAmount).toHaveClass(/bg-white/);
+    console.log("[E2E Test] ✓ Panel 2 Top Vendors Bar Chart verified successfully.");
+
     // 6. Assertions for US-030 (Sliding Transaction Drawer)
     console.log("[E2E Test] Testing Sliding Transaction Drawer (US-030)...");
 

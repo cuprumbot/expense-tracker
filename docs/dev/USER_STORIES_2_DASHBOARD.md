@@ -128,24 +128,24 @@ It details the transition from the initial reporting cards to a comprehensive, f
   - [x] Returns sorted lists for both criteria (defaulting to Top 5 or Top 8 merchants).
   - [x] Includes unit tests covering merchant name normalization, tie-breaking, and ranking accuracy.
 
-### [ ] US-034: Top Vendors Bar Chart with Dual Metric Selector
+### [x] US-034: Top Vendors Bar Chart with Dual Metric Selector
 - **As a** user asking "Where is my money going?",
 - **I want to** explore a bar chart of my top merchants and switch between "Highest spend amount" and "Most frequent transactions",
 - **So that** I can see both where the largest sums of money flow and which businesses I frequent most often.
 - **Split-Brain Boundary:** 100% Local (Native SVG Bar Chart and UI state).
 - **Acceptance Criteria:**
-  - [ ] Panel 2 renders an interactive bar chart titled "¿A dónde se va mi dinero?" (Panel 2: Comercios Principales).
-  - [ ] Includes a segmented toggle selector at the top of the panel:
+  - [x] Panel 2 renders an interactive bar chart titled "¿A dónde se va mi dinero?" (Panel 2: Comercios Principales).
+  - [x] Includes a segmented toggle selector at the top of the panel:
     - Option 1: "Mayor monto gastado (Q)"
     - Option 2: "Mayor cantidad de compras"
-  - [ ] When "Mayor monto gastado" is selected:
+  - [x] When "Mayor monto gastado" is selected:
     - Bars represent top vendors by Quetzales spent.
     - Labels display the merchant name and formatted amount (e.g., "Supermercados La Torre — Q 4,820.00 (24.5%)").
-  - [ ] When "Mayor cantidad de compras" is selected:
+  - [x] When "Mayor cantidad de compras" is selected:
     - Bars represent top vendors by frequency of visits.
     - Labels display the merchant name and purchase count (e.g., "Café Barista — 18 compras (Total: Q 640.00)").
-  - [ ] Bars render with rounded caps, smooth width transition animations (300ms ease), and color coding matching the vendor's primary category.
-  - [ ] Hovering over any bar displays a tooltip with average ticket size (`Monto promedio por compra: Q XX.XX`).
+  - [x] Bars render with rounded caps, smooth width transition animations (300ms ease), and color coding matching the vendor's primary category.
+  - [x] Hovering over any bar displays a tooltip with average ticket size (`Monto promedio por compra: Q XX.XX`).
 
 ---
 

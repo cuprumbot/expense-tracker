@@ -6,6 +6,7 @@ import { Transaction, CSVParsingSummary, CustomCategory } from "@/types/transact
 import { formatCurrency } from "@/lib/currency";
 import { SlidingDrawer } from "@/components/sliding-drawer";
 import { CategoryTrendChart } from "@/components/category-trend-chart";
+import { VendorConcentrationChart } from "@/components/vendor-concentration-chart";
 
 interface DashboardViewProps {
   transactions: Transaction[];
@@ -200,17 +201,12 @@ export function DashboardView({
             </div>
           </div>
 
-          {/* Panel 2 Body / Visual Placeholder */}
-          <div className="flex-1 py-8 flex flex-col items-center justify-center text-center space-y-2">
-            <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-zinc-400 flex items-center justify-center">
-              <Icons.BarChart3 className="w-6 h-6" />
-            </div>
-            <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-              Gráfico de Barras de Principales Comercios
-            </p>
-            <p className="text-2xs text-zinc-400 dark:text-zinc-500 max-w-xs">
-              Alterna entre volumen de gasto acumulado y frecuencia de transacciones por proveedor.
-            </p>
+          {/* Panel 2 Body / Interactive Dual-Metric Bar Chart */}
+          <div className="flex-1 pt-4">
+            <VendorConcentrationChart
+              transactions={transactions}
+              customCategories={customCategories}
+            />
           </div>
         </section>
 
