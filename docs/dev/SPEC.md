@@ -100,7 +100,9 @@ These changes directly improve the product functionality and the user experience
 
 The main feature in this iteration will be presenting the results after categorization as a dashboard.
 
+In this iteration we will remove the current cards that show stats (both the totals and the line bar) the recurring expenses panel and the suggested savings panel. These will be replaced by the dashboard. These files should not be deleted, these files should be documented as deprecated.
 
+If the user has less than 10 unclassified expenses, the dashboard will be shown.
 
 - Dashboard UI/UX:
     - The dashboard will take all the screen when viewed in a computer or on a landscape orientation tablet, everything should fit nicely. We will decide later the best approach for smaller or portrait orientation screens.

@@ -184,4 +184,71 @@ The **Product improvements** section deals with creating a dashboard. To create 
 
 The saving suggestions feature will be deprecated when implementing the dashboard.
 
-Generate enough user stories: one to create the dashboard base UI, and then as many as needed for each panel or interactive element the dashboard will have.
+Generate enough user stories:
+- Enough user stories to create the dashboard base UI, hide the previous panels, show the dashboard.
+- As many user stories as needed for each panel or interactive element the dashboard will have.
+
+---
+
+Implement Playwright testing.
+
+Install the necessary tools and libraries for Playwright testing. Implement the following test:
+- Check if `npm run dev` is already running. If it is not, start it.
+- Start a new session. If there is previous data, use the `Borrar mis datos` option.
+- Upload the `2026-09.pdf` and `2026-07.pdf` files to the new session. Use the correct tools so this requires no user interaction.
+- If done correctly, this should give 9 unclassified expenses. Create a `Testing` category and classify them as such.
+- After finishing, end the `npm run dev` process.
+
+Report the results to me.
+
+---
+
+TO DO 1
+
+Execute the following User Stories from `USER_STORIES_2_DASHBOARD.md` sequentially: US-029, US-030.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end for EACH user story in the sequence:
+
+1. **Implementation:** Complete each step required by the current story's acceptance criteria without asking for intermediate approvals.
+2. **Build Verification:** Run `npm run build` to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+3. **End-to-End Testing:** Once the build passes, execute an automated Playwright test to verify the web app functionality. For this test:
+    * Check if `npm run dev` is already running. If it is not, start it.
+    * Start a clean, new session. If there is previous data, use the `Borrar mis datos` option first.
+    * Upload the `2026-09.pdf` and `2026-07.pdf` files to the new session. Make sure to use Playwright and the correct programmatic tools (e.g., `setInputFiles` or file chooser events) so this step and the entire testing process requires absolutely no user interaction.
+    * Continue navigating the flow until you successfully reach the **dashboard**. *Note: The program logic may or may not require you to classify missing expenses before the dashboard is accessible. If classification is required, handle it dynamically (e.g., create a `Testing` category and classify the unclassified expenses) to proceed.*
+    * After reaching the dashboard and verifying the flow, gracefully end the `npm run dev` process.
+
+Only stop when all specified User Stories are fully implemented and verified via both build and E2E tests. Then, provide a comprehensive report of what was done and the test results for each story. Summarize it in `DASHBOARD_IMPLEMENTATION.md`.
+
+The stories US-029 and US-030 create the base dashboard. After each of these specific stories is done and successfully tested, stage and commit the changes automatically. Make exactly one commit per story.
+
+After completing the entire batch, execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.
+
+---
+
+TO DO 2
+
+Execute the following User Stories from `USER_STORIES_2_DASHBOARD.md` sequentially: US-031 through US-039.
+
+These stories implement the four different panels of the dashboard. 
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end for EACH user story in the sequence:
+
+1. **Branch Management:** Determine which dashboard panel the current story belongs to. If it is the first story being implemented for that specific panel, create and switch to a new Git branch named appropriately for that panel (e.g., `feature/panel-name`). Ensure all subsequent stories related to that same panel are committed to its corresponding branch.
+2. **Implementation:** Complete each step required by the current story's acceptance criteria without asking for intermediate approvals.
+3. **Build Verification:** Run `npm run build` to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+4. **End-to-End Testing:** Once the build passes, execute an automated Playwright test to verify the web app functionality. For this test:
+    * Check if `npm run dev` is already running. If it is not, start it.
+    * Start a clean, new session. If there is previous data, use the `Borrar mis datos` option first.
+    * Upload the `2026-09.pdf` and `2026-07.pdf` files to the new session. Make sure to use Playwright and the correct programmatic tools (e.g., `setInputFiles` or file chooser events) so this step and the entire testing process requires absolutely no user interaction.
+    * Continue navigating the flow until you successfully reach the **dashboard** and can verify the new panel functionality. *Note: The program logic may or may not require you to classify missing expenses before the dashboard is accessible. If classification is required, handle it dynamically (e.g., create a `Testing` category and classify the unclassified expenses) to proceed.*
+    * After reaching the dashboard and verifying the flow, gracefully end the `npm run dev` process.
+5. **Committing:** After the story is fully implemented and has successfully passed both the build and E2E testing, automatically stage and commit the changes to the current panel's branch. Make exactly one commit per story.
+
+Only stop when all specified User Stories are fully implemented, verified, and committed across their respective branches. Then, provide a comprehensive report of what was done and the test results for each story. Summarize it in `DASHBOARD_IMPLEMENTATION.md`.
+
+After completing the entire batch, execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.

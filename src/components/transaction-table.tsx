@@ -985,6 +985,7 @@ export function TransactionTable({
             </select>
             <button
               type="button"
+              id="btn-apply-bulk-category"
               disabled={!bulkTargetCategory}
               onClick={handleApplyBulkCategory}
               className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-zinc-900 bg-white hover:bg-zinc-100 disabled:opacity-50 rounded-lg dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-colors cursor-pointer shadow-xs"
