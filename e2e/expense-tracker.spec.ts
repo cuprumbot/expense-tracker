@@ -152,6 +152,33 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await expect(btnSortAmount).toHaveClass(/bg-white/);
     console.log("[E2E Test] ✓ Panel 2 Top Vendors Bar Chart verified successfully.");
 
+    // 5.3 Assertions for US-035 & US-036 (Panel 3: Consumption Patterns & Outliers)
+    console.log("[E2E Test] Verifying Panel 3 Consumption Patterns Bar Chart (US-035 & US-036)...");
+    const panel3 = page.locator("#panel-consumption-patterns");
+    await expect(panel3).toBeVisible();
+
+    const btnPatternDayOfWeek = page.locator("#btn-pattern-day-of-week");
+    const btnPatternDayOfMonth = page.locator("#btn-pattern-day-of-month");
+    await expect(btnPatternDayOfWeek).toBeVisible();
+    await expect(btnPatternDayOfMonth).toBeVisible();
+
+    // Default is day of week: check for day abbreviations (Lun, Mar, Mié, etc.)
+    await expect(panel3.getByText("Lun")).toBeVisible();
+    await expect(panel3.getByText("Vie")).toBeVisible();
+
+    // Verify presence of anomaly banner
+    const anomalyBanner = page.locator("#consumption-anomaly-banner");
+    await expect(anomalyBanner).toBeVisible();
+
+    // Toggle to Day of Month (1 to 31)
+    await btnPatternDayOfMonth.click();
+    await expect(btnPatternDayOfMonth).toHaveClass(/bg-white/);
+
+    // Toggle back to Day of Week
+    await btnPatternDayOfWeek.click();
+    await expect(btnPatternDayOfWeek).toHaveClass(/bg-white/);
+    console.log("[E2E Test] ✓ Panel 3 Consumption Patterns Bar Chart verified successfully.");
+
     // 6. Assertions for US-030 (Sliding Transaction Drawer)
     console.log("[E2E Test] Testing Sliding Transaction Drawer (US-030)...");
 
