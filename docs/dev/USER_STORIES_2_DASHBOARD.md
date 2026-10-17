@@ -201,20 +201,20 @@ It details the transition from the initial reporting cards to a comprehensive, f
   - [x] Updates `TransactionCategory` types and ensures local classifier assigns this category deterministically.
   - [x] Unit tests verify that sample transaction lines containing installment keywords are classified as `"Visacuotas y Financiamiento"` locally with zero LLM queries.
 
-### [ ] US-038: Three-Segment Transaction Age Aggregator with Month Filtering
+### [x] US-038: Three-Segment Transaction Age Aggregator with Month Filtering
 - **As a** developer,
 - **I want** an analytics engine that categorizes spending into three specific decision-age buckets with multi-month filtering,
 - **So that** the pie chart accurately illustrates when the user's spending commitments originated.
 - **Split-Brain Boundary:** 100% Local (Pure TypeScript aggregation logic).
 - **Acceptance Criteria:**
-  - [ ] Implements aggregation function `calculateTransactionAgeSegments(transactions: Transaction[], selectedMonth?: string)`:
-  - [ ] Partitions all expenses into exactly three canonical buckets:
+  - [x] Implements aggregation function `calculateTransactionAgeSegments(transactions: Transaction[], selectedMonth?: string)`:
+  - [x] Partitions all expenses into exactly three canonical buckets:
     1. **Cuotas y Financiamiento:** Transactions in the `"Visacuotas y Financiamiento"` category (decisions made months/years prior).
     2. **Suscripciones y Servicios Recurrentes:** Transactions tagged with `isSubscription: true` or category `"Suscripciones"` (standing monthly commitments).
     3. **Compras Inmediatas:** All other transactions made in the current period (immediate discretionary and essential purchases).
-  - [ ] Supports an optional `selectedMonth` filter argument (`"all"` or `"YYYY-MM"`) allowing calculations for all uploaded statements or for a single month.
-  - [ ] Returns totals in Quetzales, percentage distribution, and transaction counts for all 3 segments.
-  - [ ] Unit tests in `src/lib/reporting.test.ts` verify segment totals sum to 100% of the filtered spending.
+  - [x] Supports an optional `selectedMonth` filter argument (`"all"` or `"YYYY-MM"`) allowing calculations for all uploaded statements or for a single month.
+  - [x] Returns totals in Quetzales, percentage distribution, and transaction counts for all 3 segments.
+  - [x] Unit tests in `src/lib/reporting.test.ts` verify segment totals sum to 100% of the filtered spending.
 
 ### [ ] US-039: Transaction Age Donut / Pie Chart & Interactive Breakdown
 - **As a** user viewing "Transaction Age",

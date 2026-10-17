@@ -795,3 +795,152 @@ export function calculateConsumptionPatterns(
     insights,
   };
 }
+
+export type TransactionAgeSegmentId =
+  | "cuotas"
+  | "suscripciones"
+  | "inmediatas";
+
+export interface TransactionAgeSegment {
+  id: TransactionAgeSegmentId;
+  label: string;
+  shortDescription: string;
+  color: string;
+  totalAmountGTQ: number;
+  transactionCount: number;
+  percentageShare: number;
+}
+
+export interface TransactionAgeResult {
+  segments: TransactionAgeSegment[];
+  totalFilteredAmountGTQ: number;
+  totalFilteredCount: number;
+  selectedMonth: string;
+  availableMonths: { monthKey: string; monthLabel: string }[];
+}
+
+export const TRANSACTION_AGE_COLORS: Record<TransactionAgeSegmentId, string> = {
+  cuotas: "#0284c7",
+  suscripciones: "#6366f1",
+  inmediatas: "#10b981",
+};
+
+/**
+ * Categorizes spending into three canonical decision-age segments:
+ * 1. Cuotas y Financiamiento: Decisions made in past months/years.
+ * 2. Suscripciones y Servicios Recurrentes: Standing monthly commitments.
+ * 3. Compras Inmediatas: Discretionary and fresh current-period expenses.
+ *
+ * Supports multi-month filtering ("all" or "YYYY-MM").
+ * Pure local calculation conforming 100% to Split-Brain architecture.
+ */
+export function calculateTransactionAgeSegments(
+  transactions: Transaction[],
+  selectedMonth: string = "all"
+): TransactionAgeResult {
+  const validExpenses = transactions.filter(
+    (tx) => typeof tx.amount === "number" && tx.amount > 0
+  );
+
+  // Discover all distinct months
+  const monthKeySet = new Set<string>();
+  for (const tx of validExpenses) {
+    monthKeySet.add(extractMonthKey(tx.date));
+  }
+  const sortedMonthKeys = Array.from(monthKeySet).sort();
+  const availableMonths = sortedMonthKeys.map((monthKey) => ({
+    monthKey,
+    monthLabel: formatMonthKeyToLabel(monthKey),
+  }));
+
+  // Filter by selected month if not "all"
+  const filtered =
+    selectedMonth && selectedMonth !== "all"
+      ? validExpenses.filter((tx) => extractMonthKey(tx.date) === selectedMonth)
+      : validExpenses;
+
+  let cuotasTotal = 0;
+  let cuotasCount = 0;
+
+  let subsTotal = 0;
+  let subsCount = 0;
+
+  let inmediatasTotal = 0;
+  let inmediatasCount = 0;
+
+  for (const tx of filtered) {
+    const cat = (tx.category || "").trim();
+    const isCuota = cat.toLowerCase() === "visacuotas y financiamiento";
+    const isSub =
+      !isCuota &&
+      (tx.isSubscription === true || cat.toLowerCase() === "suscripciones");
+
+    if (isCuota) {
+      cuotasTotal += tx.amount;
+      cuotasCount += 1;
+    } else if (isSub) {
+      subsTotal += tx.amount;
+      subsCount += 1;
+    } else {
+      inmediatasTotal += tx.amount;
+      inmediatasCount += 1;
+    }
+  }
+
+  const totalFilteredAmountGTQ = Number(
+    (cuotasTotal + subsTotal + inmediatasTotal).toFixed(2)
+  );
+  const totalFilteredCount = filtered.length;
+
+  const cuotasShare =
+    totalFilteredAmountGTQ > 0
+      ? Number(((cuotasTotal / totalFilteredAmountGTQ) * 100).toFixed(1))
+      : 0;
+  const subsShare =
+    totalFilteredAmountGTQ > 0
+      ? Number(((subsTotal / totalFilteredAmountGTQ) * 100).toFixed(1))
+      : 0;
+  const inmediatasShare =
+    totalFilteredAmountGTQ > 0
+      ? Number(Math.max(0, 100 - (cuotasShare + subsShare)).toFixed(1))
+      : 0;
+
+  const segments: TransactionAgeSegment[] = [
+    {
+      id: "cuotas",
+      label: "Visacuotas y Financiamiento",
+      shortDescription: "Decisiones de compra de meses o años pasados",
+      color: TRANSACTION_AGE_COLORS.cuotas,
+      totalAmountGTQ: Number(cuotasTotal.toFixed(2)),
+      transactionCount: cuotasCount,
+      percentageShare: cuotasShare,
+    },
+    {
+      id: "suscripciones",
+      label: "Suscripciones Recurrentes",
+      shortDescription: "Servicios mensuales domiciliados y compromisos fijos",
+      color: TRANSACTION_AGE_COLORS.suscripciones,
+      totalAmountGTQ: Number(subsTotal.toFixed(2)),
+      transactionCount: subsCount,
+      percentageShare: subsShare,
+    },
+    {
+      id: "inmediatas",
+      label: "Compras Inmediatas",
+      shortDescription: "Gastos discrecionales y consumos del período actual",
+      color: TRANSACTION_AGE_COLORS.inmediatas,
+      totalAmountGTQ: Number(inmediatasTotal.toFixed(2)),
+      transactionCount: inmediatasCount,
+      percentageShare: inmediatasShare,
+    },
+  ];
+
+  return {
+    segments,
+    totalFilteredAmountGTQ,
+    totalFilteredCount,
+    selectedMonth,
+    availableMonths,
+  };
+}
+
