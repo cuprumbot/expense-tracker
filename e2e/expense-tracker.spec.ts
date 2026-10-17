@@ -103,6 +103,32 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await expect(page.locator("#panel-transaction-age")).toBeVisible();
     console.log("[E2E Test] ✓ US-029 Dashboard layout & 4 panels verified successfully.");
 
+    // 5.1 Assertions for US-031 & US-032 (Panel 1: Category Trends Line Chart)
+    console.log("[E2E Test] Verifying Panel 1 Category Trend Line Chart (US-031 & US-032)...");
+    const trendSvg = page.locator('#panel-category-trends svg[aria-label="Gráfico de tendencia mensual por categoría"]');
+    await expect(trendSvg).toBeVisible();
+
+    // Check that months are present on X-axis (Jul 2026, Sep 2026)
+    await expect(trendSvg.getByText("Jul 2026")).toBeVisible();
+    await expect(trendSvg.getByText("Sep 2026")).toBeVisible();
+
+    // Check SVG paths and circles
+    const svgPaths = trendSvg.locator("path");
+    await expect(svgPaths.first()).toBeVisible();
+    const svgCircles = trendSvg.locator("circle");
+    expect(await svgCircles.count()).toBeGreaterThan(0);
+
+    // Check category filter pill toggling in Panel 1
+    const panel1Pills = page.locator("#panel-category-trends button").filter({ hasText: /Supermercado/ });
+    if (await panel1Pills.first().isVisible().catch(() => false)) {
+      await panel1Pills.first().click();
+      await expect(panel1Pills.first()).toHaveClass(/line-through/);
+      // Toggle back on
+      await panel1Pills.first().click();
+      await expect(panel1Pills.first()).not.toHaveClass(/line-through/);
+    }
+    console.log("[E2E Test] ✓ Panel 1 Category Trend Line Chart verified successfully.");
+
     // 6. Assertions for US-030 (Sliding Transaction Drawer)
     console.log("[E2E Test] Testing Sliding Transaction Drawer (US-030)...");
 

@@ -5,6 +5,7 @@ import { Icons } from "@/components/icons";
 import { Transaction, CSVParsingSummary, CustomCategory } from "@/types/transaction";
 import { formatCurrency } from "@/lib/currency";
 import { SlidingDrawer } from "@/components/sliding-drawer";
+import { CategoryTrendChart } from "@/components/category-trend-chart";
 
 interface DashboardViewProps {
   transactions: Transaction[];
@@ -163,17 +164,12 @@ export function DashboardView({
             </div>
           </div>
 
-          {/* Panel 1 Body / Visual Placeholder */}
-          <div className="flex-1 py-8 flex flex-col items-center justify-center text-center space-y-2">
-            <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-zinc-400 flex items-center justify-center">
-              <Icons.TrendingDown className="w-6 h-6" />
-            </div>
-            <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-              Gráfico de Tendencias en Serie Temporal
-            </p>
-            <p className="text-2xs text-zinc-400 dark:text-zinc-500 max-w-xs">
-              Muestra la evolución cronológica y comparativa de cada categoría a lo largo de los meses.
-            </p>
+          {/* Panel 1 Body / Interactive Multi-Line SVG Chart */}
+          <div className="flex-1 pt-4">
+            <CategoryTrendChart
+              transactions={transactions}
+              customCategories={customCategories}
+            />
           </div>
         </section>
 

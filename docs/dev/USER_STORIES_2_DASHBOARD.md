@@ -90,24 +90,24 @@ It details the transition from the initial reporting cards to a comprehensive, f
   - [x] Excludes credit refunds, payments, and filtered transactions.
   - [x] Includes comprehensive unit tests in `src/lib/reporting.test.ts` validating single-month, multi-month, missing-month zero fills, and sorting.
 
-### [ ] US-032: Category Trend Line Chart with Interactive Filtering
+### [x] US-032: Category Trend Line Chart with Interactive Filtering
 - **As a** user reviewing my basic spending information,
 - **I want to** see an interactive multi-line chart showing the evolution of each category over time with the ability to toggle individual categories,
 - **So that** I can track whether my spending in specific categories is rising, falling, or stable across months.
 - **Split-Brain Boundary:** 100% Local (Native SVG chart rendering).
 - **Acceptance Criteria:**
-  - [ ] Panel 1 of the dashboard renders an interactive SVG Line Chart titled "Tendencia de Gastos por Categoría" (Panel 1: Información Básica).
-  - [ ] Horizontal X-axis displays sorted month labels (e.g., "Ene 2026", "Feb 2026", "Mar 2026").
-  - [ ] Vertical Y-axis scales dynamically to the peak category spending, formatted in Quetzales (e.g., "Q 0", "Q 2,500", "Q 5,000").
-  - [ ] Each active category is rendered as an independent smooth SVG path (`<path d="..." />`) with circular data points at each month coordinate using its catalog color.
-  - [ ] An interactive category filter bar / pill legend allows users to click any category to hide or show its line on the chart.
-  - [ ] Hidden categories are visually dimmed in the legend; active categories remain brightly highlighted.
-  - [ ] Hovering over or tapping any data point reveals a crisp tooltip card showing:
+  - [x] Panel 1 of the dashboard renders an interactive SVG Line Chart titled "Tendencia de Gastos por Categoría" (Panel 1: Información Básica).
+  - [x] Horizontal X-axis displays sorted month labels (e.g., "Ene 2026", "Feb 2026", "Mar 2026").
+  - [x] Vertical Y-axis scales dynamically to the peak category spending, formatted in Quetzales (e.g., "Q 0", "Q 2,500", "Q 5,000").
+  - [x] Each active category is rendered as an independent smooth SVG path (`<path d="..." />`) with circular data points at each month coordinate using its catalog color.
+  - [x] An interactive category filter bar / pill legend allows users to click any category to hide or show its line on the chart.
+  - [x] Hidden categories are visually dimmed in the legend; active categories remain brightly highlighted.
+  - [x] Hovering over or tapping any data point reveals a crisp tooltip card showing:
     - Month and Year (e.g., "Julio 2026").
     - Category name with a colored dot indicator.
     - Total spent in Quetzales (`Q 1,845.20`).
     - Percentage change relative to the previous month (if prior month exists).
-  - [ ] If only one month of data is present, displays a clear message informing the user that uploading additional months will plot full trends, while showing the single-month category distribution.
+  - [x] If only one month of data is present, displays a clear message informing the user that uploading additional months will plot full trends, while showing the single-month category distribution.
 
 ---
 
