@@ -8,6 +8,7 @@ import { SlidingDrawer } from "@/components/sliding-drawer";
 import { CategoryTrendChart } from "@/components/category-trend-chart";
 import { VendorConcentrationChart } from "@/components/vendor-concentration-chart";
 import { ConsumptionPatternsChart } from "@/components/consumption-patterns-chart";
+import { TransactionAgeChart } from "@/components/transaction-age-chart";
 
 interface DashboardViewProps {
   transactions: Transaction[];
@@ -271,17 +272,9 @@ export function DashboardView({
             </div>
           </div>
 
-          {/* Panel 4 Body / Visual Placeholder */}
-          <div className="flex-1 py-8 flex flex-col items-center justify-center text-center space-y-2">
-            <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-zinc-400 flex items-center justify-center">
-              <Icons.PieChart className="w-6 h-6" />
-            </div>
-            <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-              Gráfico de Dona / Pastel de Antigüedad
-            </p>
-            <p className="text-2xs text-zinc-400 dark:text-zinc-500 max-w-xs">
-              Compara qué porción de tus ingresos está comprometida en decisiones pasadas vs consumos nuevos.
-            </p>
+          {/* Panel 4 Body / Transaction Age Donut Chart */}
+          <div className="flex-1 pt-4">
+            <TransactionAgeChart transactions={transactions} />
           </div>
         </section>
       </main>

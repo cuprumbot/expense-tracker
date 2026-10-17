@@ -179,6 +179,38 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await expect(btnPatternDayOfWeek).toHaveClass(/bg-white/);
     console.log("[E2E Test] ✓ Panel 3 Consumption Patterns Bar Chart verified successfully.");
 
+    // 5.4 Assertions for US-037, US-038 & US-039 (Panel 4: Transaction Age Donut Chart)
+    console.log("[E2E Test] Verifying Panel 4 Transaction Age Donut Chart (US-037, US-038 & US-039)...");
+    const panel4 = page.locator("#panel-transaction-age");
+    await expect(panel4).toBeVisible();
+
+    const donutSvg = panel4.locator('svg[aria-label="Gráfico de anillo de antigüedad del gasto"]');
+    await expect(donutSvg).toBeVisible();
+
+    // Verify month filter dropdown
+    const monthSelect = page.locator("#select-transaction-age-month");
+    await expect(monthSelect).toBeVisible();
+    await expect(monthSelect).toHaveValue("all");
+
+    // Verify 3 segment legends are present
+    await expect(page.locator("#legend-segment-cuotas")).toBeVisible();
+    await expect(page.locator("#legend-segment-suscripciones")).toBeVisible();
+    await expect(page.locator("#legend-segment-inmediatas")).toBeVisible();
+
+    // Test changing month filter to specific month
+    const options = await monthSelect.locator("option").all();
+    if (options.length > 1) {
+      const secondOptionVal = await options[1].getAttribute("value");
+      if (secondOptionVal && secondOptionVal !== "all") {
+        await monthSelect.selectOption(secondOptionVal);
+        await expect(monthSelect).toHaveValue(secondOptionVal);
+        // Switch back to all
+        await monthSelect.selectOption("all");
+        await expect(monthSelect).toHaveValue("all");
+      }
+    }
+    console.log("[E2E Test] ✓ Panel 4 Transaction Age Donut Chart verified successfully.");
+
     // 6. Assertions for US-030 (Sliding Transaction Drawer)
     console.log("[E2E Test] Testing Sliding Transaction Drawer (US-030)...");
 

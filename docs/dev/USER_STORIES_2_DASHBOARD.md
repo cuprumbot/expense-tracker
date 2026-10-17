@@ -216,26 +216,26 @@ It details the transition from the initial reporting cards to a comprehensive, f
   - [x] Returns totals in Quetzales, percentage distribution, and transaction counts for all 3 segments.
   - [x] Unit tests in `src/lib/reporting.test.ts` verify segment totals sum to 100% of the filtered spending.
 
-### [ ] US-039: Transaction Age Donut / Pie Chart & Interactive Breakdown
+### [x] US-039: Transaction Age Donut / Pie Chart & Interactive Breakdown
 - **As a** user viewing "Transaction Age",
 - **I want to** see a clean Donut/Pie chart contrasting past installment commitments, recurring subscriptions, and immediate purchases with a month filter,
 - **So that** I understand how much of my paycheck is already committed to past choices versus fresh monthly spending.
 - **Split-Brain Boundary:** 100% Local (Native SVG Donut Chart and local filtering).
 - **Acceptance Criteria:**
-  - [ ] Panel 4 renders an interactive Donut Chart titled "Antigüedad del Gasto" (Panel 4: Compromisos vs Compras Inmediatas).
-  - [ ] Top control features a month filter dropdown in Spanish:
+  - [x] Panel 4 renders an interactive Donut Chart titled "Antigüedad del Gasto" (Panel 4: Compromisos vs Compras Inmediatas).
+  - [x] Top control features a month filter dropdown in Spanish:
     - "Todos los meses cargados" (default).
     - Individual options for each uploaded month (e.g., "Mayo 2026", "Junio 2026").
-  - [ ] Renders 3 SVG donut slices with distinct colors:
+  - [x] Renders 3 SVG donut slices with distinct colors:
     - Visacuotas / Financiamiento: `#0284c7` (Sky Blue)
     - Suscripciones Recurrentes: `#6366f1` (Indigo)
     - Compras Inmediatas: `#10b981` (Emerald)
-  - [ ] Center of the donut displays the total expenditure for the selected period in Quetzales (`Q XX,XXX.XX`).
-  - [ ] Legend card alongside the chart displays:
+  - [x] Center of the donut displays the total expenditure for the selected period in Quetzales (`Q XX,XXX.XX`).
+  - [x] Legend card alongside the chart displays:
     - Segment name and colored badge.
     - Total amount in Quetzales.
     - Percentage of total spending.
-  - [ ] Hovering over any slice highlights the segment and displays a tooltip with details and purchase count.
+  - [x] Hovering over any slice highlights the segment and displays a tooltip with details and purchase count.
 
 ---
 
