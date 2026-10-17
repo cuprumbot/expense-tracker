@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Icons } from "@/components/icons";
 import { Transaction, CSVParsingSummary, CustomCategory } from "@/types/transaction";
 import { formatCurrency } from "@/lib/currency";
+import { SlidingDrawer } from "@/components/sliding-drawer";
 
 interface DashboardViewProps {
   transactions: Transaction[];
@@ -300,25 +301,15 @@ export function DashboardView({
         </section>
       </main>
 
-      {/* Transaction drawer container */}
-      {isDrawerOpen && (
-        <div id="drawer-container" className="fixed inset-0 z-40 bg-black/40 flex justify-end">
-          <div className="w-full max-w-5xl bg-white dark:bg-zinc-950 p-6 overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-sm font-semibold">Detalle de movimientos</h2>
-              <button
-                type="button"
-                id="btn-close-sliding-drawer"
-                onClick={() => setIsDrawerOpen(false)}
-                className="px-3 py-1.5 text-xs bg-zinc-100 rounded-lg"
-              >
-                Cerrar
-              </button>
-            </div>
-            {renderDrawerContent()}
-          </div>
-        </div>
-      )}
+      {/* Off-canvas Sliding Transaction Drawer */}
+      <SlidingDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        title="Detalle de movimientos"
+        totalCount={totalCount}
+      >
+        {renderDrawerContent()}
+      </SlidingDrawer>
     </div>
   );
 }

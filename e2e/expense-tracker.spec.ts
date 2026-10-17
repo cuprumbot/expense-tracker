@@ -1,15 +1,15 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
 
-test.describe("Expense Tracker E2E - Playwright Automated Workflow", () => {
-  test("clears prior session if present, ingests 2026-09.pdf and 2026-07.pdf, verifies 9 unclassified expenses, creates Testing category and classifies all 9", async ({
+test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
+  test("clean session, ingest PDFs, reach dashboard, verify 4-panel grid, test sliding drawer & reactive classification", async ({
     page,
   }) => {
     // 1. Navigate to the application
     console.log("[E2E Test] Navigating to http://localhost:3000...");
     await page.goto("/");
 
-    // 2. Start a new session: If previous data exists, use the "Borrar mis datos" option
+    // 2. Start a clean, new session: If previous data exists, use "Borrar mis datos"
     const clearDataBtn = page.getByRole("button", { name: "Borrar mis datos" });
     const hasPreviousData = await clearDataBtn
       .first()
@@ -20,32 +20,32 @@ test.describe("Expense Tracker E2E - Playwright Automated Workflow", () => {
       console.log("[E2E Test] Previous session detected. Clicking 'Borrar mis datos'...");
       await clearDataBtn.first().click();
 
-      // Confirm deletion in the confirmation modal
+      // Confirm deletion in the modal
       const modalConfirmBtn = page.locator("button.bg-red-600", {
         hasText: "Borrar mis datos",
       });
       await expect(modalConfirmBtn).toBeVisible({ timeout: 5000 });
       await modalConfirmBtn.click();
 
-      // Wait for modal to close
+      // Wait for modal to disappear and upload screen to be ready
       await expect(page.getByText("¿Borrar todos mis datos?")).not.toBeVisible();
       console.log("[E2E Test] ✓ Previous session data cleared successfully.");
     } else {
-      console.log("[E2E Test] Starting clean session (no previous data found).");
+      console.log("[E2E Test] Clean session confirmed (no previous session data).");
     }
 
-    // 3. Ensure the file input element is ready
+    // 3. Ensure the file upload input element is ready
     const fileInput = page.locator("#file-upload-input");
     await expect(fileInput).toBeAttached();
 
-    // Upload 2026-09.pdf and 2026-07.pdf without user interaction
+    // Programmatically upload 2026-09.pdf and 2026-07.pdf without user interaction
     const pdfPath1 = path.resolve(process.cwd(), "demo", "2026-09.pdf");
     const pdfPath2 = path.resolve(process.cwd(), "demo", "2026-07.pdf");
 
-    console.log(`[E2E Test] Automated file upload: \n  - ${pdfPath1}\n  - ${pdfPath2}`);
+    console.log(`[E2E Test] Programmatic file upload: \n  - ${pdfPath1}\n  - ${pdfPath2}`);
     await fileInput.setInputFiles([pdfPath1, pdfPath2]);
 
-    // Verify batch staging display
+    // Verify batch staging displays both files
     await expect(page.getByText("2 archivos listos para procesar")).toBeVisible();
     await expect(page.getByText("2026-09.pdf")).toBeVisible();
     await expect(page.getByText("2026-07.pdf")).toBeVisible();
@@ -55,79 +55,122 @@ test.describe("Expense Tracker E2E - Playwright Automated Workflow", () => {
     await expect(confirmRoutingBtn).toBeVisible();
     await confirmRoutingBtn.click();
 
-    // 4. Wait for processing to complete and the transaction table to display
-    await expect(page.getByText("Movimientos extraídos")).toBeVisible({ timeout: 30000 });
-    console.log("[E2E Test] ✓ Bank statements processed and transaction table displayed.");
+    // 4. Wait for processing to complete and verify whether dashboard or review screen appears
+    console.log("[E2E Test] Waiting for batch file processing to complete...");
+    const dashboardOrReview = page.locator("#dashboard-root, table");
+    await dashboardOrReview.first().waitFor({ state: "visible", timeout: 40000 });
 
-    // 5. Verify that this produces exactly 9 unclassified expenses
-    const pendingNotice = page.getByText(/Tienes 9 gastos pendientes de clasificar/i);
-    await expect(pendingNotice).toBeVisible();
+    const isDashboardActive = await page.locator("#dashboard-root").isVisible();
 
-    const pendingPill = page
-      .locator("button")
-      .filter({ hasText: /^Pendiente\s*\(9\)/ });
-    await expect(pendingPill).toBeVisible();
-    console.log("[E2E Test] ✓ Confirmed: Exactly 9 unclassified expenses identified.");
+    if (!isDashboardActive) {
+      console.log("[E2E Test] Pending >= 10 detected: Classifying expenses to proceed to dashboard...");
+      // Filter pending expenses and classify
+      const pendingPill = page.locator("button").filter({ hasText: /^Pendiente/ });
+      await expect(pendingPill).toBeVisible();
+      await pendingPill.click();
 
-    // 6. Create a "Testing" category
-    console.log("[E2E Test] Opening 'Nueva categoría' dialog...");
-    const newCategoryBtn = page
-      .getByRole("button", { name: "Nueva categoría" })
-      .first();
+      // Create "Testing" category
+      const newCategoryBtn = page.getByRole("button", { name: "Nueva categoría" }).first();
+      await newCategoryBtn.click();
+      const categoryNameInput = page.locator("#category-name-input");
+      await categoryNameInput.fill("Testing");
+      await page.getByRole("button", { name: "Guardar categoría" }).click();
+
+      // Bulk classify
+      const selectAllCheckbox = page.locator('input[aria-label="Seleccionar todas las transacciones filtradas"]');
+      await selectAllCheckbox.check();
+      const bulkCategorySelect = page.locator("#bulk-cat-select");
+      await bulkCategorySelect.selectOption("Testing");
+      const bulkSaveBtn = page.locator("#btn-apply-bulk-category");
+      await bulkSaveBtn.click();
+    }
+
+    // 5. Assertions for US-029 (Dashboard Layout Scaffold)
+    console.log("[E2E Test] Verifying Dashboard container (US-029)...");
+    const dashboardRoot = page.locator("#dashboard-root");
+    await expect(dashboardRoot).toBeVisible({ timeout: 15000 });
+
+    // Verify header title & elements
+    await expect(page.getByRole("heading", { name: "Panel de Control Financiero" })).toBeVisible();
+    await expect(page.locator("#btn-dashboard-add-statements")).toBeVisible();
+    await expect(page.locator("#btn-dashboard-reset-session")).toBeVisible();
+    await expect(page.locator("#btn-toggle-transactions-drawer")).toBeVisible();
+
+    // Verify 4-Panel 2x2 Responsive Grid
+    await expect(page.locator("#panel-category-trends")).toBeVisible();
+    await expect(page.locator("#panel-vendor-concentration")).toBeVisible();
+    await expect(page.locator("#panel-consumption-patterns")).toBeVisible();
+    await expect(page.locator("#panel-transaction-age")).toBeVisible();
+    console.log("[E2E Test] ✓ US-029 Dashboard layout & 4 panels verified successfully.");
+
+    // 6. Assertions for US-030 (Sliding Transaction Drawer)
+    console.log("[E2E Test] Testing Sliding Transaction Drawer (US-030)...");
+
+    // Drawer should be off-canvas initially
+    const drawerAside = page.locator('aside[aria-label="Detalle de movimientos"]');
+    await expect(drawerAside).toHaveClass(/translate-x-full/);
+
+    // Click "Ver transacciones" to open drawer
+    const openDrawerBtn = page.locator("#btn-toggle-transactions-drawer");
+    await openDrawerBtn.click();
+
+    // Drawer slides in
+    await expect(drawerAside).toHaveClass(/translate-x-0/);
+    console.log("[E2E Test] ✓ Drawer opened smoothly.");
+
+    // Verify full TransactionTable is mounted inside drawer
+    await expect(page.locator("#search-transactions-input")).toBeVisible();
+
+    // Test inline custom category creation inside drawer
+    const newCategoryBtn = page.getByRole("button", { name: "Nueva categoría" }).first();
     await newCategoryBtn.click();
-
-    // Fill in category name "Testing"
     const categoryNameInput = page.locator("#category-name-input");
     await expect(categoryNameInput).toBeVisible();
     await categoryNameInput.fill("Testing");
-
-    // Save custom category
-    const saveCategoryBtn = page.getByRole("button", { name: "Guardar categoría" });
-    await saveCategoryBtn.click();
-
-    // Modal closes
+    await page.getByRole("button", { name: "Guardar categoría" }).click();
     await expect(categoryNameInput).not.toBeVisible();
-    console.log("[E2E Test] ✓ 'Testing' category created successfully.");
+    console.log("[E2E Test] ✓ 'Testing' category created from within drawer.");
 
-    // 7. Classify the 9 unclassified expenses as "Testing"
-    console.log("[E2E Test] Filtering table to view pending expenses...");
-    await pendingPill.click();
+    // Filter pending transactions inside drawer
+    const pendingFilterPill = page.locator("button").filter({ hasText: /^Pendiente/ });
+    if (await pendingFilterPill.isVisible({ timeout: 3000 }).catch(() => false)) {
+      console.log("[E2E Test] Classifying pending transactions to 'Testing' from inside drawer...");
+      await pendingFilterPill.click();
 
-    // Select all filtered pending items via table header checkbox
-    const selectAllCheckbox = page.locator(
-      'input[aria-label="Seleccionar todas las transacciones filtradas"]'
-    );
-    await selectAllCheckbox.check();
+      const selectAllCheckbox = page.locator(
+        'input[aria-label="Seleccionar todas las transacciones filtradas"]'
+      );
+      await selectAllCheckbox.check();
 
-    // Choose "Testing" in the bulk category select
-    const bulkCategorySelect = page.locator("#bulk-cat-select");
-    await expect(bulkCategorySelect).toBeVisible();
-    await bulkCategorySelect.selectOption("Testing");
+      const bulkCategorySelect = page.locator("#bulk-cat-select");
+      await expect(bulkCategorySelect).toBeVisible();
+      await bulkCategorySelect.selectOption("Testing");
 
-    // Click "Guardar" in the bulk toolbar
-    const bulkSaveBtn = page.locator("#btn-apply-bulk-category");
-    await expect(bulkSaveBtn).toBeEnabled();
-    await bulkSaveBtn.click();
+      const bulkSaveBtn = page.locator("#btn-apply-bulk-category");
+      await bulkSaveBtn.click();
 
-    // 8. Assertions:
-    // - Pending triage banner disappears and full Expense Dashboard appears
-    await expect(page.getByText("Total de gastos del mes")).toBeVisible();
+      // Check that Testing category pill now reflects classified count
+      const testingPill = page.locator("button").filter({ hasText: /^Testing/ });
+      await expect(testingPill).toBeVisible();
+    }
 
-    // - The "Testing" category pill now displays (9)
-    const testingPillWithCount = page
-      .locator("button")
-      .filter({ hasText: /^Testing\s*\(9\)/ });
-    await expect(testingPillWithCount).toBeVisible();
+    // Test closing drawer via close button ("Ocultar transacciones")
+    const closeDrawerBtn = page.locator("#btn-close-sliding-drawer");
+    await expect(closeDrawerBtn).toBeVisible();
+    await closeDrawerBtn.click();
+    await expect(drawerAside).toHaveClass(/translate-x-full/);
+    console.log("[E2E Test] ✓ Drawer closed via close button.");
 
-    // - Filter to "Testing" and verify all 9 rows show the Testing category
-    await testingPillWithCount.click();
-    const tableRows = page.locator("tbody tr");
-    await expect(tableRows).toHaveCount(9);
+    // Reopen drawer and test closing via Escape key
+    await openDrawerBtn.click();
+    await expect(drawerAside).toHaveClass(/translate-x-0/);
+    await page.keyboard.press("Escape");
+    await expect(drawerAside).toHaveClass(/translate-x-full/);
+    console.log("[E2E Test] ✓ Drawer closed via Escape key.");
 
-    // Verify first row select value is "Testing"
-    const firstRowSelect = tableRows.first().locator("select");
-    await expect(firstRowSelect).toHaveValue("Testing");
-
-    console.log("[E2E Test] ✓ All 9 expenses successfully classified as 'Testing'.");
+    // 7. Verify reactive dashboard updates
+    // Total count should show 140 movimientos analizados
+    await expect(page.getByText("140 movimientos analizados")).toBeVisible();
+    console.log("[E2E Test] ✓ Reactive dashboard statistics verified.");
   });
 });

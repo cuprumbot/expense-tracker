@@ -41,24 +41,24 @@ It details the transition from the initial reporting cards to a comprehensive, f
     - "Ver transacciones" toggle button with an SVG table/list icon to open the sliding drawer.
   - [x] All typography uses standard modern fonts, neutral dark/light theme tokens, and 100% Spanish text with zero emojis.
 
-### [ ] US-030: Sliding Transaction Drawer Component
+### [x] US-030: Sliding Transaction Drawer Component
 - **As a** user viewing the financial dashboard,
 - **I want to** toggle a sliding drawer from the edge of the screen to inspect, filter, or edit my transactions without navigating away from the dashboard,
 - **So that** I can reference detailed line items whenever needed while keeping the main screen focused on visual analytics.
 - **Split-Brain Boundary:** 100% Local (Client React state and CSS transitions).
 - **Acceptance Criteria:**
-  - [ ] The transaction list (`TransactionTable`) is hidden from the main viewport by default when the dashboard is active.
-  - [ ] Clicking the "Ver transacciones" button in the header triggers a smooth sliding drawer animation entering from the right side of the screen.
-  - [ ] The drawer renders over an unobtrusive semi-transparent dark backdrop overlay (`bg-black/40` with subtle blur).
-  - [ ] The sliding drawer contains the complete `TransactionTable` with all existing functionality:
+  - [x] The transaction list (`TransactionTable`) is hidden from the main viewport by default when the dashboard is active.
+  - [x] Clicking the "Ver transacciones" button in the header triggers a smooth sliding drawer animation entering from the right side of the screen.
+  - [x] The drawer renders over an unobtrusive semi-transparent dark backdrop overlay (`bg-black/40` with subtle blur).
+  - [x] The sliding drawer contains the complete `TransactionTable` with all existing functionality:
     - Search bar and category filters.
     - Currency filter ("Todas", "Solo GTQ", "Convertidas de USD") and USD original badges.
     - Inline category assignment and custom category creation.
     - Transaction editing (amount, date, description) and individual deletion.
-  - [ ] The drawer header includes a clear "Ocultar transacciones" / "Cerrar" button with an SVG close icon.
-  - [ ] The drawer closes smoothly when clicking the close button, clicking the backdrop overlay, or pressing the `Escape` key.
-  - [ ] When transactions are edited or deleted inside the drawer, dashboard statistics and charts reactively update in real time without page reload.
-  - [ ] Uses hardware-accelerated CSS transforms (`translate-x-0` / `translate-x-full`) with a duration of 300ms for smooth 60fps performance.
+  - [x] The drawer header includes a clear "Ocultar transacciones" / "Cerrar" button with an SVG close icon.
+  - [x] The drawer closes smoothly when clicking the close button, clicking the backdrop overlay, or pressing the `Escape` key.
+  - [x] When transactions are edited or deleted inside the drawer, dashboard statistics and charts reactively update in real time without page reload.
+  - [x] Uses hardware-accelerated CSS transforms (`translate-x-0` / `translate-x-full`) with a duration of 300ms for smooth 60fps performance.
 
 ---
 
