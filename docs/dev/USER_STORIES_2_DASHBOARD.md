@@ -64,17 +64,17 @@ It details the transition from the initial reporting cards to a comprehensive, f
 
 ## Phase 15: Panel 1 - Category Trends Over Time (Basic Information)
 
-### [ ] US-031: Multi-Month Category Time-Series Aggregation Engine
+### [x] US-031: Multi-Month Category Time-Series Aggregation Engine
 - **As a** developer,
 - **I want** an aggregation module that groups multi-month transactions into chronological monthly series per category,
 - **So that** the trend line chart receives clean, normalized data points regardless of how many statements have been loaded.
 - **Split-Brain Boundary:** 100% Local (Client-side pure mathematical aggregation).
 - **Acceptance Criteria:**
-  - [ ] Creates a dedicated reporting utility function `calculateMonthlyCategoryTrends(transactions: Transaction[], customCategories?: CustomCategory[])`.
-  - [ ] Identifies all distinct calendar months present in the transactions, sorted in chronological order (e.g., `["2026-05", "2026-06", "2026-07"]`).
-  - [ ] For single-month uploads, partitions data by calendar weeks or displays the single monthly total per category with clear visual indicators.
-  - [ ] For each month and each active category, computes the exact sum of expenses in Guatemalan Quetzales (`GTQ`).
-  - [ ] Returns structured trend data:
+  - [x] Creates a dedicated reporting utility function `calculateMonthlyCategoryTrends(transactions: Transaction[], customCategories?: CustomCategory[])`.
+  - [x] Identifies all distinct calendar months present in the transactions, sorted in chronological order (e.g., `["2026-05", "2026-06", "2026-07"]`).
+  - [x] For single-month uploads, partitions data by calendar weeks or displays the single monthly total per category with clear visual indicators.
+  - [x] For each month and each active category, computes the exact sum of expenses in Guatemalan Quetzales (`GTQ`).
+  - [x] Returns structured trend data:
     ```typescript
     interface CategoryMonthlyTrend {
       categoryId: string;
@@ -87,8 +87,8 @@ It details the transition from the initial reporting cards to a comprehensive, f
       }>;
     }
     ```
-  - [ ] Excludes credit refunds, payments, and filtered transactions.
-  - [ ] Includes comprehensive unit tests in `src/lib/reporting.test.ts` validating single-month, multi-month, missing-month zero fills, and sorting.
+  - [x] Excludes credit refunds, payments, and filtered transactions.
+  - [x] Includes comprehensive unit tests in `src/lib/reporting.test.ts` validating single-month, multi-month, missing-month zero fills, and sorting.
 
 ### [ ] US-032: Category Trend Line Chart with Interactive Filtering
 - **As a** user reviewing my basic spending information,

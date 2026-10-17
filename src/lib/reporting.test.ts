@@ -185,3 +185,158 @@ describe("US-012 & US-013: Reporting & Visualizations Unit Tests", () => {
     );
   });
 });
+
+describe("US-031: Multi-Month Category Time-Series Aggregation Engine Unit Tests", () => {
+  const multiMonthTransactions: Transaction[] = [
+    {
+      id: "tx-may-1",
+      date: "2026-05-10",
+      description: "Supermercado La Torre",
+      amount: 500.0,
+      category: "Supermercado",
+      currency: "GTQ",
+    },
+    {
+      id: "tx-may-2",
+      date: "2026-05-20",
+      description: "San Martin",
+      amount: 200.0,
+      category: "Restaurantes y Cafés",
+      currency: "GTQ",
+    },
+    {
+      id: "tx-jun-1",
+      date: "2026-06-15",
+      description: "Supermercado Paiz",
+      amount: 650.5,
+      category: "Supermercado",
+      currency: "GTQ",
+    },
+    {
+      id: "tx-jul-1",
+      date: "2026-07-02",
+      description: "Supermercado Walmart",
+      amount: 450.0,
+      category: "Supermercado",
+      currency: "GTQ",
+    },
+    {
+      id: "tx-jul-2",
+      date: "2026-07-18",
+      description: "Netflix Mensual",
+      amount: 100.0,
+      category: "Suscripciones",
+      currency: "GTQ",
+    },
+    {
+      id: "tx-refund-1",
+      date: "2026-07-20",
+      description: "Crédito reembolso",
+      amount: -50.0,
+      category: "Supermercado",
+      currency: "GTQ",
+    },
+  ];
+
+  it("identifies all distinct calendar months in sorted chronological order", () => {
+    const { calculateMonthlyCategoryTrends } = require("./reporting");
+    const result = calculateMonthlyCategoryTrends(multiMonthTransactions);
+
+    assert.equal(result.months.length, 3);
+    assert.deepEqual(
+      result.months.map((m: any) => m.monthKey),
+      ["2026-05", "2026-06", "2026-07"]
+    );
+    assert.deepEqual(
+      result.months.map((m: any) => m.monthLabel),
+      ["May 2026", "Jun 2026", "Jul 2026"]
+    );
+    assert.equal(result.isSingleMonth, false);
+  });
+
+  it("calculates exact sums in GTQ and zero-fills categories in missing months", () => {
+    const { calculateMonthlyCategoryTrends } = require("./reporting");
+    const result = calculateMonthlyCategoryTrends(multiMonthTransactions);
+
+    // Supermercado: May 500, Jun 650.5, Jul 450 (refund excluded)
+    const superTrend = result.trends.find((t: any) => t.categoryName === "Supermercado");
+    assert.ok(superTrend);
+    assert.deepEqual(superTrend.monthlyTotals, [
+      { monthKey: "2026-05", monthLabel: "May 2026", totalAmount: 500.0 },
+      { monthKey: "2026-06", monthLabel: "Jun 2026", totalAmount: 650.5 },
+      { monthKey: "2026-07", monthLabel: "Jul 2026", totalAmount: 450.0 },
+    ]);
+
+    // Restaurantes y Cafés: May 200, Jun 0 (zero fill), Jul 0 (zero fill)
+    const restTrend = result.trends.find((t: any) => t.categoryName === "Restaurantes y Cafés");
+    assert.ok(restTrend);
+    assert.deepEqual(restTrend.monthlyTotals, [
+      { monthKey: "2026-05", monthLabel: "May 2026", totalAmount: 200.0 },
+      { monthKey: "2026-06", monthLabel: "Jun 2026", totalAmount: 0.0 },
+      { monthKey: "2026-07", monthLabel: "Jul 2026", totalAmount: 0.0 },
+    ]);
+
+    // Suscripciones: May 0, Jun 0, Jul 100
+    const subTrend = result.trends.find((t: any) => t.categoryName === "Suscripciones");
+    assert.ok(subTrend);
+    assert.deepEqual(subTrend.monthlyTotals, [
+      { monthKey: "2026-05", monthLabel: "May 2026", totalAmount: 0.0 },
+      { monthKey: "2026-06", monthLabel: "Jun 2026", totalAmount: 0.0 },
+      { monthKey: "2026-07", monthLabel: "Jul 2026", totalAmount: 100.0 },
+    ]);
+
+    assert.equal(result.peakAmount, 650.5);
+  });
+
+  it("handles single-month uploads with isSingleMonth flag", () => {
+    const { calculateMonthlyCategoryTrends } = require("./reporting");
+    const singleMonthTx: Transaction[] = [
+      {
+        id: "tx-s-1",
+        date: "2026-09-05",
+        description: "Gasolina Shell",
+        amount: 350.0,
+        category: "Transporte y Combustible",
+        currency: "GTQ",
+      },
+      {
+        id: "tx-s-2",
+        date: "2026-09-22",
+        description: "Supermercado La Torre",
+        amount: 720.0,
+        category: "Supermercado",
+        currency: "GTQ",
+      },
+    ];
+
+    const result = calculateMonthlyCategoryTrends(singleMonthTx);
+    assert.equal(result.months.length, 1);
+    assert.equal(result.isSingleMonth, true);
+    assert.equal(result.months[0].monthKey, "2026-09");
+    assert.equal(result.months[0].monthLabel, "Sep 2026");
+    assert.equal(result.peakAmount, 720.0);
+  });
+
+  it("resolves custom category colors accurately", () => {
+    const { calculateMonthlyCategoryTrends } = require("./reporting");
+    const customTx: Transaction[] = [
+      {
+        id: "tx-c-1",
+        date: "2026-08-01",
+        description: "Comida para perro",
+        amount: 250.0,
+        category: "Mascotas VIP",
+        currency: "GTQ",
+      },
+    ];
+    const customCats = [
+      { id: "custom-1", name: "Mascotas VIP", color: "#e11d48" },
+    ];
+
+    const result = calculateMonthlyCategoryTrends(customTx, customCats);
+    assert.equal(result.trends.length, 1);
+    assert.equal(result.trends[0].categoryName, "Mascotas VIP");
+    assert.equal(result.trends[0].color, "#e11d48");
+  });
+});
+
