@@ -501,3 +501,297 @@ export function calculateTopVendors(
     byFrequency,
   };
 }
+
+export interface TemporalPatternItem {
+  key: string;
+  label: string;
+  shortLabel: string;
+  totalAmountGTQ: number;
+  transactionCount: number;
+  percentage: number;
+  isOutlier: boolean;
+  anomalyScore?: number;
+  outlierReason?: string;
+}
+
+export interface ConsumptionPatternInsight {
+  type: "day_of_week" | "day_of_month";
+  title: string;
+  description: string;
+  isAnomaly: boolean;
+}
+
+export interface ConsumptionPatternsResult {
+  dayOfWeek: {
+    items: TemporalPatternItem[];
+    mean: number;
+    stdDev: number;
+    peakAmount: number;
+  };
+  dayOfMonth: {
+    items: TemporalPatternItem[];
+    mean: number;
+    stdDev: number;
+    peakAmount: number;
+  };
+  insights: ConsumptionPatternInsight[];
+}
+
+const DAYS_OF_WEEK_DEF = [
+  { key: "lun", label: "Lunes", shortLabel: "Lun" },
+  { key: "mar", label: "Martes", shortLabel: "Mar" },
+  { key: "mie", label: "Miércoles", shortLabel: "Mié" },
+  { key: "jue", label: "Jueves", shortLabel: "Jue" },
+  { key: "vie", label: "Viernes", shortLabel: "Vie" },
+  { key: "sab", label: "Sábado", shortLabel: "Sáb" },
+  { key: "dom", label: "Domingo", shortLabel: "Dom" },
+];
+
+const MONTH_NAME_TO_NUM: Record<string, number> = {
+  ene: 1, jan: 1,
+  feb: 2,
+  mar: 3,
+  abr: 4, apr: 4,
+  may: 5,
+  jun: 6,
+  jul: 7,
+  ago: 8, aug: 8,
+  sep: 9, set: 9,
+  oct: 10,
+  nov: 11,
+  dic: 12, dec: 12,
+};
+
+export function parseTransactionDateParts(dateStr: string): {
+  year: number;
+  month: number;
+  day: number;
+} | null {
+  if (!dateStr) return null;
+  const parts = dateStr.trim().split(/[-/.]/);
+  if (parts.length < 3) return null;
+
+  // YYYY-MM-DD
+  if (parts[0].length === 4) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+      return { year, month, day };
+    }
+  }
+
+  // DD-MM-YYYY
+  if (parts[2].length === 4) {
+    const year = parseInt(parts[2], 10);
+    let month = parseInt(parts[1], 10);
+    if (isNaN(month)) {
+      const mStr = parts[1].toLowerCase().substring(0, 3);
+      month = MONTH_NAME_TO_NUM[mStr] || 1;
+    }
+    const day = parseInt(parts[0], 10);
+    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+      return { year, month, day };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Calculates temporal consumption patterns (by day of week and day of month)
+ * with mathematical statistical baseline and outlier anomaly detection.
+ * Pure TypeScript logic operating 100% locally with zero external network calls.
+ */
+export function calculateConsumptionPatterns(
+  transactions: Transaction[]
+): ConsumptionPatternsResult {
+  const validExpenses = transactions.filter(
+    (tx) => typeof tx.amount === "number" && tx.amount > 0
+  );
+
+  const totalPeriodSpend = validExpenses.reduce((acc, tx) => acc + tx.amount, 0);
+
+  // 1. Day of Week Aggregation (Index 0: Lunes ... 6: Domingo)
+  const dowTotals = new Array(7).fill(0);
+  const dowCounts = new Array(7).fill(0);
+
+  // 2. Day of Month Aggregation (Index 0: Day 1 ... 30: Day 31)
+  const domTotals = new Array(31).fill(0);
+  const domCounts = new Array(31).fill(0);
+  const domMonthMap: Record<number, Record<string, number>> = {};
+
+  for (const tx of validExpenses) {
+    const parts = parseTransactionDateParts(tx.date);
+    if (!parts) continue;
+
+    const { year, month, day } = parts;
+
+    // Day of week (UTC date prevents timezone shifts)
+    const d = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+    const jsDay = d.getUTCDay(); // 0 is Sun, 1 is Mon...
+    const dowIndex = jsDay === 0 ? 6 : jsDay - 1; // 0=Lun ... 6=Dom
+
+    if (dowIndex >= 0 && dowIndex < 7) {
+      dowTotals[dowIndex] += tx.amount;
+      dowCounts[dowIndex] += 1;
+    }
+
+    // Day of month (1 to 31)
+    if (day >= 1 && day <= 31) {
+      const domIndex = day - 1;
+      domTotals[domIndex] += tx.amount;
+      domCounts[domIndex] += 1;
+
+      const monthKey = `${year}-${String(month).padStart(2, "0")}`;
+      if (!domMonthMap[day]) domMonthMap[day] = {};
+      domMonthMap[day][monthKey] = (domMonthMap[day][monthKey] || 0) + tx.amount;
+    }
+  }
+
+  // Statistical Baseline for Day of Week (N = 7)
+  const dowMean = Number((dowTotals.reduce((a, b) => a + b, 0) / 7).toFixed(2));
+  const dowVariance =
+    dowTotals.reduce((acc, val) => acc + Math.pow(val - dowMean, 2), 0) / 7;
+  const dowStdDev = Number(Math.sqrt(dowVariance).toFixed(2));
+  const dowThreshold = dowMean + 1.75 * dowStdDev;
+
+  // Sorted values for median calculation
+  const sortedDow = [...dowTotals].sort((a, b) => a - b);
+  const dowMedian = sortedDow[3]; // Middle value of 7
+
+  let dowPeak = 0;
+  const dowItems: TemporalPatternItem[] = DAYS_OF_WEEK_DEF.map((def, idx) => {
+    const amount = Number(dowTotals[idx].toFixed(2));
+    if (amount > dowPeak) dowPeak = amount;
+    const percentage =
+      totalPeriodSpend > 0 ? Number(((amount / totalPeriodSpend) * 100).toFixed(1)) : 0;
+
+    const isOutlier =
+      dowStdDev > 0 &&
+      (amount > dowThreshold || (dowMedian > 0 && amount > 2.5 * dowMedian));
+
+    const anomalyScore =
+      isOutlier && dowStdDev > 0
+        ? Number(((amount - dowMean) / dowStdDev).toFixed(2))
+        : undefined;
+
+    return {
+      key: def.key,
+      label: def.label,
+      shortLabel: def.shortLabel,
+      totalAmountGTQ: amount,
+      transactionCount: dowCounts[idx],
+      percentage,
+      isOutlier,
+      anomalyScore,
+      outlierReason: isOutlier
+        ? `Gasto extraordinario de Q ${amount.toFixed(2)} (${anomalyScore}σ sobre la media semanal de Q ${dowMean.toFixed(2)})`
+        : undefined,
+    };
+  });
+
+  // Statistical Baseline for Day of Month (N = 31)
+  const domMean = Number((domTotals.reduce((a, b) => a + b, 0) / 31).toFixed(2));
+  const domVariance =
+    domTotals.reduce((acc, val) => acc + Math.pow(val - domMean, 2), 0) / 31;
+  const domStdDev = Number(Math.sqrt(domVariance).toFixed(2));
+  const domThreshold = domMean + 1.75 * domStdDev;
+
+  let domPeak = 0;
+  const domItems: TemporalPatternItem[] = Array.from({ length: 31 }, (_, idx) => {
+    const dayNum = idx + 1;
+    const amount = Number(domTotals[idx].toFixed(2));
+    if (amount > domPeak) domPeak = amount;
+    const percentage =
+      totalPeriodSpend > 0 ? Number(((amount / totalPeriodSpend) * 100).toFixed(1)) : 0;
+
+    // Cross-month anomaly detection: check if a specific month spiked heavily on this day
+    const monthsForThisDay = domMonthMap[dayNum] ? Object.values(domMonthMap[dayNum]) : [];
+    let hasCrossMonthSpike = false;
+    if (monthsForThisDay.length >= 2) {
+      const maxMonthAmount = Math.max(...monthsForThisDay);
+      const otherMonthAmounts = monthsForThisDay.filter((a) => a !== maxMonthAmount);
+      const otherAvg =
+        otherMonthAmounts.length > 0
+          ? otherMonthAmounts.reduce((a, b) => a + b, 0) / otherMonthAmounts.length
+          : 0;
+      if (otherAvg > 0 && maxMonthAmount > 3.0 * otherAvg) {
+        hasCrossMonthSpike = true;
+      }
+    }
+
+    const isOutlier = (domStdDev > 0 && amount > domThreshold) || hasCrossMonthSpike;
+    const anomalyScore =
+      isOutlier && domStdDev > 0
+        ? Number(((amount - domMean) / domStdDev).toFixed(2))
+        : undefined;
+
+    return {
+      key: String(dayNum),
+      label: `Día ${dayNum}`,
+      shortLabel: String(dayNum),
+      totalAmountGTQ: amount,
+      transactionCount: domCounts[idx],
+      percentage,
+      isOutlier,
+      anomalyScore,
+      outlierReason: isOutlier
+        ? `Día atípico con gasto de Q ${amount.toFixed(2)} (promedio diario Q ${domMean.toFixed(2)})`
+        : undefined,
+    };
+  });
+
+  // Insights generation
+  const insights: ConsumptionPatternInsight[] = [];
+
+  const dowOutliers = dowItems.filter((i) => i.isOutlier);
+  if (dowOutliers.length > 0) {
+    const topDowOutlier = [...dowOutliers].sort(
+      (a, b) => b.totalAmountGTQ - a.totalAmountGTQ
+    )[0];
+    insights.push({
+      type: "day_of_week",
+      title: "Consumo extraordinario en días específicos",
+      description: `Se detectó un consumo extraordinario los días ${topDowOutlier.label.toLowerCase()} (acumulado Q ${topDowOutlier.totalAmountGTQ.toFixed(2)} frente al promedio semanal de Q ${dowMean.toFixed(2)}).`,
+      isAnomaly: true,
+    });
+  } else {
+    const topDow = [...dowItems].sort((a, b) => b.totalAmountGTQ - a.totalAmountGTQ)[0];
+    insights.push({
+      type: "day_of_week",
+      title: "Distribución semanal balanceada",
+      description: `El gasto semanal se mantiene regular, con mayor concentración habitual los días ${topDow?.label.toLowerCase() || "laborales"}.`,
+      isAnomaly: false,
+    });
+  }
+
+  const domOutliers = domItems.filter((i) => i.isOutlier);
+  if (domOutliers.length > 0) {
+    const topDomOutlier = [...domOutliers].sort(
+      (a, b) => b.totalAmountGTQ - a.totalAmountGTQ
+    )[0];
+    insights.push({
+      type: "day_of_month",
+      title: "Día del mes con gasto inusual",
+      description: `El ${topDomOutlier.label.toLowerCase()} concentró un gasto atípico de Q ${topDomOutlier.totalAmountGTQ.toFixed(2)}, destacando sobre el promedio diario de Q ${domMean.toFixed(2)}.`,
+      isAnomaly: true,
+    });
+  }
+
+  return {
+    dayOfWeek: {
+      items: dowItems,
+      mean: dowMean,
+      stdDev: dowStdDev,
+      peakAmount: dowPeak,
+    },
+    dayOfMonth: {
+      items: domItems,
+      mean: domMean,
+      stdDev: domStdDev,
+      peakAmount: domPeak,
+    },
+    insights,
+  };
+}

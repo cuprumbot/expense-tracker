@@ -455,4 +455,73 @@ describe("US-033: Vendor Aggregation Engine Unit Tests", () => {
   });
 });
 
+describe("US-035: Day-of-Week & Day-of-Month Temporal Aggregation & Anomaly Heuristics Unit Tests", () => {
+  const { calculateConsumptionPatterns } = require("./reporting");
+
+  // 2026-10-12 is Monday, 2026-10-13 is Tuesday, 2026-10-14 is Wednesday,
+  // 2026-10-15 is Thursday, 2026-10-16 is Friday, 2026-10-17 is Saturday, 2026-10-18 is Sunday.
+  const patternTransactions: Transaction[] = [
+    { id: "p1", date: "2026-10-12", description: "Café", amount: 50.0, category: "Restaurantes", currency: "GTQ" }, // Lunes
+    { id: "p2", date: "2026-10-13", description: "Almuerzo", amount: 60.0, category: "Restaurantes", currency: "GTQ" }, // Martes
+    { id: "p3", date: "2026-10-14", description: "Gasolina", amount: 70.0, category: "Transporte", currency: "GTQ" }, // Miércoles
+    { id: "p4", date: "2026-10-15", description: "Farmacia", amount: 40.0, category: "Salud", currency: "GTQ" }, // Jueves
+    // Massive outlier spike on Friday:
+    { id: "p5", date: "2026-10-16", description: "Compra extraordinaria", amount: 3500.0, category: "Tecnología", currency: "GTQ" }, // Viernes
+    { id: "p6", date: "2026-10-17", description: "Supermercado", amount: 200.0, category: "Supermercado", currency: "GTQ" }, // Sábado
+    { id: "p7", date: "2026-10-18", description: "Cine", amount: 80.0, category: "Entretenimiento", currency: "GTQ" }, // Domingo
+  ];
+
+  it("aggregates spending across all 7 days of the week starting with Lunes", () => {
+    const result = calculateConsumptionPatterns(patternTransactions);
+
+    assert.equal(result.dayOfWeek.items.length, 7);
+    assert.deepEqual(
+      result.dayOfWeek.items.map((i: any) => i.shortLabel),
+      ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+    );
+
+    const monday = result.dayOfWeek.items[0];
+    assert.equal(monday.label, "Lunes");
+    assert.equal(monday.totalAmountGTQ, 50.0);
+
+    const friday = result.dayOfWeek.items[4];
+    assert.equal(friday.label, "Viernes");
+    assert.equal(friday.totalAmountGTQ, 3500.0);
+  });
+
+  it("calculates mean, standard deviation, and flags Friday as a statistical outlier", () => {
+    const result = calculateConsumptionPatterns(patternTransactions);
+
+    // Friday with 3500 heavily exceeds mean + 1.75 * stdDev
+    const friday = result.dayOfWeek.items[4];
+    assert.equal(friday.isOutlier, true);
+    assert.ok(friday.anomalyScore && friday.anomalyScore > 1.75);
+
+    // Other days are not outliers
+    const monday = result.dayOfWeek.items[0];
+    assert.equal(monday.isOutlier, false);
+
+    // Insights generate Spanish anomaly description
+    const dowInsight = result.insights.find((ins: any) => ins.type === "day_of_week");
+    assert.ok(dowInsight);
+    assert.equal(dowInsight.isAnomaly, true);
+    assert.match(dowInsight.description, /viernes/i);
+  });
+
+  it("aggregates across 31 days of the month and detects day 16 spike", () => {
+    const result = calculateConsumptionPatterns(patternTransactions);
+
+    assert.equal(result.dayOfMonth.items.length, 31);
+    const day16 = result.dayOfMonth.items[15]; // index 15 = Day 16
+    assert.equal(day16.shortLabel, "16");
+    assert.equal(day16.totalAmountGTQ, 3500.0);
+    assert.equal(day16.isOutlier, true);
+
+    const domInsight = result.insights.find((ins: any) => ins.type === "day_of_month");
+    assert.ok(domInsight);
+    assert.equal(domInsight.isAnomaly, true);
+  });
+});
+
+
 
