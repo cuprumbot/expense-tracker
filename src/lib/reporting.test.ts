@@ -340,3 +340,119 @@ describe("US-031: Multi-Month Category Time-Series Aggregation Engine Unit Tests
   });
 });
 
+describe("US-033: Vendor Aggregation Engine Unit Tests", () => {
+  const { normalizeMerchantName, calculateTopVendors } = require("./reporting");
+
+  it("normalizes vendor descriptions by stripping POS prefixes, terminal IDs and branch tokens", () => {
+    assert.equal(
+      normalizeMerchantName("POS COMPRA EN SUPERMERCADO LA TORRE ZONA 14 GTM"),
+      "Supermercados La Torre"
+    );
+    assert.equal(
+      normalizeMerchantName("ESTBL SAN MARTIN Z.10 LOCAL 102"),
+      "San Martín"
+    );
+    assert.equal(
+      normalizeMerchantName("COMPRA EN POLLO CAMPERO TERM 5912"),
+      "Pollo Campero"
+    );
+    assert.equal(
+      normalizeMerchantName("UBER *TRIP HELP.UBER.COM"),
+      "Uber"
+    );
+  });
+
+  it("calculates top vendors by spend volume and by transaction frequency accurately", () => {
+    const transactions: Transaction[] = [
+      // La Torre: 2 purchases, total 1000 GTQ
+      {
+        id: "tx-v-1",
+        date: "2026-07-01",
+        description: "POS La Torre Zona 14",
+        amount: 600.0,
+        category: "Supermercado",
+        currency: "GTQ",
+      },
+      {
+        id: "tx-v-2",
+        date: "2026-07-05",
+        description: "Supermercado La Torre",
+        amount: 400.0,
+        category: "Supermercado",
+        currency: "GTQ",
+      },
+      // San Martín: 3 purchases, total 300 GTQ
+      {
+        id: "tx-v-3",
+        date: "2026-07-02",
+        description: "San Martin Z.10",
+        amount: 100.0,
+        category: "Restaurantes y Cafés",
+        currency: "GTQ",
+      },
+      {
+        id: "tx-v-4",
+        date: "2026-07-08",
+        description: "San Martin Cafe",
+        amount: 100.0,
+        category: "Restaurantes y Cafés",
+        currency: "GTQ",
+      },
+      {
+        id: "tx-v-5",
+        date: "2026-07-15",
+        description: "Panaderia San Martin",
+        amount: 100.0,
+        category: "Restaurantes y Cafés",
+        currency: "GTQ",
+      },
+      // Gasolina Shell: 1 purchase, total 500 GTQ
+      {
+        id: "tx-v-6",
+        date: "2026-07-04",
+        description: "Estacion Shell Los Proceres",
+        amount: 500.0,
+        category: "Transporte y Combustible",
+        currency: "GTQ",
+      },
+    ];
+
+    const result = calculateTopVendors(transactions, 3);
+
+    // Total spend: 1000 + 300 + 500 = 1800 GTQ, 6 transactions
+    assert.equal(result.totalSpendGTQ, 1800.0);
+    assert.equal(result.totalTransactionsCount, 6);
+
+    // By Amount:
+    // 1. Supermercados La Torre: 1000.0 (55.6%)
+    // 2. Shell: 500.0 (27.8%)
+    // 3. San Martín: 300.0 (16.7%)
+    assert.equal(result.byAmount[0].merchantName, "Supermercados La Torre");
+    assert.equal(result.byAmount[0].totalAmountGTQ, 1000.0);
+    assert.equal(result.byAmount[0].transactionCount, 2);
+    assert.equal(result.byAmount[0].percentageShare, 55.6);
+    assert.equal(result.byAmount[0].averageTicketGTQ, 500.0);
+
+    assert.equal(result.byAmount[1].merchantName, "Shell");
+    assert.equal(result.byAmount[1].totalAmountGTQ, 500.0);
+
+    assert.equal(result.byAmount[2].merchantName, "San Martín");
+    assert.equal(result.byAmount[2].totalAmountGTQ, 300.0);
+
+    // By Frequency:
+    // 1. San Martín: 3 purchases (average ticket 100.0)
+    // 2. Supermercados La Torre: 2 purchases (average ticket 500.0)
+    // 3. Shell: 1 purchase (average ticket 500.0)
+    assert.equal(result.byFrequency[0].merchantName, "San Martín");
+    assert.equal(result.byFrequency[0].transactionCount, 3);
+    assert.equal(result.byFrequency[0].averageTicketGTQ, 100.0);
+
+    assert.equal(result.byFrequency[1].merchantName, "Supermercados La Torre");
+    assert.equal(result.byFrequency[1].transactionCount, 2);
+
+    assert.equal(result.byFrequency[2].merchantName, "Shell");
+    assert.equal(result.byFrequency[2].transactionCount, 1);
+  });
+});
+
+

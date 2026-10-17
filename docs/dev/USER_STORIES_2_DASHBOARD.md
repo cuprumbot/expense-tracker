@@ -113,20 +113,20 @@ It details the transition from the initial reporting cards to a comprehensive, f
 
 ## Phase 16: Panel 2 - Merchant Concentration ("Where is my money going?")
 
-### [ ] US-033: Vendor Aggregation Engine by Spend Volume & Transaction Frequency
+### [x] US-033: Vendor Aggregation Engine by Spend Volume & Transaction Frequency
 - **As a** developer,
 - **I want** an analytics utility that aggregates transactions by merchant to rank top vendors by total spend and by transaction count,
 - **So that** the merchant concentration bar chart can toggle seamlessly between financial volume and purchase frequency.
 - **Split-Brain Boundary:** 100% Local (Pure TypeScript algorithm).
 - **Acceptance Criteria:**
-  - [ ] Implements a merchant aggregation function `calculateTopVendors(transactions: Transaction[], limit?: number)`.
-  - [ ] Normalizes vendor descriptions by stripping branch IDs, card terminal numbers, dates, and common bank prefixes (`POS`, `COMPRA EN`, `ESTBL`, `GTM`).
-  - [ ] Computes two ranking metrics for each merchant:
+  - [x] Implements a merchant aggregation function `calculateTopVendors(transactions: Transaction[], limit?: number)`.
+  - [x] Normalizes vendor descriptions by stripping branch IDs, card terminal numbers, dates, and common bank prefixes (`POS`, `COMPRA EN`, `ESTBL`, `GTM`).
+  - [x] Computes two ranking metrics for each merchant:
     1. `totalAmountGTQ`: Sum of all purchases at this vendor in Quetzales.
     2. `transactionCount`: Total number of individual transactions at this vendor.
-  - [ ] Computes the percentage share of each vendor relative to total period spending.
-  - [ ] Returns sorted lists for both criteria (defaulting to Top 5 or Top 8 merchants).
-  - [ ] Includes unit tests covering merchant name normalization, tie-breaking, and ranking accuracy.
+  - [x] Computes the percentage share of each vendor relative to total period spending.
+  - [x] Returns sorted lists for both criteria (defaulting to Top 5 or Top 8 merchants).
+  - [x] Includes unit tests covering merchant name normalization, tie-breaking, and ranking accuracy.
 
 ### [ ] US-034: Top Vendors Bar Chart with Dual Metric Selector
 - **As a** user asking "Where is my money going?",

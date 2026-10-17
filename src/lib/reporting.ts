@@ -319,3 +319,185 @@ export function calculateMonthlyCategoryTrends(
     peakAmount,
   };
 }
+
+export interface VendorAggregationItem {
+  merchantName: string;
+  totalAmountGTQ: number;
+  transactionCount: number;
+  percentageShare: number;
+  averageTicketGTQ: number;
+  category: string;
+}
+
+export interface TopVendorsResult {
+  totalSpendGTQ: number;
+  totalTransactionsCount: number;
+  byAmount: VendorAggregationItem[];
+  byFrequency: VendorAggregationItem[];
+}
+
+/**
+ * Normalizes merchant descriptions by stripping prefixes, POS numbers, branch suffixes, and dates.
+ */
+export function normalizeMerchantName(description: string): string {
+  if (!description) return "Desconocido";
+
+  let desc = description.trim();
+
+  // Strip POS terminal split with backslashes
+  if (desc.includes("\\")) {
+    desc = desc.split("\\")[0];
+  }
+
+  // Strip common bank and POS prefixes
+  desc = desc.replace(/^(POS|COMPRA EN|ESTBL|ESTABLECIMIENTO|PAGO EN|CARGO|DEBITO|COMPRA)\s*[:-]?\s*/i, "");
+
+  // Match and normalize known top Guatemalan brands
+  const lower = desc.toLowerCase();
+  if (lower.includes("la torre")) return "Supermercados La Torre";
+  if (lower.includes("paiz")) return "Supermercados Paiz";
+  if (lower.includes("walmart") || lower.includes("wal-mart")) return "Walmart";
+  if (lower.includes("despensa familiar")) return "Despensa Familiar";
+  if (lower.includes("san martin") || lower.includes("san martín")) return "San Martín";
+  if (lower.includes("pollo campero") || lower.includes("campero")) return "Pollo Campero";
+  if (lower.includes("mcdonald")) return "McDonald's";
+  if (lower.includes("starbucks")) return "Starbucks";
+  if (lower.includes("barista")) return "Café Barista";
+  if (lower.includes("netflix")) return "Netflix";
+  if (lower.includes("spotify")) return "Spotify";
+  if (lower.includes("uber trip") || lower.includes("uber *")) return "Uber";
+  if (lower.includes("uber eats")) return "Uber Eats";
+  if (lower.includes("shell")) return "Shell";
+  if (lower.includes("puma")) return "Puma Energy";
+  if (lower.includes("texaco")) return "Texaco";
+  if (lower.includes("claro")) return "Claro";
+  if (lower.includes("tigo")) return "Tigo";
+  if (lower.includes("dollarcity") || lower.includes("dollar city")) return "Dollarcity";
+  if (lower.includes("pricesmart")) return "PriceSmart";
+
+  // Remove terminal and card info: e.g. TERM 123, NO. 55, #1234
+  desc = desc.replace(/\b(TERM|TERMINAL|NO\.|POS|TRANS|REF)\s*#?\d+\b/gi, "");
+
+  // Remove trailing branch identifiers like ZONA 10, Z.14, LOCAL 102, SUCURSAL, GTM, GUA
+  desc = desc.replace(/\s+(ZONA|Z\.)\s*\d+.*$/i, "");
+  desc = desc.replace(/\s+(LOCAL|SUC\.|SUCURSAL)\s*#?\w+.*$/i, "");
+  desc = desc.replace(/\s+(GTM|GUA|GT)$/i, "");
+
+  // Remove trailing date stamps or card digits
+  desc = desc.replace(/\s+\d{2}[-/]\d{2}([-/]\d{2,4})?$/i, "");
+  desc = desc.replace(/\s+\*{2,}\d{2,}$/, "");
+
+  // Clean trailing punctuation and collapse spaces
+  desc = desc.replace(/[#*._-]+$/, "").replace(/\s+/g, " ").trim();
+
+  return desc || description.trim();
+}
+
+/**
+ * Calculates top vendors by spend volume and purchase frequency.
+ * Pure TypeScript logic operating 100% locally.
+ */
+export function calculateTopVendors(
+  transactions: Transaction[],
+  limit: number = 5
+): TopVendorsResult {
+  const validExpenses = transactions.filter(
+    (tx) => typeof tx.amount === "number" && tx.amount > 0
+  );
+
+  const totalSpendGTQ = Number(
+    validExpenses.reduce((acc, tx) => acc + tx.amount, 0).toFixed(2)
+  );
+  const totalTransactionsCount = validExpenses.length;
+
+  if (validExpenses.length === 0) {
+    return {
+      totalSpendGTQ: 0,
+      totalTransactionsCount: 0,
+      byAmount: [],
+      byFrequency: [],
+    };
+  }
+
+  // Merchant aggregation map
+  // merchantName -> { totalAmount: number, count: number, categoryCounts: Record<string, number> }
+  const merchantMap: Record<
+    string,
+    { totalAmount: number; count: number; categoryCounts: Record<string, number> }
+  > = {};
+
+  for (const tx of validExpenses) {
+    const merchantName = normalizeMerchantName(tx.description);
+    const cat = tx.category || "Pendiente";
+
+    if (!merchantMap[merchantName]) {
+      merchantMap[merchantName] = {
+        totalAmount: 0,
+        count: 0,
+        categoryCounts: {},
+      };
+    }
+
+    merchantMap[merchantName].totalAmount += tx.amount;
+    merchantMap[merchantName].count += 1;
+    merchantMap[merchantName].categoryCounts[cat] =
+      (merchantMap[merchantName].categoryCounts[cat] || 0) + 1;
+  }
+
+  // Build aggregated items
+  const items: VendorAggregationItem[] = Object.entries(merchantMap).map(
+    ([merchantName, data]) => {
+      const totalAmountGTQ = Number(data.totalAmount.toFixed(2));
+      const transactionCount = data.count;
+      const percentageShare =
+        totalSpendGTQ > 0
+          ? Number(((totalAmountGTQ / totalSpendGTQ) * 100).toFixed(1))
+          : 0;
+      const averageTicketGTQ =
+        transactionCount > 0
+          ? Number((totalAmountGTQ / transactionCount).toFixed(2))
+          : 0;
+
+      // Primary category is the most frequent category
+      const primaryCategory = Object.entries(data.categoryCounts).sort(
+        (a, b) => b[1] - a[1]
+      )[0]?.[0] || "Pendiente";
+
+      return {
+        merchantName,
+        totalAmountGTQ,
+        transactionCount,
+        percentageShare,
+        averageTicketGTQ,
+        category: primaryCategory,
+      };
+    }
+  );
+
+  // Sort by Amount (descending) with tie-breaker on transaction count
+  const byAmount = [...items]
+    .sort((a, b) => {
+      if (b.totalAmountGTQ !== a.totalAmountGTQ) {
+        return b.totalAmountGTQ - a.totalAmountGTQ;
+      }
+      return b.transactionCount - a.transactionCount;
+    })
+    .slice(0, limit);
+
+  // Sort by Frequency (descending) with tie-breaker on total amount
+  const byFrequency = [...items]
+    .sort((a, b) => {
+      if (b.transactionCount !== a.transactionCount) {
+        return b.transactionCount - a.transactionCount;
+      }
+      return b.totalAmountGTQ - a.totalAmountGTQ;
+    })
+    .slice(0, limit);
+
+  return {
+    totalSpendGTQ,
+    totalTransactionsCount,
+    byAmount,
+    byFrequency,
+  };
+}
