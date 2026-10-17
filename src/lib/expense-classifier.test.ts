@@ -322,4 +322,51 @@ describe("expense-classifier unit tests", () => {
       );
     });
   });
+
+  describe("US-037: Installment Financing Category (Visacuotas y Financiamiento)", () => {
+    it("classifies transactions with installment keywords as 'Visacuotas y Financiamiento'", () => {
+      const installmentDescriptions = [
+        "PAGO VISACUOTA NO. 04/12 TIENDA MAX",
+        "VISA CUOTA 03 DE 10 ELEKTRA",
+        "MASTERCUOTA 02/06 DISTELSA",
+        "MASTER CUOTA ZONA 10",
+        "EXTRAFINANCIAMIENTO EFECTIVO MENSUAL",
+        "PAGO EXTRA FINANCIAMIENTO BANCO",
+        "PAGO EN CUOTAS SIMAN",
+        "CUOTAS SIN INTERESES CEMACO",
+        "CREDICUOTA BI ZONA 9",
+        "FINANCIAMIENTO AUTOMOTRIZ",
+        "PAGO A PLAZOS IPHONE",
+        "CUOTA NO. 5 MOTO GUATEMALA",
+        "PLAN CUOTAS APPLE STORE",
+        "VISACUOTAS SAMSUNG GALAXY",
+        "MASTERCUOTAS TECNOLOGIA",
+      ];
+
+      for (const desc of installmentDescriptions) {
+        const match = matchMerchantCategory(desc);
+        assert.equal(
+          match.category,
+          "Visacuotas y Financiamiento",
+          `Expected "${desc}" to be classified as "Visacuotas y Financiamiento", but got "${match.category}"`
+        );
+        assert.equal(match.source, "local");
+      }
+    });
+
+    it("ensures classifyTransaction sets category to 'Visacuotas y Financiamiento' locally with zero LLM", () => {
+      const tx: Transaction = {
+        id: "tx-visa-1",
+        date: "2026-09-15",
+        description: "VISACUOTA 06/18 REFRIGERADORA WHIRLPOOL",
+        amount: 450.0,
+        currency: "GTQ",
+      };
+
+      const classified = classifyTransaction(tx);
+      assert.equal(classified.category, "Visacuotas y Financiamiento");
+      assert.equal(classified.classificationSource, "local");
+    });
+  });
 });
+

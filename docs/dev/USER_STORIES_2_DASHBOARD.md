@@ -186,20 +186,20 @@ It details the transition from the initial reporting cards to a comprehensive, f
 
 ## Phase 18: Panel 4 - Decision Age & Installment Financing Analysis (Transaction Age)
 
-### [ ] US-037: Installment Financing Category in Merchant Catalog & Classifier Extension
+### [x] US-037: Installment Financing Category in Merchant Catalog & Classifier Extension
 - **As a** user paying off past purchases through credit installments,
 - **I want** the system to recognize Visacuotas, Mastercuotas, and extrafinanciamiento transactions automatically,
 - **So that** payments for past purchasing decisions are categorized separately from my current-month discretionary spending.
 - **Split-Brain Boundary:** 100% Local (Catalog extension and deterministic keyword matching).
 - **Acceptance Criteria:**
-  - [ ] Adds a new official category to `src/data/merchant-catalog.json`:
+  - [x] Adds a new official category to `src/data/merchant-catalog.json`:
     - Name: `"Visacuotas y Financiamiento"`
     - Color: Sky Blue / Cyan (`#0284c7` or `#0ea5e9`)
     - Description: "Pagos a plazos, cuotas y extrafinanciamiento de decisiones de compra pasadas."
-  - [ ] Populates the category with comprehensive Guatemalan financing keywords:
+  - [x] Populates the category with comprehensive Guatemalan financing keywords:
     - `visacuota`, `visa cuota`, `mastercuota`, `master cuota`, `cuota`, `extrafinanciamiento`, `pago en cuotas`, `cuotas sin intereses`, `credicuota`, `financiamiento`, `pago a plazos`, `cuota no.`, `plan cuotas`.
-  - [ ] Updates `TransactionCategory` types and ensures local classifier assigns this category deterministically.
-  - [ ] Unit tests verify that sample transaction lines containing installment keywords are classified as `"Visacuotas y Financiamiento"` locally with zero LLM queries.
+  - [x] Updates `TransactionCategory` types and ensures local classifier assigns this category deterministically.
+  - [x] Unit tests verify that sample transaction lines containing installment keywords are classified as `"Visacuotas y Financiamiento"` locally with zero LLM queries.
 
 ### [ ] US-038: Three-Segment Transaction Age Aggregator with Month Filtering
 - **As a** developer,
