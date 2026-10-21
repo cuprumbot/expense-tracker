@@ -138,31 +138,16 @@ export function DashboardView({
 
       {/* Main 4-Panel 2x2 Responsive Grid */}
       <main className="flex-1 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5 auto-rows-fr">
-        {/* Panel 1: Tendencia de Gastos por Categoría */}
+        {/* Panel 1: Histórico por categoría */}
         <section
           id="panel-category-trends"
-          aria-label="Panel 1: Tendencia de Gastos por Categoría"
+          aria-label="Histórico por categoría"
           className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs flex flex-col justify-between"
         >
           <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-850">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <Icons.TrendingDown className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-3xs font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                    Panel 1
-                  </span>
-                  <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                    Tendencia de Gastos por Categoría
-                  </h2>
-                </div>
-                <p className="text-2xs text-zinc-500 dark:text-zinc-400">
-                  Información Básica · Evolución mensual del gasto por categoría.
-                </p>
-              </div>
-            </div>
+            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              Histórico por categoría
+            </h2>
           </div>
 
           {/* Panel 1 Body / Interactive Multi-Line SVG Chart */}
