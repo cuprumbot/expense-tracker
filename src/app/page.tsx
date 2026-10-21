@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Icons } from "@/components/icons";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { FileUpload } from "@/components/file-upload";
 import { ColumnMappingModal } from "@/components/column-mapping-modal";
 import { AnonymizationModal } from "@/components/anonymization-modal";
@@ -166,6 +167,25 @@ export default function Home() {
       saveStoredCategories(customCategories);
     }
   }, [customCategories, hasHydratedStorage]);
+
+  // Auto-dismiss transient toast notifications after 7 seconds
+  useEffect(() => {
+    if (batchSummaryNotification) {
+      const timer = setTimeout(() => {
+        setBatchSummaryNotification(null);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [batchSummaryNotification]);
+
+  useEffect(() => {
+    if (llmSuccessMessage) {
+      const timer = setTimeout(() => {
+        setLlmSuccessMessage(null);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [llmSuccessMessage]);
 
   const ensureUniqueTransactionIds = (txs: Transaction[]): Transaction[] => {
     const seen = new Set<string>();
@@ -458,7 +478,7 @@ export default function Home() {
     parsedSummary: CSVParsingSummary,
     detectedBankName: string | null = null,
     sourceFileName?: string | null
-  ) => {
+  ): Promise<{ hasDuplicates: boolean; addedCount: number }> => {
     const existing = transactions || [];
     const dedup = deduplicateTransactions(
       rawTransactions,
@@ -468,11 +488,13 @@ export default function Home() {
 
     if (dedup.isAllDuplicates) {
       setDuplicateNotification(dedup.notificationMessage);
-      return;
+      setBatchSummaryNotification(null);
+      return { hasDuplicates: true, addedCount: 0 };
     }
 
     if (dedup.discardedCount > 0) {
       setDuplicateNotification(dedup.notificationMessage);
+      setBatchSummaryNotification(null);
     } else {
       setDuplicateNotification(null);
     }
@@ -517,6 +539,11 @@ export default function Home() {
     if (shouldTriggerLLMClassification(pending.length, unclassifiedThreshold)) {
       await classifyPendingWithLLM(pending, combinedTransactions);
     }
+
+    return {
+      hasDuplicates: dedup.discardedCount > 0,
+      addedCount: dedup.uniqueTransactions.length,
+    };
   };
 
   const handleBatchFilesRouted = async (
@@ -614,15 +641,19 @@ export default function Home() {
           setRoutedFile(validEntries[0]);
         }
 
-        await processLoadedTransactions(
+        const loadResult = await processLoadedTransactions(
           outcome.transactions,
           batchSummary,
           validEntries.length === 1 ? null : "Consolidado multicuenta",
           sourceLabel
         );
-      }
 
-      setBatchSummaryNotification(outcome.summaryMessage);
+        if (!loadResult?.hasDuplicates) {
+          setBatchSummaryNotification(outcome.summaryMessage);
+        } else {
+          setBatchSummaryNotification(null);
+        }
+      }
     } catch (err) {
       console.error("Error durante el procesamiento por lotes:", err);
       setBatchErrors((prev) => [
@@ -824,29 +855,28 @@ export default function Home() {
     });
   };
 
-  const pendingTransactionsCount = transactions
-    ? transactions.filter((t) => !t.category || t.category === "Pendiente").length
-    : 0;
-  const isDashboardActive = transactions !== null && pendingTransactionsCount < 10;
+  const isDashboardActive = Boolean(transactions && summary);
 
   return (
     <>
       {isDashboardActive ? (
         <DashboardView
-          transactions={transactions}
+          transactions={transactions!}
           summary={summary}
           bankName={bankName}
           customCategories={customCategories}
+          isClassifyingWithLLM={isClassifyingWithLLM}
           onAddMoreStatements={() => setIsAddMoreModalOpen(true)}
           onResetSession={() => {
             setWipeCustomCategoriesOnReset(false);
             setIsResetSessionModalOpen(true);
           }}
           onClearData={() => setIsClearConfirmOpen(true)}
-          renderDrawerContent={() => (
+          renderDrawerContent={(categoryFilter) => (
             <TransactionTable
-              transactions={transactions}
+              transactions={transactions!}
               summary={summary!}
+              externalCategoryFilter={categoryFilter}
               sourceLabel={
                 bankName
                   ? `${bankName} · ${routedFile?.file.name || "Múltiples archivos"}`
@@ -896,17 +926,19 @@ export default function Home() {
         <div className="min-h-screen flex flex-col bg-white text-zinc-900 antialiased selection:bg-zinc-900 selection:text-white dark:bg-zinc-950 dark:text-zinc-100">
           {/* Minimal Top Header */}
           <header className="border-b border-zinc-200/80 dark:border-zinc-800/80">
-        <div className="max-w-5xl lg:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md bg-zinc-900 text-white flex items-center justify-center dark:bg-zinc-100 dark:text-zinc-900">
-              <Icons.Wallet className="w-4 h-4" />
+        <div className="max-w-5xl lg:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-5.5 h-5.5 rounded-md bg-zinc-900 text-white flex items-center justify-center dark:bg-zinc-100 dark:text-zinc-900">
+              <Icons.Wallet className="w-3 h-3" />
             </div>
             <span className="text-sm font-semibold tracking-tight">
-              Control de Gastos
+              Expense Tracker
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <ThemeToggle />
+
             {((transactions && transactions.length > 0) || savedSession) && (
               <button
                 type="button"
@@ -922,10 +954,6 @@ export default function Home() {
                 <span>Reiniciar sesión</span>
               </button>
             )}
-
-            <div className="text-xs text-zinc-500 font-mono tracking-tight dark:text-zinc-400">
-              GTQ · Q
-            </div>
           </div>
         </div>
       </header>
@@ -978,16 +1006,12 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                  {savedSession.sourceLabel ? `${savedSession.sourceLabel} · ` : ""}
                   Guardado el{" "}
                   {new Date(savedSession.savedAt).toLocaleDateString("es-GT", {
                     day: "2-digit",
-                    month: "short",
+                    month: "2-digit",
                     year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
                   })}
-                  . Puedes retomar tu sesión o comenzar una nueva carga.
                 </p>
               </div>
             </div>
@@ -1221,46 +1245,10 @@ export default function Home() {
         {!transactions || !summary ? (
           !isProcessingPDF && !pdfError && !unsupportedBank && !isExtractingWithLLM && !llmExtractionError && (
             <section className="border border-zinc-200 rounded-xl bg-zinc-50/50 p-6 sm:p-8 dark:border-zinc-800 dark:bg-zinc-900/40 space-y-6">
-              {/* Standalone duplicate warning banner if all duplicates uploaded without active table */}
-              {duplicateNotification && (
-                <div
-                  role="alert"
-                  id="duplicate-transactions-banner-standalone"
-                  className="p-4 rounded-xl border border-amber-300 bg-amber-50 dark:border-amber-800/80 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 flex items-start justify-between gap-3 shadow-xs animate-in fade-in duration-200"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
-                      <Icons.AlertCircle className="w-4 h-4" />
-                    </div>
-                    <div className="space-y-0.5">
-                      <h4 className="text-xs font-semibold text-amber-900 dark:text-amber-200">
-                        Aviso de transacciones duplicadas
-                      </h4>
-                      <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed font-medium">
-                        {duplicateNotification}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setDuplicateNotification(null)}
-                    aria-label="Cerrar notificación"
-                    className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 cursor-pointer p-1 rounded-md hover:bg-amber-100/60 dark:hover:bg-amber-900/40 transition-colors shrink-0"
-                  >
-                    <Icons.X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-
               <div className="flex items-center justify-between border-b border-zinc-200/80 pb-4 dark:border-zinc-800/80">
                 <span className="text-xs font-medium tracking-tight text-zinc-700 dark:text-zinc-300">
                   Carga de documento
                 </span>
-                <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                  <span>PDF</span>
-                  <span className="text-zinc-300 dark:text-zinc-700">/</span>
-                  <span>CSV</span>
-                </div>
               </div>
 
               {batchErrors.length > 0 && !transactions && (
@@ -1421,6 +1409,7 @@ export default function Home() {
       {isAddMoreModalOpen && (
         <div
           role="dialog"
+          id="modal-add-more-statements"
           aria-modal="true"
           aria-labelledby="add-more-title"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
@@ -1540,6 +1529,98 @@ export default function Home() {
           </div>
         </div>
       )}
+      {/* Floating Pop-up Toast Notifications */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none max-w-md w-[calc(100vw-3rem)]">
+        {batchSummaryNotification && (
+          <div
+            role="status"
+            id="batch-summary-popup"
+            className="pointer-events-auto p-4 rounded-xl border border-emerald-300 bg-white dark:bg-zinc-900 dark:border-emerald-700/80 text-emerald-950 dark:text-emerald-100 shadow-xl backdrop-blur-md flex items-start justify-between gap-3 animate-in slide-in-from-bottom-5 fade-in duration-300 ring-1 ring-black/5 dark:ring-white/10"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+                <Icons.CheckCircle2 className="w-4 h-4" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                  Lote de archivos procesado
+                </h4>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                  {batchSummaryNotification}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setBatchSummaryNotification(null)}
+              aria-label="Cerrar notificación de lote"
+              className="text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-pointer p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+            >
+              <Icons.X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {llmSuccessMessage && (
+          <div
+            role="status"
+            id="llm-success-popup"
+            className="pointer-events-auto p-4 rounded-xl border border-blue-300 bg-white dark:bg-zinc-900 dark:border-blue-700/80 text-blue-950 dark:text-blue-100 shadow-xl backdrop-blur-md flex items-start justify-between gap-3 animate-in slide-in-from-bottom-5 fade-in duration-300 ring-1 ring-black/5 dark:ring-white/10"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 flex items-center justify-center shrink-0 mt-0.5">
+                <Icons.Sparkles className="w-4 h-4" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                  Clasificación de gastos
+                </h4>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                  {llmSuccessMessage}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setLlmSuccessMessage(null)}
+              aria-label="Cerrar notificación"
+              className="text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-pointer p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+            >
+              <Icons.X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {duplicateNotification && (
+          <div
+            role="alert"
+            id="duplicate-transactions-popup"
+            className="pointer-events-auto p-4 rounded-xl border border-amber-300 bg-white dark:bg-zinc-900 dark:border-amber-700/80 text-amber-950 dark:text-amber-100 shadow-xl backdrop-blur-md flex items-start justify-between gap-3 animate-in slide-in-from-bottom-5 fade-in duration-300 ring-1 ring-black/5 dark:ring-white/10"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+                <Icons.AlertCircle className="w-4 h-4" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                  Aviso de transacciones duplicadas
+                </h4>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                  {duplicateNotification}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDuplicateNotification(null)}
+              aria-label="Cerrar notificación"
+              className="text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-pointer p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+            >
+              <Icons.X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
     </>
   );
 }

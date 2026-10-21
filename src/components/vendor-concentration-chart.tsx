@@ -62,9 +62,9 @@ export function VendorConcentrationChart({
   }
 
   return (
-    <div className="flex flex-col h-full space-y-3.5">
+    <div className="flex flex-col h-full space-y-2">
       {/* Top Segmented Dual Metric Selector */}
-      <div className="flex items-center justify-between gap-2 pb-1">
+      <div className="flex items-center justify-between gap-2 pb-0.5">
         <span className="text-3xs font-semibold uppercase tracking-wider text-zinc-400 select-none">
           Ordenar por:
         </span>
@@ -97,7 +97,7 @@ export function VendorConcentrationChart({
       </div>
 
       {/* Bar List */}
-      <div className="flex-1 space-y-3">
+      <div className="flex-1 space-y-1.5">
         {activeVendors.map((item, index) => {
           const barValue =
             metricMode === "amount" ? item.totalAmountGTQ : item.transactionCount;
@@ -110,12 +110,12 @@ export function VendorConcentrationChart({
           return (
             <div
               key={`vendor-${item.merchantName}`}
-              className="group relative p-2.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors"
+              className="group relative p-1.5 sm:p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors"
               onMouseEnter={() => setHoveredVendor(item)}
               onMouseLeave={() => setHoveredVendor(null)}
             >
               {/* Header: Rank + Name + Amount/Count Label */}
-              <div className="flex items-center justify-between gap-2 mb-1.5 text-xs">
+              <div className="flex items-center justify-between gap-2 mb-1 text-xs">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="w-4 text-2xs font-mono font-bold text-zinc-400 text-center shrink-0">
                     {index + 1}
@@ -151,7 +151,7 @@ export function VendorConcentrationChart({
               </div>
 
               {/* Progress Bar Track & Bar */}
-              <div className="w-full h-3 bg-zinc-100 dark:bg-zinc-900 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-900 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-300 ease-in-out"
                   style={{
@@ -160,6 +160,7 @@ export function VendorConcentrationChart({
                   }}
                 />
               </div>
+
 
               {/* Hover Tooltip card with Average Ticket size */}
               {hoveredVendor?.merchantName === item.merchantName && (

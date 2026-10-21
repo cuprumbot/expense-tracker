@@ -60,39 +60,6 @@ export function FileUpload({ onFileRouted, onFilesRouted }: FileUploadProps) {
     }
   };
 
-  const handleLoadDemoFile = async (fileName: string) => {
-    try {
-      const res = await fetch(`/demo/${fileName}`);
-      if (!res.ok) throw new Error("No se pudo cargar el archivo demo");
-      const blob = await res.blob();
-      const file = new File([blob], fileName, {
-        type: fileName.endsWith(".csv") ? "text/csv" : "application/pdf",
-      });
-      handleProcessFiles([file]);
-    } catch (err) {
-      console.error("Error al cargar archivo demo:", err);
-    }
-  };
-
-  const handleLoadDemoBatch = async () => {
-    try {
-      const [res1, res2] = await Promise.all([
-        fetch("/demo/demo2_pocos_pendientes.pdf"),
-        fetch("/demo/gastos_ejemplo.csv"),
-      ]);
-      const blob1 = await res1.blob();
-      const blob2 = await res2.blob();
-      const file1 = new File([blob1], "demo2_pocos_pendientes.pdf", {
-        type: "application/pdf",
-      });
-      const file2 = new File([blob2], "gastos_ejemplo.csv", {
-        type: "text/csv",
-      });
-      handleProcessFiles([file1, file2]);
-    } catch (err) {
-      console.error("Error al cargar lote demo:", err);
-    }
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -261,47 +228,8 @@ export function FileUpload({ onFileRouted, onFilesRouted }: FileUploadProps) {
             <Icons.FileText className="w-3.5 h-3.5" />
             <span>Seleccionar archivos</span>
           </button>
-
-          {/* Quick Demo Loaders */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
-            <span className="text-2xs text-zinc-400 dark:text-zinc-500 mr-1">
-              O prueba con archivos demo:
-            </span>
-            <button
-              type="button"
-              id="btn-demo-lote-mixto"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLoadDemoBatch();
-              }}
-              className="px-2.5 py-1 text-2xs font-medium rounded-md border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 transition-colors cursor-pointer"
-            >
-              Lote mixto demo (PDF + CSV)
-            </button>
-            <button
-              type="button"
-              id="btn-demo-duplicados"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLoadDemoFile("gastos_con_duplicados.csv");
-              }}
-              className="px-2.5 py-1 text-2xs font-medium rounded-md border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 transition-colors cursor-pointer"
-            >
-              CSV con duplicados
-            </button>
-            <button
-              type="button"
-              id="btn-demo-100-duplicados"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLoadDemoFile("gastos_100_duplicados.csv");
-              }}
-              className="px-2.5 py-1 text-2xs font-medium rounded-md border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 transition-colors cursor-pointer"
-            >
-              CSV 100% duplicados
-            </button>
-          </div>
         </div>
+
       ) : (
         /* File(s) Selected: Preview & Actions */
         <div className="border border-zinc-200 rounded-lg bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-950 space-y-4 animate-in fade-in">

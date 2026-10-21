@@ -64,27 +64,10 @@ export function SlidingDrawer({
         }`}
       >
         {/* Drawer Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/60 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center">
-              <Icons.Table className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  {title}
-                </h2>
-                {typeof totalCount === "number" && (
-                  <span className="text-2xs font-mono font-medium px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                    {totalCount}
-                  </span>
-                )}
-              </div>
-              <p className="text-2xs text-zinc-500 dark:text-zinc-400">
-                Inspecciona, filtra o edita tus movimientos sin salir del panel.
-              </p>
-            </div>
-          </div>
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/60 shrink-0">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            {title}
+          </h2>
 
           <button
             type="button"

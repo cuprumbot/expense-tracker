@@ -129,11 +129,11 @@ export function CategoryTrendChart({
 
   // SVG layout constants
   const svgWidth = 560;
-  const svgHeight = 240;
+  const svgHeight = 175;
   const padLeft = 60;
   const padRight = 30;
-  const padTop = 25;
-  const padBottom = 40;
+  const padTop = 14;
+  const padBottom = 30;
   const plotWidth = svgWidth - padLeft - padRight;
   const plotHeight = svgHeight - padTop - padBottom;
 
@@ -170,10 +170,10 @@ export function CategoryTrendChart({
   }
 
   return (
-    <div className="flex flex-col h-full space-y-4">
+    <div className="flex flex-col h-full space-y-2.5">
       {/* Informative banner for single-month statement */}
       {isSingleMonth && (
-        <div className="p-2.5 rounded-lg border border-blue-200 bg-blue-50/70 dark:border-blue-900/40 dark:bg-blue-950/30 flex items-center gap-2 text-2xs text-blue-800 dark:text-blue-300">
+        <div className="p-2 rounded-lg border border-blue-200 bg-blue-50/70 dark:border-blue-900/40 dark:bg-blue-950/30 flex items-center gap-2 text-2xs text-blue-800 dark:text-blue-300">
           <Icons.Info className="w-3.5 h-3.5 shrink-0" />
           <span>
             Se detectó 1 solo mes cargado ({months[0]?.monthLabel || ""}). Carga estados de cuenta adicionales para trazar la línea de evolución continua.
@@ -182,7 +182,7 @@ export function CategoryTrendChart({
       )}
 
       {/* Interactive Category Filter Pills Bar */}
-      <div className="flex flex-wrap items-center gap-1.5 max-h-24 overflow-y-auto pr-1">
+      <div className="flex flex-wrap items-center gap-1.5 max-h-16 overflow-y-auto pr-1">
         <span className="text-3xs font-semibold uppercase tracking-wider text-zinc-400 mr-1 select-none">
           Categorías:
         </span>
@@ -210,7 +210,7 @@ export function CategoryTrendChart({
               }
             >
               <span
-                className="w-2 h-2 rounded-full shrink-0"
+                className="w-2.5 h-2.5 rounded-full shrink-0"
                 style={{ backgroundColor: cat.color }}
               />
               <span className="truncate max-w-[120px]">{cat.categoryName}</span>
@@ -223,7 +223,7 @@ export function CategoryTrendChart({
       </div>
 
       {/* Responsive SVG Chart Container */}
-      <div className="relative flex-1 w-full min-h-[220px] select-none">
+      <div className="relative flex-1 w-full min-h-[145px] select-none">
         <svg
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           className="w-full h-full overflow-visible"
@@ -258,6 +258,7 @@ export function CategoryTrendChart({
           {/* X-axis labels & vertical tick marks */}
           {months.map((m, mIdx) => {
             const { x } = getCoordinates(mIdx, 0);
+            const [monthPart, yearPart] = m.monthLabel.split(" ");
             return (
               <g key={`xtick-${m.monthKey}`}>
                 <line
@@ -271,11 +272,26 @@ export function CategoryTrendChart({
                 />
                 <text
                   x={x}
-                  y={padTop + plotHeight + 18}
+                  y={padTop + plotHeight + 13}
                   textAnchor="middle"
-                  className="text-[11px] font-medium fill-zinc-600 dark:fill-zinc-400"
+                  className="fill-zinc-600 dark:fill-zinc-400 select-none"
                 >
-                  {m.monthLabel}
+                  <tspan
+                    x={x}
+                    dy="0"
+                    className="text-[9.5px] font-medium fill-zinc-700 dark:fill-zinc-300"
+                  >
+                    {monthPart}{yearPart ? " " : ""}
+                  </tspan>
+                  {yearPart && (
+                    <tspan
+                      x={x}
+                      dy="11"
+                      className="text-[8.5px] font-mono fill-zinc-400 dark:fill-zinc-500"
+                    >
+                      {yearPart}
+                    </tspan>
+                  )}
                 </text>
               </g>
             );
@@ -320,29 +336,39 @@ export function CategoryTrendChart({
                     hoveredPoint?.monthKey === mt.monthKey;
 
                   return (
-                    <circle
-                      key={`point-${cat.categoryId}-${mt.monthKey}`}
-                      cx={x}
-                      cy={y}
-                      r={isHovered ? 6.5 : isSingleMonth ? 6 : 4}
-                      fill={cat.color}
-                      stroke="#ffffff"
-                      strokeWidth={isHovered ? "2.5" : "1.5"}
-                      className="cursor-pointer transition-transform duration-150 hover:scale-125 dark:stroke-zinc-950"
-                      onMouseEnter={() =>
-                        setHoveredPoint({
-                          categoryName: cat.categoryName,
-                          color: cat.color,
-                          monthKey: mt.monthKey,
-                          monthLabel: mt.monthLabel,
-                          totalAmount: mt.totalAmount,
-                          changePercent,
-                          x,
-                          y,
-                        })
-                      }
-                      onMouseLeave={() => setHoveredPoint(null)}
-                    />
+                    <g key={`point-wrapper-${cat.categoryId}-${mt.monthKey}`}>
+                      {/* Visual Data Point */}
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r={isHovered ? 6 : isSingleMonth ? 5.5 : 4}
+                        fill={cat.color}
+                        stroke="#ffffff"
+                        strokeWidth={isHovered ? 2.5 : 1.5}
+                        className="pointer-events-none transition-[r,stroke-width] duration-150 dark:stroke-zinc-950"
+                      />
+                      {/* Generous & Stable Hit Target (avoids SVG transform origin flicker) */}
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r={14}
+                        fill="transparent"
+                        className="cursor-pointer"
+                        onMouseEnter={() =>
+                          setHoveredPoint({
+                            categoryName: cat.categoryName,
+                            color: cat.color,
+                            monthKey: mt.monthKey,
+                            monthLabel: mt.monthLabel,
+                            totalAmount: mt.totalAmount,
+                            changePercent,
+                            x,
+                            y,
+                          })
+                        }
+                        onMouseLeave={() => setHoveredPoint(null)}
+                      />
+                    </g>
                   );
                 })}
               </g>
@@ -353,7 +379,9 @@ export function CategoryTrendChart({
         {/* Hover / Tap Tooltip Card */}
         {hoveredPoint && (
           <div
-            className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full mb-3 px-3 py-2 rounded-xl bg-zinc-900/95 dark:bg-zinc-100/95 text-white dark:text-zinc-900 shadow-xl border border-zinc-700/50 dark:border-zinc-300/50 backdrop-blur-md min-w-[150px] animate-in fade-in zoom-in-95 duration-150"
+            className={`pointer-events-none absolute z-20 -translate-x-1/2 px-3 py-2 rounded-xl bg-zinc-900/95 dark:bg-zinc-100/95 text-white dark:text-zinc-900 shadow-xl border border-zinc-700/50 dark:border-zinc-300/50 backdrop-blur-md min-w-[150px] animate-in fade-in duration-150 ${
+              hoveredPoint.y < 55 ? "translate-y-3" : "-translate-y-full mb-3"
+            }`}
             style={{
               left: `${(hoveredPoint.x / svgWidth) * 100}%`,
               top: `${(hoveredPoint.y / svgHeight) * 100}%`,

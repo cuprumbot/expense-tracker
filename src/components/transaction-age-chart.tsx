@@ -32,9 +32,9 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
   } = ageResult;
 
   // SVG Donut geometry (enlarged for prominent visual hierarchy)
-  const size = 210;
-  const strokeWidth = 22;
-  const hoverStrokeWidth = 26;
+  const size = 180;
+  const strokeWidth = 20;
+  const hoverStrokeWidth = 24;
   const radius = (size - hoverStrokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
@@ -58,9 +58,9 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
   });
 
   return (
-    <div className="flex flex-col h-full space-y-3">
+    <div className="flex flex-col h-full space-y-2">
       {/* Top Filter Controls */}
-      <div className="flex items-center justify-between gap-2 pb-1">
+      <div className="flex items-center justify-between gap-2 pb-0.5">
         <label
           htmlFor="select-transaction-age-month"
           className="text-3xs font-semibold uppercase tracking-wider text-zinc-400 select-none"
@@ -91,7 +91,7 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
       <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
         {/* Left: SVG Donut Chart (Bigger display & centered hole) */}
         <div className="sm:col-span-5 flex flex-col items-center justify-center relative py-1">
-          <div className="relative w-[200px] h-[200px] sm:w-[210px] sm:h-[210px] flex items-center justify-center">
+          <div className="relative w-[160px] h-[160px] sm:w-[170px] sm:h-[170px] flex items-center justify-center">
             <svg
               viewBox={`0 0 ${size} ${size}`}
               className="w-full h-full -rotate-90 transform"
@@ -135,8 +135,8 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
 
             {/* Donut Center Display: Constrained strictly to avoid touching the ring */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-[136px] max-w-[136px] flex flex-col items-center justify-center text-center px-1">
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 truncate max-w-[125px]">
+              <div className="w-[115px] max-w-[115px] flex flex-col items-center justify-center text-center px-1">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 truncate max-w-[110px]">
                   {hoveredSegment ? hoveredSegment.label : "Total Período"}
                 </span>
                 <span className="text-xs sm:text-sm font-bold font-mono text-zinc-900 dark:text-zinc-100 my-0.5 truncate max-w-[130px]">
@@ -157,7 +157,7 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
         </div>
 
         {/* Right: Legend Breakdown Cards (Clean cards with only title and amount) */}
-        <div className="sm:col-span-7 flex flex-col space-y-2.5">
+        <div className="sm:col-span-7 flex flex-col space-y-1.5">
           {segments.map((seg) => {
             const isHovered = hoveredSegment?.id === seg.id;
 
@@ -167,7 +167,7 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
                 id={`legend-segment-${seg.id}`}
                 onMouseEnter={() => setHoveredSegment(seg)}
                 onMouseLeave={() => setHoveredSegment(null)}
-                className={`px-3.5 py-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                className={`px-3 py-2 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                   isHovered
                     ? "bg-zinc-50 dark:bg-zinc-900/70 border-zinc-300 dark:border-zinc-700 shadow-2xs"
                     : "bg-white dark:bg-zinc-950 border-zinc-150 dark:border-zinc-850 hover:border-zinc-200"

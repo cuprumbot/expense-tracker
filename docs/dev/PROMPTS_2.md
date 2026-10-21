@@ -252,3 +252,73 @@ Work autonomously end-to-end for EACH user story in the sequence:
 Only stop when all specified User Stories are fully implemented, verified, and committed across their respective branches. Then, provide a comprehensive report of what was done and the test results for each story. Summarize it in `DASHBOARD_IMPLEMENTATION.md`.
 
 After completing the entire batch, execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.
+
+---
+
+Let's improve the overall UI of the web app. Use the `frontend-design` skill.
+
+- Make the web app title `Expense Tracker` both in the header and in the browser tab title. Make the icon besides the title smaller.
+- Add a dark/light theme switcher. It should show the light theme by default. Add colors if needed so they look good in the light theme.
+
+- In the starting screen, where the user loads their files:
+    - Remove the `GTQ - Q` text in the header.
+    - Remove the "Consolidado multicuenta" and "Archivo de movimientos" text. Just keep the "Guardado el <dd/mm/yyyy>" text.
+    - Delete the "PDF / CSV" text in the corner of the loader panel.
+    - Check if Playwright uses the demo files selector for its E2E testing. If Playwright does not use them, remove them.
+
+- In the dashboard screen:
+    - Make the header smaller vertically.
+    - Remove the "Consolidado multicuenta" chip.
+    - When the "X sin clasificar" is clicked, it should open the side panel with the transactions and filter to show only the unclassified expenses.
+    - Reduce the panels height a little bit, to see more content on the screen. Modify the paddings to allow more useful content on the screen without making it hard or unconfortable to read.
+
+- In the transactions side panel:
+    - Remove the "Inspecciona, filtra ..." subtitle.
+    - Remove the header icon.
+    - Remove the number of transactions in the header.
+    - Remove the "Consolidado multicuenta" chip.
+
+Do not commit anything, I will check the changes manually.
+
+After completing, execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.
+
+---
+
+Let's improve the overall UI of the web app. Use the `frontend-design` skill.
+
+Move to the correct place:
+- When the user uploads a file and repeated transactions are detected, a small panel would show above the transaction list alerting that it might be a duplicated file. Remove that panel and instead alert the user with some pop-up message.
+
+In the dashboard screen:
+- Remove the "Panel de Control Financiero" text. Keep only the "Expense Tracker" title.
+
+We still have some intermediate screen between the file loading and the dashboard when there are more than 10 unclassified expenses/while the AI is classifying them.
+- Remove this screen, proceed directly to the dashboard.
+- Show some small chip to indicate the user that their expenses are being classified.
+- If the AI didn't manage to classify everything and more than 10 transactions were left pending, add a subtle animation to the chip to get the user's attention.
+
+If you want to test something, use Playwright. Do not use the native browser subagent.
+
+Do not commit anything, I will check the changes manually.
+
+After completing, execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.
+
+---
+
+These messages are currently shown in a panel above the transaction list:
+    Lote de archivos procesado
+    X archivos procesados exitosamente, X transacciones añadidas.
+
+    Se clasificaron X gastos pendientes con Gemini Pro.
+They should be shown in some kind of pop up message (like a toast notification).
+
+
+In panel 1 when I put the mouse over some graph point, the message that pops up flashes. It seems like the point is changing position. Investigate and repair.
+
+---
+
+These two messages shouldn't be shown at the same time:
+- 1 archivo procesado exitosamente, 73 transacciones añadidas.
+- Todas las transacciones del archivo '2026-04.pdf' ya se encontraban registradas y fueron omitidas.
+
+If there were duplicated transactions just say that, don't pop up the success message.

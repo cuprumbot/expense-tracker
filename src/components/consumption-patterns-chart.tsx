@@ -57,9 +57,9 @@ export function ConsumptionPatternsChart({
   }
 
   return (
-    <div className="flex flex-col h-full space-y-3">
+    <div className="flex flex-col h-full space-y-2">
       {/* Top Controls: Mode Switcher */}
-      <div className="flex items-center justify-between gap-2 pb-1">
+      <div className="flex items-center justify-between gap-2 pb-0.5">
         <span className="text-3xs font-semibold uppercase tracking-wider text-zinc-400 select-none">
           Visualizar por:
         </span>
@@ -98,11 +98,11 @@ export function ConsumptionPatternsChart({
       </div>
 
       {/* Bar Chart Container */}
-      <div className="flex-1 min-h-[200px] flex flex-col justify-between p-3 rounded-xl bg-zinc-50/60 dark:bg-zinc-900/30 border border-zinc-100 dark:border-zinc-850">
+      <div className="flex-1 min-h-[160px] flex flex-col justify-between p-2.5 rounded-lg bg-zinc-50/60 dark:bg-zinc-900/30 border border-zinc-100 dark:border-zinc-850">
         {/* Tooltip & Info Header (Dedicated row in layout flow to completely prevent overlap with bars) */}
-        <div className="h-6 flex items-center justify-between text-2xs mb-2 shrink-0">
+        <div className="h-5 flex items-center justify-between text-2xs mb-1.5 shrink-0">
           {hoveredItem ? (
-            <div className="flex items-center gap-2 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-xs">
+            <div className="flex items-center gap-2 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xs px-2.5 py-0.5 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-xs">
               <span className="font-bold text-zinc-900 dark:text-zinc-100">
                 {hoveredItem.label}
               </span>
@@ -134,7 +134,7 @@ export function ConsumptionPatternsChart({
 
         {/* 1. Bar Plot Area: Fixed grid with baseline border so all bars start exactly on the axis */}
         <div
-          className={`w-full flex-1 min-h-[120px] pt-3 grid items-end border-b border-zinc-200 dark:border-zinc-800 pb-0.5 relative ${
+          className={`w-full flex-1 min-h-[100px] pt-2 grid items-end border-b border-zinc-200 dark:border-zinc-800 pb-0.5 relative ${
             patternMode === "dayOfWeek"
               ? "grid-cols-7 gap-2 sm:gap-3"
               : "grid-cols-[repeat(31,minmax(0,1fr))] gap-0.5 sm:gap-1"
@@ -220,7 +220,7 @@ export function ConsumptionPatternsChart({
       {/* Outlier / Contextual Anomaly Insight Banner */}
       <div
         id="consumption-anomaly-banner"
-        className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 transition-colors ${
+        className={`p-2.5 rounded-lg border text-xs flex items-start gap-2.5 transition-colors ${
           activeInsight?.isAnomaly
             ? "bg-rose-50/80 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50 text-rose-900 dark:text-rose-200"
             : "bg-zinc-50 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300"

@@ -45,12 +45,16 @@ import {
   Table,
   LayoutDashboard,
   List,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 export const Icons = {
   Table,
   LayoutDashboard,
   List,
+  Sun,
+  Moon,
   Upload,
   FileText,
   FileSpreadsheet,
@@ -95,3 +99,4 @@ export const Icons = {
   Globe,
   RotateCcw,
 };
+

@@ -9,6 +9,23 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     console.log("[E2E Test] Navigating to http://localhost:3000...");
     await page.goto("/");
 
+    // 1.1 Verify document title & starting screen improvements
+    await expect(page).toHaveTitle("Expense Tracker");
+    await expect(page.locator("header").getByText("Expense Tracker")).toBeVisible();
+    await expect(page.locator("header").getByText("GTQ · Q")).not.toBeVisible();
+    await expect(page.getByText("PDF / CSV")).not.toBeVisible();
+    await expect(page.locator("#btn-demo-lote-mixto")).not.toBeAttached();
+
+    // Verify Theme Switcher (light by default, toggle to dark, toggle back to light)
+    const htmlElement = page.locator("html");
+    await expect(htmlElement).not.toHaveClass(/dark/);
+    const themeBtn = page.locator("#btn-theme-toggle");
+    await expect(themeBtn).toBeVisible();
+    await themeBtn.click();
+    await expect(htmlElement).toHaveClass(/dark/);
+    await themeBtn.click();
+    await expect(htmlElement).not.toHaveClass(/dark/);
+
     // 2. Start a clean, new session: If previous data exists, use "Borrar mis datos"
     const clearDataBtn = page.getByRole("button", { name: "Borrar mis datos" });
     const hasPreviousData = await clearDataBtn
@@ -55,46 +72,38 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await expect(confirmRoutingBtn).toBeVisible();
     await confirmRoutingBtn.click();
 
-    // 4. Wait for processing to complete and verify whether dashboard or review screen appears
-    console.log("[E2E Test] Waiting for batch file processing to complete...");
-    const dashboardOrReview = page.locator("#dashboard-root, table");
-    await dashboardOrReview.first().waitFor({ state: "visible", timeout: 40000 });
+    // 4. Wait for processing to complete and verify immediate navigation to dashboard (no intermediate review table)
+    console.log("[E2E Test] Waiting for batch file processing to complete directly to dashboard...");
+    const dashboardRoot = page.locator("#dashboard-root");
+    await expect(dashboardRoot).toBeVisible({ timeout: 40000 });
+    console.log("[E2E Test] ✓ Successfully proceeded directly to dashboard without intermediate screen.");
 
-    const isDashboardActive = await page.locator("#dashboard-root").isVisible();
-
-    if (!isDashboardActive) {
-      console.log("[E2E Test] Pending >= 10 detected: Classifying expenses to proceed to dashboard...");
-      // Filter pending expenses and classify
-      const pendingPill = page.locator("button").filter({ hasText: /^Pendiente/ });
-      await expect(pendingPill).toBeVisible();
-      await pendingPill.click();
-
-      // Create "Testing" category
-      const newCategoryBtn = page.getByRole("button", { name: "Nueva categoría" }).first();
-      await newCategoryBtn.click();
-      const categoryNameInput = page.locator("#category-name-input");
-      await categoryNameInput.fill("Testing");
-      await page.getByRole("button", { name: "Guardar categoría" }).click();
-
-      // Bulk classify
-      const selectAllCheckbox = page.locator('input[aria-label="Seleccionar todas las transacciones filtradas"]');
-      await selectAllCheckbox.check();
-      const bulkCategorySelect = page.locator("#bulk-cat-select");
-      await bulkCategorySelect.selectOption("Testing");
-      const bulkSaveBtn = page.locator("#btn-apply-bulk-category");
-      await bulkSaveBtn.click();
+    // Verify chip behavior: if classifying with LLM or if > 10 pending, chip has attention animation
+    const classifyingChip = page.locator("#chip-classifying-expenses");
+    const unclassifiedChip = page.locator("#btn-filter-unclassified");
+    if (await classifyingChip.isVisible().catch(() => false)) {
+      console.log("[E2E Test] ✓ Verified AI classification chip is displayed while classifying.");
+    }
+    if (await unclassifiedChip.isVisible().catch(() => false)) {
+      const chipText = await unclassifiedChip.innerText();
+      console.log(`[E2E Test] Unclassified chip text: "${chipText}"`);
+      const countMatch = chipText.match(/(\d+)/);
+      if (countMatch && parseInt(countMatch[1], 10) > 10) {
+        await expect(unclassifiedChip).toHaveClass(/animate-pulse/);
+        console.log("[E2E Test] ✓ Verified subtle animation (animate-pulse) on unclassified chip with >10 pending.");
+      }
     }
 
-    // 5. Assertions for US-029 (Dashboard Layout Scaffold)
-    console.log("[E2E Test] Verifying Dashboard container (US-029)...");
-    const dashboardRoot = page.locator("#dashboard-root");
-    await expect(dashboardRoot).toBeVisible({ timeout: 15000 });
-
-    // Verify header title & elements
-    await expect(page.getByRole("heading", { name: "Panel de Control Financiero" })).toBeVisible();
+    // 5. Assertions for Dashboard Layout Scaffold
+    console.log("[E2E Test] Verifying Dashboard container and header...");
+    // Verify header title & elements (only 'Expense Tracker' heading, no 'Panel de Control Financiero')
+    await expect(page.getByRole("heading", { name: "Panel de Control Financiero" })).not.toBeVisible();
+    await expect(page.locator("#dashboard-root header").getByRole("heading", { name: "Expense Tracker" })).toBeVisible();
+    await expect(page.locator("#dashboard-root header").getByText("Consolidado multicuenta")).not.toBeVisible();
     await expect(page.locator("#btn-dashboard-add-statements")).toBeVisible();
     await expect(page.locator("#btn-dashboard-reset-session")).toBeVisible();
     await expect(page.locator("#btn-toggle-transactions-drawer")).toBeVisible();
+    await expect(page.locator("#dashboard-root #btn-theme-toggle")).toBeVisible();
 
     // Verify 4-Panel 2x2 Responsive Grid
     await expect(page.locator("#panel-category-trends")).toBeVisible();
@@ -117,6 +126,13 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await expect(svgPaths.first()).toBeVisible();
     const svgCircles = trendSvg.locator("circle");
     expect(await svgCircles.count()).toBeGreaterThan(0);
+
+    // Test hover on data point hit target without jumping or flashing
+    const pointHitTarget = trendSvg.locator("circle.cursor-pointer").first();
+    await pointHitTarget.hover();
+    const trendTooltip = page.locator("#panel-category-trends").getByText(/Gasto:/);
+    await expect(trendTooltip).toBeVisible();
+    console.log("[E2E Test] ✓ Panel 1 point hover tooltip verified without flickering.");
 
     // Check category filter pill toggling in Panel 1
     const panel1Pills = page.locator("#panel-category-trends button").filter({ hasText: /Supermercado/ });
@@ -226,8 +242,14 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await expect(drawerAside).toHaveClass(/translate-x-0/);
     console.log("[E2E Test] ✓ Drawer opened smoothly.");
 
-    // Verify full TransactionTable is mounted inside drawer
+    // Verify drawer header has no subtitle, no icon, and no "Consolidado multicuenta"
+    await expect(page.getByText("Inspecciona, filtra o edita tus movimientos sin salir del panel.")).not.toBeVisible();
+    await expect(drawerAside.getByText("Consolidado multicuenta")).not.toBeVisible();
+
+    // Verify full TransactionTable is mounted inside drawer with no inline banner panels
     await expect(page.locator("#search-transactions-input")).toBeVisible();
+    await expect(page.locator("#batch-summary-banner")).not.toBeAttached();
+    await expect(page.locator("#duplicate-transactions-banner")).not.toBeAttached();
 
     // Test inline custom category creation inside drawer
     const newCategoryBtn = page.getByRole("button", { name: "Nueva categoría" }).first();
@@ -280,5 +302,50 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     // Total count should show 140 movimientos analizados
     await expect(page.getByText("140 movimientos analizados")).toBeVisible();
     console.log("[E2E Test] ✓ Reactive dashboard statistics verified.");
+
+    // 8. Verify unclassified counter button interaction (US-040 improvement)
+    const unclassifiedBtn = page.locator("#btn-filter-unclassified");
+    if (await unclassifiedBtn.isVisible().catch(() => false)) {
+      await unclassifiedBtn.click();
+      await expect(drawerAside).toHaveClass(/translate-x-0/);
+      console.log("[E2E Test] ✓ Clicking unclassified badge successfully opened drawer with unclassified filter.");
+      await closeDrawerBtn.click();
+      await expect(drawerAside).toHaveClass(/translate-x-full/);
+    }
+
+    // 9. Verify duplicate file detection pop-up message (no inline table banner)
+    console.log("[E2E Test] Testing duplicate statement upload and pop-up alert...");
+    const addMoreBtn = page.locator("#btn-dashboard-add-statements");
+    await addMoreBtn.click();
+
+    const addMoreModal = page.locator("#modal-add-more-statements");
+    await expect(addMoreModal).toBeVisible();
+
+    const modalFileInput = addMoreModal.locator("#file-upload-input");
+    // Re-upload 2026-09.pdf which is already fully loaded
+    await modalFileInput.setInputFiles([pdfPath1]);
+
+    const confirmModalRoutingBtn = addMoreModal.locator("#btn-confirm-routing");
+    await expect(confirmModalRoutingBtn).toBeVisible();
+    await confirmModalRoutingBtn.click();
+
+    // Verify floating pop-up appears
+    const duplicatePopup = page.locator("#duplicate-transactions-popup");
+    await expect(duplicatePopup).toBeVisible({ timeout: 15000 });
+    await expect(duplicatePopup).toContainText("Aviso de transacciones duplicadas");
+    console.log("[E2E Test] ✓ Duplicate transactions floating pop-up displayed.");
+
+    // Verify batch summary success message is NOT shown when duplicates occur
+    await expect(page.locator("#batch-summary-popup")).not.toBeVisible();
+    console.log("[E2E Test] ✓ Verified batch summary success popup is suppressed when duplicates occur.");
+
+    // Verify inline banner is NOT present
+    await expect(page.locator("#duplicate-transactions-banner")).not.toBeAttached();
+
+    // Dismiss pop-up
+    const dismissPopupBtn = duplicatePopup.locator("button[aria-label='Cerrar notificación']");
+    await dismissPopupBtn.click();
+    await expect(duplicatePopup).not.toBeVisible();
+    console.log("[E2E Test] ✓ Duplicate pop-up dismissed successfully.");
   });
 });

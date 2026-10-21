@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Transaction,
   CSVParsingSummary,
@@ -57,6 +57,7 @@ interface TransactionTableProps {
   batchErrors?: { fileName: string; error: string }[];
   onDismissBatchError?: (fileName: string) => void;
   hideTopDashboard?: boolean;
+  externalCategoryFilter?: string | null;
 }
 
 type SortField = "date" | "description" | "amount";
@@ -198,8 +199,19 @@ export function TransactionTable({
   batchErrors = [],
   onDismissBatchError,
   hideTopDashboard = false,
+  externalCategoryFilter = null,
 }: TransactionTableProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    externalCategoryFilter || "all"
+  );
+
+  useEffect(() => {
+    if (externalCategoryFilter) {
+      setSelectedCategory(externalCategoryFilter);
+    } else if (externalCategoryFilter === null) {
+      setSelectedCategory("all");
+    }
+  }, [externalCategoryFilter]);
   const [selectedCurrency, setSelectedCurrency] = useState<"all" | "GTQ" | "USD">("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [sortField, setSortField] = useState<SortField | null>(null);
@@ -483,38 +495,6 @@ export function TransactionTable({
 
   return (
     <div className="space-y-6">
-      {/* Batch Ingestion Outcome Summary (US-026) */}
-      {batchSummaryNotification && (
-        <div
-          role="status"
-          id="batch-summary-banner"
-          className="p-4 rounded-xl border border-emerald-300 bg-emerald-50 dark:border-emerald-800/80 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 flex items-start justify-between gap-3 shadow-xs animate-in fade-in duration-200"
-        >
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
-              <Icons.CheckCircle2 className="w-4 h-4" />
-            </div>
-            <div className="space-y-0.5">
-              <h4 className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
-                Lote de archivos procesado
-              </h4>
-              <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed font-medium">
-                {batchSummaryNotification}
-              </p>
-            </div>
-          </div>
-          {onDismissBatchSummaryNotification && (
-            <button
-              type="button"
-              onClick={onDismissBatchSummaryNotification}
-              aria-label="Cerrar notificación de lote"
-              className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200 cursor-pointer p-1 rounded-md hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 transition-colors shrink-0"
-            >
-              <Icons.X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      )}
 
       {/* Batch Ingestion Errors (US-026) */}
       {batchErrors && batchErrors.length > 0 && (
@@ -550,39 +530,6 @@ export function TransactionTable({
               )}
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Prominent Duplicate Detection Alert Banner (US-028) */}
-      {duplicateNotification && (
-        <div
-          role="alert"
-          id="duplicate-transactions-banner"
-          className="p-4 rounded-xl border border-amber-300 bg-amber-50 dark:border-amber-800/80 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 flex items-start justify-between gap-3 shadow-xs animate-in fade-in duration-200"
-        >
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
-              <Icons.AlertCircle className="w-4 h-4" />
-            </div>
-            <div className="space-y-0.5">
-              <h4 className="text-xs font-semibold text-amber-900 dark:text-amber-200">
-                Aviso de transacciones duplicadas
-              </h4>
-              <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed font-medium">
-                {duplicateNotification}
-              </p>
-            </div>
-          </div>
-          {onDismissDuplicateNotification && (
-            <button
-              type="button"
-              onClick={onDismissDuplicateNotification}
-              aria-label="Cerrar notificación"
-              className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 cursor-pointer p-1 rounded-md hover:bg-amber-100/60 dark:hover:bg-amber-900/40 transition-colors shrink-0"
-            >
-              <Icons.X className="w-4 h-4" />
-            </button>
-          )}
         </div>
       )}
 
@@ -780,18 +727,6 @@ export function TransactionTable({
       )
       )}
 
-      {/* Success Notification */}
-      {llmSuccessMessage && (
-        <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-200 flex items-center justify-between gap-3 shadow-2xs">
-          <div className="flex items-center gap-2">
-            <Icons.CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="font-medium">{llmSuccessMessage}</span>
-          </div>
-          <span className="text-3xs font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
-            Completado
-          </span>
-        </div>
-      )}
 
       {/* Category Pills & Search Filter Bar (US-012) */}
       <div className="space-y-3">
@@ -1020,9 +955,13 @@ export function TransactionTable({
             <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
               Movimientos extraídos
             </span>
-            <span className="text-2xs font-mono px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-              {sourceLabel}
-            </span>
+            {sourceLabel &&
+              !sourceLabel.includes("Consolidado multicuenta") &&
+              sourceLabel !== "Archivo de movimientos" && (
+                <span className="text-2xs font-mono px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                  {sourceLabel}
+                </span>
+              )}
             {selectedCategory !== "all" && (
               <span className="text-2xs px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 font-medium dark:bg-zinc-800 dark:text-zinc-300">
                 Subtotal: {formatCurrency(filteredTotal)}
