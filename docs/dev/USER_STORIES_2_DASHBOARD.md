@@ -151,36 +151,36 @@ It details the transition from the initial reporting cards to a comprehensive, f
 
 ## Phase 17: Panel 3 - Spending Patterns & Outlier Detection (Consumption Patterns)
 
-### [ ] US-035: Day-of-Week & Day-of-Month Temporal Aggregation & Anomaly Heuristics
+### [x] US-035: Day-of-Week & Day-of-Month Temporal Aggregation & Anomaly Heuristics
 - **As a** developer,
 - **I want** a statistical calculation engine that breaks down spending by day of the week and day of the month and identifies statistical outliers,
 - **So that** the consumption pattern panel can pinpoint unusual spikes in user expenditure.
 - **Split-Brain Boundary:** 100% Local (Pure statistical logic, zero external AI).
 - **Acceptance Criteria:**
-  - [ ] Implements temporal aggregation utility `calculateConsumptionPatterns(transactions: Transaction[])`:
+  - [x] Implements temporal aggregation utility `calculateConsumptionPatterns(transactions: Transaction[])`:
     - **Day of Week:** Aggregates spending across 7 days: Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo.
     - **Day of Month:** Aggregates spending across days 1 to 31 of calendar months.
-  - [ ] Computes statistical baseline: mean daily spend ($\mu$) and standard deviation ($\sigma$).
-  - [ ] Outlier Detection Rule 1 (Overall Spike): Any day with total spending exceeding $\mu + 1.75\sigma$ (or $> 2.5\times$ median) is flagged as an `outlierDay` with an `anomalyScore`.
-  - [ ] Outlier Detection Rule 2 (Cross-Month Spike): Compares same-day spending across individual months (e.g., normal spending on day 15 is near zero, but one specific month recorded a high spike on day 15) and flags cross-month anomalies with specific context.
-  - [ ] Returns structured insight summaries in Spanish detailing identified anomalies (e.g., `hasOutliers: true, anomalyDescription: "Gasto atípico detectado el 15 de julio por compra extraordinaria..."`).
-  - [ ] Comprehensive unit tests verify day-of-week parsing, leap year/month-end handling, and mathematical outlier detection.
+  - [x] Computes statistical baseline: mean daily spend ($\mu$) and standard deviation ($\sigma$).
+  - [x] Outlier Detection Rule 1 (Overall Spike): Any day with total spending exceeding $\mu + 1.75\sigma$ (or $> 2.5\times$ median) is flagged as an `outlierDay` with an `anomalyScore`.
+  - [x] Outlier Detection Rule 2 (Cross-Month Spike): Compares same-day spending across individual months (e.g., normal spending on day 15 is near zero, but one specific month recorded a high spike on day 15) and flags cross-month anomalies with specific context.
+  - [x] Returns structured insight summaries in Spanish detailing identified anomalies (e.g., `hasOutliers: true, anomalyDescription: "Gasto atípico detectado el 15 de julio por compra extraordinaria..."`).
+  - [x] Comprehensive unit tests verify day-of-week parsing, leap year/month-end handling, and mathematical outlier detection.
 
-### [ ] US-036: Consumption Patterns Bar Chart with Outlier Visual Indicators
+### [x] US-036: Consumption Patterns Bar Chart with Outlier Visual Indicators
 - **As a** user analyzing my consumption patterns,
 - **I want to** toggle between day-of-the-week and day-of-the-month bar charts and immediately see highlighted outlier days,
 - **So that** I can detect recurring spending habits and identify days with abnormal financial impact.
 - **Split-Brain Boundary:** 100% Local (Native SVG chart rendering and alert badges).
 - **Acceptance Criteria:**
-  - [ ] Panel 3 renders an interactive chart titled "Patrones de Consumo" (Panel 3: Hábitos y Anomalías).
-  - [ ] Includes a segmented toggle selector:
+  - [x] Panel 3 renders an interactive chart titled "Patrones de Consumo" (Panel 3: Hábitos y Anomalías).
+  - [x] Includes a segmented toggle selector:
     - Mode A: "Día de la semana" (7 bars: Lun, Mar, Mié, Jue, Vie, Sáb, Dom).
     - Mode B: "Día del mes" (31 bars numbered 1 to 31).
-  - [ ] Outlier days are visually distinguished with a contrasting alert stroke/fill (e.g., Amber/Rose highlight `#f59e0b` / `#f43f5e`) and a subtle badge indicator over the bar.
-  - [ ] A dedicated insight banner below the chart displays contextual explanations in Spanish when an anomaly is detected:
+  - [x] Outlier days are visually distinguished with a contrasting alert stroke/fill (e.g., Amber/Rose highlight `#f59e0b` / `#f43f5e`) and a subtle badge indicator over the bar.
+  - [x] A dedicated insight banner below the chart displays contextual explanations in Spanish when an anomaly is detected:
     - Example: "Se detectó un consumo extraordinario los días viernes (promedio Q 1,850 frente a Q 420 en días laborales)."
     - Example: "Día atípico: El día 15 de julio concentró un gasto 3 veces mayor al promedio habitual de esa fecha."
-  - [ ] Tooltip on each bar shows total amount, percentage of weekly/monthly total, and transaction count.
+  - [x] Tooltip on each bar shows total amount, percentage of weekly/monthly total, and transaction count.
 
 ---
 

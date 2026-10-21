@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/currency";
 import { SlidingDrawer } from "@/components/sliding-drawer";
 import { CategoryTrendChart } from "@/components/category-trend-chart";
 import { VendorConcentrationChart } from "@/components/vendor-concentration-chart";
+import { ConsumptionPatternsChart } from "@/components/consumption-patterns-chart";
 
 interface DashboardViewProps {
   transactions: Transaction[];
@@ -180,44 +181,21 @@ export function DashboardView({
           </div>
         </section>
 
-        {/* Panel 3: Patrones de Consumo */}
+        {/* Panel 3: Patrones de consumo */}
         <section
           id="panel-consumption-patterns"
-          aria-label="Panel 3: Patrones de Consumo"
+          aria-label="Patrones de consumo"
           className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs flex flex-col justify-between"
         >
           <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-850">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                <Icons.Calendar className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-3xs font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                    Panel 3
-                  </span>
-                  <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                    Patrones de Consumo
-                  </h2>
-                </div>
-                <p className="text-2xs text-zinc-500 dark:text-zinc-400">
-                  Patrones de Gasto · Distribución por día de semana o mes y detección de atípicos.
-                </p>
-              </div>
-            </div>
+            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              Patrones de consumo
+            </h2>
           </div>
 
-          {/* Panel 3 Body / Visual Placeholder */}
-          <div className="flex-1 py-8 flex flex-col items-center justify-center text-center space-y-2">
-            <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-zinc-400 flex items-center justify-center">
-              <Icons.Sliders className="w-6 h-6" />
-            </div>
-            <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-              Distribución de Hábitos y Valores Atípicos
-            </p>
-            <p className="text-2xs text-zinc-400 dark:text-zinc-500 max-w-xs">
-              Identifica días pico de la semana o días del mes con gastos inusuales por encima del promedio.
-            </p>
+          {/* Panel 3 Body / Consumption Patterns Bar Chart */}
+          <div className="flex-1 pt-4">
+            <ConsumptionPatternsChart transactions={transactions} />
           </div>
         </section>
 
