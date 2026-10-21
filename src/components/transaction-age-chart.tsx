@@ -8,7 +8,6 @@ import {
   TransactionAgeSegment,
 } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/currency";
-import { Icons } from "@/components/icons";
 
 interface TransactionAgeChartProps {
   transactions: Transaction[];
@@ -32,9 +31,9 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
     availableMonths,
   } = ageResult;
 
-  // SVG Donut geometry
-  const size = 180;
-  const strokeWidth = 20;
+  // SVG Donut geometry (enlarged for prominent visual hierarchy)
+  const size = 210;
+  const strokeWidth = 22;
   const hoverStrokeWidth = 26;
   const radius = (size - hoverStrokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -59,7 +58,7 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
   });
 
   return (
-    <div className="flex flex-col h-full space-y-3.5">
+    <div className="flex flex-col h-full space-y-3">
       {/* Top Filter Controls */}
       <div className="flex items-center justify-between gap-2 pb-1">
         <label
@@ -90,9 +89,9 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
 
       {/* Main Content: Donut Chart + Breakdown Legend */}
       <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
-        {/* Left: SVG Donut Chart */}
+        {/* Left: SVG Donut Chart (Bigger display & centered hole) */}
         <div className="sm:col-span-5 flex flex-col items-center justify-center relative py-1">
-          <div className="relative w-[180px] h-[180px] flex items-center justify-center">
+          <div className="relative w-[200px] h-[200px] sm:w-[210px] sm:h-[210px] flex items-center justify-center">
             <svg
               viewBox={`0 0 ${size} ${size}`}
               className="w-full h-full -rotate-90 transform"
@@ -134,29 +133,31 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
                 })}
             </svg>
 
-            {/* Donut Center Display */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4">
-              <span className="text-3xs uppercase tracking-wider font-semibold text-zinc-400">
-                {hoveredSegment ? hoveredSegment.label : "Total Período"}
-              </span>
-              <span className="text-xs sm:text-sm font-bold font-mono text-zinc-900 dark:text-zinc-100">
-                {formatCurrency(
-                  hoveredSegment
-                    ? hoveredSegment.totalAmountGTQ
-                    : totalFilteredAmountGTQ
-                )}
-              </span>
-              <span className="text-3xs font-mono text-zinc-500">
-                {hoveredSegment
-                  ? `${hoveredSegment.percentageShare}% (${hoveredSegment.transactionCount} mov.)`
-                  : `${totalFilteredCount} compras`}
-              </span>
+            {/* Donut Center Display: Constrained strictly to avoid touching the ring */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-[136px] max-w-[136px] flex flex-col items-center justify-center text-center px-1">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 truncate max-w-[125px]">
+                  {hoveredSegment ? hoveredSegment.label : "Total Período"}
+                </span>
+                <span className="text-xs sm:text-sm font-bold font-mono text-zinc-900 dark:text-zinc-100 my-0.5 truncate max-w-[130px]">
+                  {formatCurrency(
+                    hoveredSegment
+                      ? hoveredSegment.totalAmountGTQ
+                      : totalFilteredAmountGTQ
+                  )}
+                </span>
+                <span className="text-[10px] font-mono text-zinc-500 truncate max-w-[125px]">
+                  {hoveredSegment
+                    ? `${hoveredSegment.percentageShare}% (${hoveredSegment.transactionCount} mov.)`
+                    : `${totalFilteredCount} compras`}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Right: Legend Breakdown Cards */}
-        <div className="sm:col-span-7 flex flex-col space-y-2">
+        {/* Right: Legend Breakdown Cards (Clean cards with only title and amount) */}
+        <div className="sm:col-span-7 flex flex-col space-y-2.5">
           {segments.map((seg) => {
             const isHovered = hoveredSegment?.id === seg.id;
 
@@ -166,44 +167,29 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
                 id={`legend-segment-${seg.id}`}
                 onMouseEnter={() => setHoveredSegment(seg)}
                 onMouseLeave={() => setHoveredSegment(null)}
-                className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                className={`px-3.5 py-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                   isHovered
                     ? "bg-zinc-50 dark:bg-zinc-900/70 border-zinc-300 dark:border-zinc-700 shadow-2xs"
                     : "bg-white dark:bg-zinc-950 border-zinc-150 dark:border-zinc-850 hover:border-zinc-200"
                 }`}
               >
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: seg.color }}
-                    />
-                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                      {seg.label}
-                    </span>
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    <span className="text-xs font-bold font-mono text-zinc-900 dark:text-zinc-100">
-                      {formatCurrency(seg.totalAmountGTQ)}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: seg.color }}
+                  />
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                    {seg.label}
+                  </span>
                 </div>
 
-                <div className="flex items-center justify-between text-2xs text-zinc-500 dark:text-zinc-400">
-                  <span className="truncate pr-2 text-3xs">
-                    {seg.shortDescription}
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-3xs font-mono font-medium text-zinc-400">
+                    ({seg.percentageShare}%)
                   </span>
-                  <div className="flex items-center gap-1.5 shrink-0 font-mono">
-                    <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-                      {seg.percentageShare}%
-                    </span>
-                    <span className="text-zinc-400">·</span>
-                    <span>
-                      {seg.transactionCount}{" "}
-                      {seg.transactionCount === 1 ? "compra" : "compras"}
-                    </span>
-                  </div>
+                  <span className="text-xs sm:text-sm font-bold font-mono text-zinc-900 dark:text-zinc-100">
+                    {formatCurrency(seg.totalAmountGTQ)}
+                  </span>
                 </div>
               </div>
             );

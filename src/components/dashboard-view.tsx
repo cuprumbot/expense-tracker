@@ -245,31 +245,16 @@ export function DashboardView({
           </div>
         </section>
 
-        {/* Panel 4: Antigüedad del Gasto */}
+        {/* Panel 4: Antigüedad del gasto */}
         <section
           id="panel-transaction-age"
-          aria-label="Panel 4: Antigüedad del Gasto"
+          aria-label="Antigüedad del gasto"
           className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs flex flex-col justify-between"
         >
           <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-850">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                <Icons.PieChart className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-3xs font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                    Panel 4
-                  </span>
-                  <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                    Antigüedad del Gasto
-                  </h2>
-                </div>
-                <p className="text-2xs text-zinc-500 dark:text-zinc-400">
-                  Compromisos vs Compras Inmediatas · Cuotas pasadas, suscripciones y gastos del mes.
-                </p>
-              </div>
-            </div>
+            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              Antigüedad del gasto
+            </h2>
           </div>
 
           {/* Panel 4 Body / Transaction Age Donut Chart */}
