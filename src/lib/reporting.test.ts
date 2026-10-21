@@ -523,5 +523,127 @@ describe("US-035: Day-of-Week & Day-of-Month Temporal Aggregation & Anomaly Heur
   });
 });
 
+describe("US-038: Three-Segment Transaction Age Aggregator Unit Tests", () => {
+  const ageTransactions: Transaction[] = [
+    {
+      id: "tx-visa-1",
+      date: "2026-07-05",
+      description: "VISACUOTA 02/12 LAPTOP DELL",
+      amount: 1200.0,
+      category: "Visacuotas y Financiamiento",
+      currency: "GTQ",
+    },
+    {
+      id: "tx-visa-2",
+      date: "2026-09-05",
+      description: "VISACUOTA 04/12 LAPTOP DELL",
+      amount: 1200.0,
+      category: "Visacuotas y Financiamiento",
+      currency: "GTQ",
+    },
+    {
+      id: "tx-sub-1",
+      date: "2026-07-10",
+      description: "Netflix Guatemala",
+      amount: 109.0,
+      category: "Suscripciones",
+      isSubscription: true,
+      currency: "GTQ",
+    },
+    {
+      id: "tx-sub-2",
+      date: "2026-09-10",
+      description: "Spotify Premium",
+      amount: 69.0,
+      category: "Entretenimiento y Compras", // tagged with isSubscription
+      isSubscription: true,
+      currency: "GTQ",
+    },
+    {
+      id: "tx-inm-1",
+      date: "2026-07-15",
+      description: "Supermercado La Torre",
+      amount: 500.0,
+      category: "Supermercado",
+      currency: "GTQ",
+    },
+    {
+      id: "tx-inm-2",
+      date: "2026-09-20",
+      description: "Gasolinera Shell",
+      amount: 300.0,
+      category: "Transporte y Combustible",
+      currency: "GTQ",
+    },
+  ];
+
+  it("partitions transactions into exactly 3 canonical segments across all statements", () => {
+    const { calculateTransactionAgeSegments } = require("./reporting");
+    const result = calculateTransactionAgeSegments(ageTransactions, "all");
+
+    assert.equal(result.segments.length, 3);
+    assert.equal(result.totalFilteredAmountGTQ, 3378.0);
+    assert.equal(result.totalFilteredCount, 6);
+
+    const cuotas = result.segments.find((s: any) => s.id === "cuotas");
+    const subs = result.segments.find((s: any) => s.id === "suscripciones");
+    const inm = result.segments.find((s: any) => s.id === "inmediatas");
+
+    assert.equal(cuotas.totalAmountGTQ, 2400.0);
+    assert.equal(cuotas.transactionCount, 2);
+
+    assert.equal(subs.totalAmountGTQ, 178.0);
+    assert.equal(subs.transactionCount, 2);
+
+    assert.equal(inm.totalAmountGTQ, 800.0);
+    assert.equal(inm.transactionCount, 2);
+
+    // Percentages sum to 100%
+    const sumPct = Number(
+      (cuotas.percentageShare + subs.percentageShare + inm.percentageShare).toFixed(1)
+    );
+    assert.equal(sumPct, 100.0);
+  });
+
+  it("filters correctly by a specific selected month (e.g. 2026-07)", () => {
+    const { calculateTransactionAgeSegments } = require("./reporting");
+    const result = calculateTransactionAgeSegments(ageTransactions, "2026-07");
+
+    assert.equal(result.selectedMonth, "2026-07");
+    assert.equal(result.totalFilteredCount, 3);
+    assert.equal(result.totalFilteredAmountGTQ, 1809.0); // 1200 + 109 + 500
+
+    const cuotas = result.segments.find((s: any) => s.id === "cuotas");
+    const subs = result.segments.find((s: any) => s.id === "suscripciones");
+    const inm = result.segments.find((s: any) => s.id === "inmediatas");
+
+    assert.equal(cuotas.totalAmountGTQ, 1200.0);
+    assert.equal(cuotas.transactionCount, 1);
+
+    assert.equal(subs.totalAmountGTQ, 109.0);
+    assert.equal(subs.transactionCount, 1);
+
+    assert.equal(inm.totalAmountGTQ, 500.0);
+    assert.equal(inm.transactionCount, 1);
+
+    const sumPct = Number(
+      (cuotas.percentageShare + subs.percentageShare + inm.percentageShare).toFixed(1)
+    );
+    assert.equal(sumPct, 100.0);
+  });
+
+  it("lists available months chronologically with Spanish labels", () => {
+    const { calculateTransactionAgeSegments } = require("./reporting");
+    const result = calculateTransactionAgeSegments(ageTransactions);
+
+    assert.equal(result.availableMonths.length, 2);
+    assert.equal(result.availableMonths[0].monthKey, "2026-07");
+    assert.equal(result.availableMonths[0].monthLabel, "Jul 2026");
+    assert.equal(result.availableMonths[1].monthKey, "2026-09");
+    assert.equal(result.availableMonths[1].monthLabel, "Sep 2026");
+  });
+});
+
+
 
 

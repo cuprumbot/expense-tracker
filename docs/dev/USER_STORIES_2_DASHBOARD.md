@@ -186,56 +186,56 @@ It details the transition from the initial reporting cards to a comprehensive, f
 
 ## Phase 18: Panel 4 - Decision Age & Installment Financing Analysis (Transaction Age)
 
-### [ ] US-037: Installment Financing Category in Merchant Catalog & Classifier Extension
+### [x] US-037: Installment Financing Category in Merchant Catalog & Classifier Extension
 - **As a** user paying off past purchases through credit installments,
 - **I want** the system to recognize Visacuotas, Mastercuotas, and extrafinanciamiento transactions automatically,
 - **So that** payments for past purchasing decisions are categorized separately from my current-month discretionary spending.
 - **Split-Brain Boundary:** 100% Local (Catalog extension and deterministic keyword matching).
 - **Acceptance Criteria:**
-  - [ ] Adds a new official category to `src/data/merchant-catalog.json`:
+  - [x] Adds a new official category to `src/data/merchant-catalog.json`:
     - Name: `"Visacuotas y Financiamiento"`
     - Color: Sky Blue / Cyan (`#0284c7` or `#0ea5e9`)
     - Description: "Pagos a plazos, cuotas y extrafinanciamiento de decisiones de compra pasadas."
-  - [ ] Populates the category with comprehensive Guatemalan financing keywords:
+  - [x] Populates the category with comprehensive Guatemalan financing keywords:
     - `visacuota`, `visa cuota`, `mastercuota`, `master cuota`, `cuota`, `extrafinanciamiento`, `pago en cuotas`, `cuotas sin intereses`, `credicuota`, `financiamiento`, `pago a plazos`, `cuota no.`, `plan cuotas`.
-  - [ ] Updates `TransactionCategory` types and ensures local classifier assigns this category deterministically.
-  - [ ] Unit tests verify that sample transaction lines containing installment keywords are classified as `"Visacuotas y Financiamiento"` locally with zero LLM queries.
+  - [x] Updates `TransactionCategory` types and ensures local classifier assigns this category deterministically.
+  - [x] Unit tests verify that sample transaction lines containing installment keywords are classified as `"Visacuotas y Financiamiento"` locally with zero LLM queries.
 
-### [ ] US-038: Three-Segment Transaction Age Aggregator with Month Filtering
+### [x] US-038: Three-Segment Transaction Age Aggregator with Month Filtering
 - **As a** developer,
 - **I want** an analytics engine that categorizes spending into three specific decision-age buckets with multi-month filtering,
 - **So that** the pie chart accurately illustrates when the user's spending commitments originated.
 - **Split-Brain Boundary:** 100% Local (Pure TypeScript aggregation logic).
 - **Acceptance Criteria:**
-  - [ ] Implements aggregation function `calculateTransactionAgeSegments(transactions: Transaction[], selectedMonth?: string)`:
-  - [ ] Partitions all expenses into exactly three canonical buckets:
+  - [x] Implements aggregation function `calculateTransactionAgeSegments(transactions: Transaction[], selectedMonth?: string)`:
+  - [x] Partitions all expenses into exactly three canonical buckets:
     1. **Cuotas y Financiamiento:** Transactions in the `"Visacuotas y Financiamiento"` category (decisions made months/years prior).
     2. **Suscripciones y Servicios Recurrentes:** Transactions tagged with `isSubscription: true` or category `"Suscripciones"` (standing monthly commitments).
     3. **Compras Inmediatas:** All other transactions made in the current period (immediate discretionary and essential purchases).
-  - [ ] Supports an optional `selectedMonth` filter argument (`"all"` or `"YYYY-MM"`) allowing calculations for all uploaded statements or for a single month.
-  - [ ] Returns totals in Quetzales, percentage distribution, and transaction counts for all 3 segments.
-  - [ ] Unit tests in `src/lib/reporting.test.ts` verify segment totals sum to 100% of the filtered spending.
+  - [x] Supports an optional `selectedMonth` filter argument (`"all"` or `"YYYY-MM"`) allowing calculations for all uploaded statements or for a single month.
+  - [x] Returns totals in Quetzales, percentage distribution, and transaction counts for all 3 segments.
+  - [x] Unit tests in `src/lib/reporting.test.ts` verify segment totals sum to 100% of the filtered spending.
 
-### [ ] US-039: Transaction Age Donut / Pie Chart & Interactive Breakdown
+### [x] US-039: Transaction Age Donut / Pie Chart & Interactive Breakdown
 - **As a** user viewing "Transaction Age",
 - **I want to** see a clean Donut/Pie chart contrasting past installment commitments, recurring subscriptions, and immediate purchases with a month filter,
 - **So that** I understand how much of my paycheck is already committed to past choices versus fresh monthly spending.
 - **Split-Brain Boundary:** 100% Local (Native SVG Donut Chart and local filtering).
 - **Acceptance Criteria:**
-  - [ ] Panel 4 renders an interactive Donut Chart titled "Antigüedad del Gasto" (Panel 4: Compromisos vs Compras Inmediatas).
-  - [ ] Top control features a month filter dropdown in Spanish:
+  - [x] Panel 4 renders an interactive Donut Chart titled "Antigüedad del Gasto" (Panel 4: Compromisos vs Compras Inmediatas).
+  - [x] Top control features a month filter dropdown in Spanish:
     - "Todos los meses cargados" (default).
     - Individual options for each uploaded month (e.g., "Mayo 2026", "Junio 2026").
-  - [ ] Renders 3 SVG donut slices with distinct colors:
+  - [x] Renders 3 SVG donut slices with distinct colors:
     - Visacuotas / Financiamiento: `#0284c7` (Sky Blue)
     - Suscripciones Recurrentes: `#6366f1` (Indigo)
     - Compras Inmediatas: `#10b981` (Emerald)
-  - [ ] Center of the donut displays the total expenditure for the selected period in Quetzales (`Q XX,XXX.XX`).
-  - [ ] Legend card alongside the chart displays:
+  - [x] Center of the donut displays the total expenditure for the selected period in Quetzales (`Q XX,XXX.XX`).
+  - [x] Legend card alongside the chart displays:
     - Segment name and colored badge.
     - Total amount in Quetzales.
     - Percentage of total spending.
-  - [ ] Hovering over any slice highlights the segment and displays a tooltip with details and purchase count.
+  - [x] Hovering over any slice highlights the segment and displays a tooltip with details and purchase count.
 
 ---
 

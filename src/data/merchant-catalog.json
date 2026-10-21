@@ -382,6 +382,31 @@
         "maquillaje",
         "corte de cabello"
       ]
+    },
+    {
+      "id": "visacuotas_financiamiento",
+      "name": "Visacuotas y Financiamiento",
+      "description": "Pagos a plazos, cuotas y extrafinanciamiento de decisiones de compra pasadas.",
+      "color": "sky",
+      "keywords": [
+        "visacuota",
+        "visa cuota",
+        "mastercuota",
+        "master cuota",
+        "cuota",
+        "cuotas",
+        "extrafinanciamiento",
+        "extra financiamiento",
+        "pago en cuotas",
+        "cuotas sin intereses",
+        "credicuota",
+        "financiamiento",
+        "pago a plazos",
+        "cuota no",
+        "plan cuotas",
+        "visacuotas",
+        "mastercuotas"
+      ]
     }
   ],
   "defaultCategory": "Pendiente",
