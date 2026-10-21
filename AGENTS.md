@@ -25,6 +25,7 @@
 - After each feature has been completed, reviewed and aproved by the user, stage and commit your changes (`git add .` and `git commit`).
 - Use the Conventional Commits specification for the message (e.g., `feat(auth): add Next.js route handler`, `fix(ui): correct tailwind padding`).
 - Summarize the commit based on the specific user story completed and the actual diff of the code.
+- When the user instructs you to use multiple branches for development, only perform what you are instructed to. Do not auto merge branches without the user's explicit instruction.
 
 ## When finishing a task
 - After fully finishing a task (including all the required reviewing) execute `[console]::beep(800, 800)` to notify the user.

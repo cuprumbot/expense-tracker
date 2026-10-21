@@ -159,31 +159,16 @@ export function DashboardView({
           </div>
         </section>
 
-        {/* Panel 2: Concentración de Comercios */}
+        {/* Panel 2: ¿A dónde va mi dinero? */}
         <section
           id="panel-vendor-concentration"
-          aria-label="Panel 2: Concentración de Comercios"
+          aria-label="¿A dónde va mi dinero?"
           className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs flex flex-col justify-between"
         >
           <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-850">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                <Icons.Building2 className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-3xs font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                    Panel 2
-                  </span>
-                  <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                    Concentración de Comercios
-                  </h2>
-                </div>
-                <p className="text-2xs text-zinc-500 dark:text-zinc-400">
-                  ¿A dónde se va mi dinero? · Principales comercios por monto y frecuencia.
-                </p>
-              </div>
-            </div>
+            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              ¿A dónde va mi dinero?
+            </h2>
           </div>
 
           {/* Panel 2 Body / Interactive Dual-Metric Bar Chart */}
