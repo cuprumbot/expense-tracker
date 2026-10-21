@@ -20,12 +20,22 @@ La aplicación implementa una arquitectura **Split-Brain (Cerebro Dividido)**: t
 * **Clasificación Inteligente y Adaptativa**:
   * Cruza las transacciones con un **catálogo local de 11 categorías de comercios de Guatemala** (`merchant-catalog.json`), reconociendo de inmediato supermercados, restaurantes, gasolineras, servicios básicos, salud, hogar, educación, mascotas y suscripciones.
   * Si quedan más de 10 gastos sin categorizar, consulta a Gemini Pro para sugerir categorías. Si son 10 o menos, evita llamadas innecesarias para ahorrar costos y permite clasificación manual.
+* **Dashboard Analítico Financiero (Cuadrícula 2x2)**:
+  * **Panel 1: Tendencia Histórica por Categoría**: Gráfico de líneas SVG con curvas Bézier cúbicas, filtrado interactivo por píldoras de categoría, escala vertical adaptativa, áreas de hover estables y etiquetas de fecha multilínea optimizadas.
+  * **Panel 2: ¿A dónde va mi dinero?**: Gráfico de barras horizontales de los 5 comercios principales con selector dual: por volumen total gastado (Q) o por frecuencia de visitas con ticket promedio.
+  * **Panel 3: Patrones de Consumo**: Gráfico de barras temporales con alternancia entre 7 días de la semana y 31 días del mes, con heurísticas estadísticas ($\mu + 1.75\sigma$) para detección de consumos atípicos.
+  * **Panel 4: Antigüedad del Gasto**: Gráfico de dona SVG interactivo que particiona los consumos en 3 segmentos de decisión (*Visacuotas y Financiamiento*, *Suscripciones Recurrentes* y *Compras Inmediatas*), con selector de mes.
+* **Drawer Lateral de Movimientos (Sliding Drawer)**:
+  * Panel lateral deslizante que permite buscar, filtrar por categoría y editar o categorizar transacciones sin salir del dashboard analítico, actualizando las métricas en tiempo real.
+* **Experiencia de Usuario Moderna**:
+  * **Tema Claro y Oscuro**: Selector de tema (`ThemeToggle`) persistente en `localStorage`, inicializado en tema claro por defecto.
+  * **Transición Directa**: Acceso inmediato al dashboard financiero sin pantallas intermedias de bloqueo.
+  * **Chips Reactivos**: Indicador de clasificación con IA (`#chip-classifying-expenses`) y chip de atención animado (`animate-pulse`) cuando restan más de 10 transacciones por categorizar.
+  * **Notificaciones Flotantes (Toasts)**: Avisos no intrusivos en la esquina inferior para duplicados, confirmación de lotes y clasificación asistida con auto-cierre tras 7 segundos.
 * **Detección Automática de Suscripciones**:
   * Detecta cobros periódicos (Netflix, Spotify, etc.), calcula el compromiso mensual en Quetzales y alerta al usuario sobre servicios activos.
 * **Gestión, Filtrado y Personalización Completa**:
-  * Tabla interactiva con búsqueda en tiempo real, filtros por categoría y por moneda (Todas, Solo GTQ, Convertidas de USD con badges explicativos), edición de montos y fechas, asignación masiva, borrado de movimientos y creación de categorías personalizadas con colores propios.
-* **Panel de Estadísticas y Reportes**:
-  * Visualización de distribución de gastos por categoría, porcentajes del presupuesto total y comparativas financieras.
+  * Búsqueda en tiempo real, filtros por categoría y por moneda (Todas, Solo GTQ, Convertidas de USD con badges explicativos), edición de montos y fechas, asignación masiva, borrado de movimientos y creación de categorías personalizadas con colores propios.
 * **Sugerencias de Ahorro con IA**:
   * Envía **únicamente** totales consolidados por categoría y el listado de suscripciones para que Gemini Pro genere oportunidades inmediatas de ahorro, estrategias a largo plazo y diagnóstico por categoría adaptadas a Guatemala.
 * **Continuidad de Sesión y Reinicio Selectivo**:
@@ -43,33 +53,33 @@ flowchart TD
     B --> |Deduplicate| C[Discard exact duplicates]
     C --> |CSV| D[Identify columns & currency]
     C --> |PDF from known bank| E[Extract data & convert USD]
-    C --> |PDF from unknown bank| F[Anonymize]
+    C --> |PDF from unknown bank| F[Anonymize PII locally]
     F --> G[Extract using LLM]
-    D --> H[Structure data]
+    D --> H[Structure data JSON]
     E --> H
     G --> H
     H --> I[Classify expenses locally - 11 categories]
-    I --> |Unclassified <= 10| J[Customization]
-    I --> |Unclassified > 10| K[Classify using LLM]
+    I --> |Pending <= 10| J[Direct to 4-Panel Dashboard]
+    I --> |Pending > 10| K[Classify using LLM & Attention Chip]
     K --> J
-    J --> L[Data reporting]
-    L --> |Aggregated data| M[Get suggestions using LLM]
+    J --> L[Sliding Drawer: Inspection & Triage]
+    J --> M[AI Savings Suggestions]
 ```
 
 ### Descripción del Flujo
 
-1. **Carga y Deduplicación**: El usuario sube uno o múltiples estados de cuenta en PDF o archivos CSV. El sistema descarta duplicados exactos frente a compras previas.
+1. **Carga y Deduplicación**: El usuario sube uno o múltiples estados de cuenta en PDF o archivos CSV. El sistema descarta duplicados exactos frente a compras previas y alerta con un pop-up flotante prioritario.
 2. **Detección de Formato y Conversión Multi-Moneda**:
    * Si es **CSV**, se identifican las columnas y la divisa localmente.
    * Si es **PDF de banco conocido** (Banco G&T), se extraen los consumos en GTQ y se convierten a Quetzales los consumos en USD (7.85) de forma local y determinista.
    * Si es **PDF de banco no soportado**, se ejecuta la anonimización local de PII, el usuario confirma el texto censurado y Gemini Pro extrae las transacciones.
 3. **Estructuración**: Los movimientos se estandarizan en un objeto JSON en memoria; a partir de este punto, el archivo original no se vuelve a utilizar.
 4. **Clasificación Local**: Se categorizan los gastos usando el catálogo de 11 categorías de comercios de Guatemala.
-5. **Evaluación de Pendientes**:
-   * Si quedan `<= 10` gastos sin clasificar, se pasa directo a la personalización manual (ahorro de llamadas de IA).
-   * Si quedan `> 10` gastos sin clasificar, Gemini Pro clasifica los pendientes de forma asistida.
-6. **Revisión y Personalización**: El usuario revisa, ajusta filtros (categoría, moneda), o añade categorías personalizadas.
-7. **Reportes y Sugerencias**: Se generan gráficos y métricas consolidadas. Opcionalmente, se envían únicamente los totales agregados al LLM para obtener recomendaciones de ahorro.
+5. **Evaluación de Pendientes y Navegación Directa**:
+   * El usuario pasa inmediatamente al **Dashboard Financiero de 4 paneles**.
+   * Si restan `> 10` gastos pendientes, se muestra el chip de clasificación con IA y se ejecuta en segundo plano. Si quedan pendientes tras clasificar, el chip se anima sutilmente para llamar la atención.
+6. **Inspección en Drawer Lateral**: El usuario puede desplegar el sliding drawer en cualquier momento para inspeccionar la tabla de movimientos, editar registros o añadir categorías sin abandonar los gráficos.
+7. **Sugerencias de Ahorro**: Opcionalmente, se envían únicamente los totales agregados y suscripciones a Gemini Pro para obtener recomendaciones de ahorro.
 
 ---
 
@@ -105,8 +115,11 @@ GEMINI_API_KEY=tu_clave_de_gemini_aqui
 # 4. Iniciar el servidor de desarrollo
 npm run dev
 
-# Opcional. Ejecutar la suite de pruebas unitarias
+# 5. Ejecutar la suite de pruebas unitarias (131 pruebas)
 npm test
+
+# 6. Ejecutar la suite de pruebas E2E con Playwright
+npm run test:e2e
 ```
 
 Abre tu navegador en [http://localhost:3000](http://localhost:3000).
@@ -117,28 +130,31 @@ Abre tu navegador en [http://localhost:3000](http://localhost:3000).
 
 ## 4. Índice de Documentación del Proyecto
 
-La documentación detallada se encuentra organizada en la carpeta [`docs/`](docs/) para facilitar su lectura y navegación en GitHub:
+La documentación detallada se encuentra organizada en la carpeta [`docs/`](docs/) y archivos especializados:
 
-1. **[Guía de Instalación, Configuración y Ejecución](docs/instalacion-y-ejecucion.md)**  
+1. **[Implementación del Dashboard Financiero](DASHBOARD_IMPLEMENTATION.md)**  
+   *Detalle técnico de la arquitectura de 4 paneles SVG (US-029 a US-040), sliding drawer, motor de series de tiempo, atípicos estadísticos y segmentación de antigüedad.*
+
+2. **[Guía de Instalación, Configuración y Ejecución](docs/instalacion-y-ejecucion.md)**  
    *Requisitos previos, configuración de variables de entorno, comandos de compilación, ejecución y despliegue en Vercel.*
 
-2. **[Estructura del Proyecto](docs/estructura-del-proyecto.md)**  
+3. **[Estructura del Proyecto](docs/estructura-del-proyecto.md)**  
    *Árbol completo de directorios, capas de la aplicación (App Router, componentes, librerías, catálogos) y responsabilidades de cada módulo.*
 
-3. **[Arquitectura Split-Brain (Cerebro Dividido)](docs/arquitectura-split-brain.md)**  
+4. **[Arquitectura Split-Brain (Cerebro Dividido)](docs/arquitectura-split-brain.md)**  
    *Explicación conceptual de la arquitectura, tablas comparativas de procesamiento local vs. LLM externo y las 4 razones de diseño: Privacidad, Costo, Latencia y Completitud.*
 
-4. **[Herramientas y Arquitectura Técnica](docs/herramientas-y-arquitectura.md)**  
+5. **[Herramientas y Arquitectura Técnica](docs/herramientas-y-arquitectura.md)**  
    *Tablas detalladas de responsabilidades (Navegador, Servidor Next.js, Gemini API), pila tecnológica completa y diagrama de arquitectura del sistema.*
 
-5. **[Uso del LLM Externo y Manejo de Fallos](docs/uso-del-llm-y-manejo-de-fallos.md)**  
+6. **[Uso del LLM Externo y Manejo de Fallos](docs/uso-del-llm-y-manejo-de-fallos.md)**  
    *Para qué se usa exactamente el LLM, estructura de payloads, cascada de modelos de fallback y cómo la aplicación continúa operando al 100% ante fallos de conexión o cuota.*
 
-6. **[Privacidad y Anonimización de Datos](docs/privacidad-y-anonimizacion.md)**  
+7. **[Privacidad y Anonimización de Datos](docs/privacidad-y-anonimizacion.md)**  
    *Filosofía de privacidad por diseño, fragmentos de código de expresiones regulares, heurística de detección de titular, validación estricta de servidor y censura interactiva.*
 
-7. **[Pruebas Unitarias y Cobertura](docs/pruebas-unitarias.md)**  
-   *Cómo ejecutar las pruebas con Node.js Test Runner y desglose exhaustivo de los 14 archivos de prueba (26 suites, 117 pruebas unitarias).*
+8. **[Pruebas Unitarias y E2E](docs/pruebas-unitarias.md)**  
+   *Cómo ejecutar las pruebas con Node.js Test Runner (31 suites, 131 pruebas unitarias) y automatización End-to-End con Playwright.*
 
 ---
 
@@ -151,5 +167,6 @@ La documentación detallada se encuentra organizada en la carpeta [`docs/`](docs
 * **Inteligencia Artificial**: [Google Gen AI SDK (`@google/genai`)](https://www.npmjs.com/package/@google/genai)
 * **Procesamiento de Documentos**: [pdf-parse](https://www.npmjs.com/package/pdf-parse) y [PapaParse](https://www.papaparse.com/)
 * **Iconografía**: [Lucide React](https://lucide.dev/)
-* **Testing**: Node.js Test Runner con [tsx](https://github.com/privatenumber/tsx)
+* **Testing Unitario**: Node.js Test Runner nativo con [tsx](https://github.com/privatenumber/tsx)
+* **Testing E2E**: [Playwright](https://playwright.dev/)
 * **Hosting**: [Vercel](https://vercel.com/)

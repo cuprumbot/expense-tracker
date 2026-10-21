@@ -1,16 +1,16 @@
-# Pruebas Unitarias y Cobertura
+# Pruebas Unitarias y Automatización E2E
 
-La confiabilidad de **Control de Gastos (Expense Tracker)** está respaldada por una completa suite de pruebas unitarias automatizadas que verifican la integridad de cada módulo, parser, validador de seguridad y componente de la arquitectura Split-Brain.
+La confiabilidad de **Control de Gastos (Expense Tracker)** está respaldada por una completa suite de pruebas unitarias automatizadas que verifican la integridad de cada módulo, parser, validador de seguridad y componente de la arquitectura Split-Brain, complementada con pruebas de extremo a extremo (E2E) con Playwright.
 
 ---
 
-## 1. Cómo Ejecutar las Pruebas
+## 1. Cómo Ejecutar las Pruebas Unitarias
 
 El proyecto utiliza el **Node.js Test Runner nativo** (`node:test` y `node:assert`) junto con `tsx` para ejecutar los archivos TypeScript directamente a máxima velocidad sin necesidad de transpilaciones lentas ni frameworks pesados de terceros.
 
 ### Comando Estándar
 
-Para ejecutar toda la suite de pruebas del proyecto:
+Para ejecutar toda la suite de pruebas unitarias del proyecto:
 
 ```bash
 npm test
@@ -32,16 +32,19 @@ node --import tsx --test src/lib/anonymizer.test.ts
 
 # Ejemplo: Probar el parser de PDF y estados de cuenta G&T
 node --import tsx --test src/lib/pdf-parser.test.ts
+
+# Ejemplo: Probar los cálculos avanzados de analítica y series de tiempo
+node --import tsx --test src/lib/reporting.test.ts
 ```
 
 ### Resultados de la Suite
 
-La suite completa consta de **14 archivos de prueba**, **26 suites temáticas** y **117 pruebas unitarias**, ejecutándose en aproximadamente 2.5 segundos:
+La suite completa consta de **14 archivos de prueba**, **31 suites temáticas** y **131 pruebas unitarias**, ejecutándose en aproximadamente 2.9 segundos:
 
 ```text
-# tests 117
-# suites 26
-# pass 117
+# tests 131
+# suites 31
+# pass 131
 # fail 0
 # cancelled 0
 # skipped 0
@@ -92,10 +95,11 @@ A continuación se detalla cada uno de los archivos de prueba y los escenarios c
 * **Palabras personalizadas**: Aplica redacciones de términos específicos ingresados por el usuario como `[DATO_REDACTADO]`.
 
 ### 2.6. Clasificación Local de Comercios (`src/lib/expense-classifier.test.ts`)
-* **Emparejamiento con catálogo (11 categorías)**: Asocia descripciones comerciales con sus categorías en `merchant-catalog.json` (ej. `"Supermercados La Torre"` -> `Supermercado`, `"Gasolinera Shell"` -> `Transporte y Combustible`, `"Cruz Verde"` -> `Salud y Farmacia`, `"Cemaco"` -> `Hogar y Mantenimiento`).
+* **Emparejamiento con catálogo (12 categorías)**: Asocia descripciones comerciales con sus categorías en `merchant-catalog.json` (ej. `"Supermercados La Torre"` -> `Supermercado`, `"Gasolinera Shell"` -> `Transporte y Combustible`, `"Cruz Verde"` -> `Salud y Farmacia`, `"Cemaco"` -> `Hogar y Mantenimiento`).
 * **Normalización de texto**: Asegura coincidencia insensible a mayúsculas, tildes y caracteres de puntuación.
 * **Reglas de desempate y puntuación**: Asigna mayor prioridad a palabras clave completas y prefijos de marca sobre coincidencias parciales.
 * **Detección de suscripciones**: Marca automáticamente consumos recurrentes (Netflix, Spotify) e integra el cálculo del compromiso mensual acumulado.
+* **Clasificación local de Visacuotas y Financiamiento (US-037)**: Valida que descripciones con palabras clave guatemaltecas de cuotas (`visacuota`, `mastercuota`, `cuotas sin intereses`, `extrafinanciamiento`, `pago a plazos`, `cuota no.`) se asignen 100% de forma determinista a la categoría `"Visacuotas y Financiamiento"` sin invocar al LLM.
 
 ### 2.7. Edición y Manipulación de Gastos (`src/lib/expense-review.test.ts`)
 * **Edición manual de transacciones**: Valida la actualización de descripciones, fechas y montos recalculando las sumas totales.
@@ -113,11 +117,15 @@ A continuación se detalla cada uno de los archivos de prueba y los escenarios c
 * **Formateo del system prompt**: Certifica que el prompt ordene la extracción exclusiva de gastos en Quetzales y formato de fecha `YYYY-MM-DD`.
 * **Parseo y normalización**: Valida la transformación de la salida del modelo a objetos `Transaction` tipados.
 
-### 2.10. Reportes y Métricas (`src/lib/reporting.test.ts`)
+### 2.10. Reportes, Analítica Avanzada y Paneles del Dashboard (`src/lib/reporting.test.ts`)
 * **Distribución por categorías**: Calcula el total gastado por categoría y su porcentaje relativo sobre el gasto total.
 * **Detección de estado pendiente**: Identifica cuándo existen gastos sin categorizar en el resumen.
 * **Filtrado combinado**: Comprueba el filtrado simultáneo por término de búsqueda y categoría seleccionada de forma insensible a mayúsculas.
 * **Filtrado por divisa**: Valida el filtrado preciso por moneda (`all`, `GTQ`, `USD`), permitiendo aislar transacciones convertidas de dólares frente a moneda local.
+* **Series de tiempo multimes por categoría (US-031)**: Valida la agregación cronológica en formato `YYYY-MM`, relleno determinista de ceros (`0.00`) para meses sin actividad y asociación dinámica de colores de categorías oficiales y personalizadas.
+* **Normalización y ranking de comercios (US-033)**: Valida la limpieza exhaustiva de prefijos bancarios (`POS`, `COMPRA EN`, `ESTBL`, `GTM`), números de terminal y sufijos de sucursal, calculando ordenamientos por volumen de gasto en Quetzales y por frecuencia de visitas con ticket promedio.
+* **Patrones de consumo y detección de atípicos (US-035)**: Valida la agregación semanal (Lunes a Domingo con parsing UTC) y mensual (días 1 a 31), el cálculo de línea base ($\mu, \sigma$) y la identificación de anomalías con explicaciones detalladas en español.
+* **Segmentación de antigüedad del gasto (US-038)**: Valida la partición exacta en 3 segmentos canónicos (Cuotas y Financiamiento, Suscripciones, Compras Inmediatas) asegurando que los porcentajes sumen 100.0%, junto con el soporte de filtrado por mes seleccionado.
 
 ### 2.11. Asesor de Ahorro y Recomendaciones (`src/lib/savings-advisor.test.ts`)
 * **Construcción del payload agregado (`buildSavingsPayload`)**: Verifica que solo se incluyan totales agregados por categoría y el desglose de suscripciones recurrentes, excluyendo compras individuales.
@@ -127,8 +135,8 @@ A continuación se detalla cada uno de los archivos de prueba y los escenarios c
 ### 2.12. Persistencia en LocalStorage y Continuidad (`src/lib/storage.test.ts`)
 * **Guardado y recuperación de sesión**: Valida la serialización y deserialización correcta de `expense_tracker_session_v1`.
 * **Continuidad de sesión incremental**: Comprueba que nuevas transacciones cargadas se anexen preservando los movimientos existentes categorizados previamente.
-* **Reinicio de sesión selectivo**: Verifica que `clearStoredSessionOnly()` elimine los movimientos y transacciones de la sesión pero conserve intactas las categorías personalizadas del usuario.
-* **Reinicio de fábrica total**: Comprueba que al activar la opción de borrado completo (`wipeCategories: true`), se eliminen tanto la sesión como las categorías personalizadas.
+* **Reinicio de sesión selectivo (US-027)**: Verifica que `clearStoredSessionOnly()` elimine los movimientos y transacciones de la sesión pero conserve intactas las categorías personalizadas del usuario.
+* **Reinicio de fábrica total (US-027)**: Comprueba que al activar la opción de borrado completo (`wipeCategories: true`), se eliminen tanto la sesión como las categorías personalizadas.
 * **Resiliencia ante datos corruptos**: Comprueba que ante un JSON malformado o alterado manualmente en el navegador, la aplicación limpie la clave y se recupere limpiamente sin colapsar.
 * **Persistencia de categorías personalizadas**: Valida que las categorías creadas por el usuario persistan de forma independiente a los estados de cuenta.
 * **Límites de cuota de almacenamiento**: Simula excepciones de tipo `QuotaExceededError` verificando un manejo controlado con alertas informativas.
@@ -147,9 +155,34 @@ A continuación se detalla cada uno de los archivos de prueba y los escenarios c
 
 ---
 
+## 3. Pruebas de Extremo a Extremo con Playwright (`npm run test:e2e`)
+
+Para verificar que todos los componentes integrados operen a la perfección en un navegador real, el proyecto cuenta con una suite automatizada End-to-End en `e2e/expense-tracker.spec.ts`.
+
+### Cómo Ejecutar las Pruebas E2E
+
+```bash
+npm run test:e2e
+```
+
+### Escenarios Validados Desatendidamente
+
+1. **Gestión Autónoma del Servidor**: Comprueba la disponibilidad de `http://localhost:3000` y lanza el servidor de desarrollo en caso de no estar activo.
+2. **Reinicio Limpio de Sesión**: Ejecuta el modal de confirmación y borra datos residuales para garantizar aislamiento total entre corridas.
+3. **Carga y Deduplicación Multi-Archivo**: Carga en lote los estados de cuenta reales `demo/2026-09.pdf` y `demo/2026-07.pdf`.
+4. **Navegación Directa al Dashboard**: Verifica el ingreso inmediato a `DashboardView` sin bloqueos ni pantallas intermedias.
+5. **Panel 1 (Tendencias)**: Valida la renderización del SVG de curvas Bézier, presencia de ejes temporales y filtrado por píldoras.
+6. **Panel 2 (Comercios)**: Valida barras horizontales, conmutación entre orden por monto y por cantidad de compras, y tooltips.
+7. **Panel 3 (Patrones y Atípicos)**: Valida vista semanal (7 días), vista mensual (31 días), resaltado de barras atípicas y banner analítico.
+8. **Panel 4 (Antigüedad y Cuotas)**: Valida la dona SVG, monto en el centro en Quetzales, selector desplegable de mes y tarjetas de leyenda.
+9. **Sliding Drawer de Transacciones**: Abre el drawer con el botón de la cabecera, crea una categoría personalizada `"Testing"`, clasifica pendientes, prueba cierre con botón y con tecla `Escape`, y confirma la reactividad inmediata del dashboard.
+
+---
+
 ## Enlaces de Referencia
 
 * [Volver al README Principal](../README.md)
+* [Implementación del Dashboard Financiero](../DASHBOARD_IMPLEMENTATION.md)
 * [Instalación, Configuración y Ejecución](instalacion-y-ejecucion.md)
 * [Estructura del Proyecto](estructura-del-proyecto.md)
 * [Arquitectura Split-Brain](arquitectura-split-brain.md)

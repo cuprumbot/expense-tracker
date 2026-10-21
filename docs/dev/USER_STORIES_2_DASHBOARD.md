@@ -241,19 +241,19 @@ It details the transition from the initial reporting cards to a comprehensive, f
 
 ## Phase 19: Comprehensive Dashboard Integration, Responsiveness & Verification
 
-### [ ] US-040: Unified 4-Panel Dashboard Assembly & Landscape Tablet Layout
+### [x] US-040: Unified 4-Panel Dashboard Assembly & Landscape Tablet Layout
 - **As a** user accessing the application on a desktop computer or landscape-oriented tablet,
 - **I want** all four dashboard panels arranged in a balanced, cohesive layout fitting the entire screen,
 - **So that** I get an executive-level financial summary at a single glance with zero clutter.
 - **Split-Brain Boundary:** 100% Local (Client layout integration).
 - **Acceptance Criteria:**
-  - [ ] Assembles the four panels into a unified responsive layout:
+  - [x] Assembles the four panels into a unified responsive layout:
     - **Top Left (Panel 1):** Información Básica (Tendencia mensual por categoría - US-032).
     - **Top Right (Panel 2):** ¿A dónde se va mi dinero? (Comercios principales con selector de métrica - US-034).
     - **Bottom Left (Panel 3):** Patrones de Consumo (Día de semana / Día de mes y detección de anomalías - US-036).
     - **Bottom Right (Panel 4):** Antigüedad del Gasto (Donut chart de cuotas, suscripciones y compras inmediatas con filtro de mes - US-039).
-  - [ ] Desktop and landscape tablet layouts present a unified 2x2 grid that fits cleanly within the screen without forced page scrolling.
-  - [ ] Portrait tablet and mobile screens gracefully stack panels vertically with clean scroll snapping and responsive SVG viewBox scaling.
-  - [ ] The "Ver transacciones" action button remains easily accessible in the header at all times, opening the sliding drawer cleanly over the dashboard.
-  - [ ] `npm run build` succeeds with zero TypeScript or Turbopack errors.
-  - [ ] `npm test` passes all unit tests for monthly trends, vendor ranking, outlier heuristics, and transaction age segments.
+  - [x] Desktop and landscape tablet layouts present a unified 2x2 grid that fits cleanly within the screen without forced page scrolling.
+  - [x] Portrait tablet and mobile screens gracefully stack panels vertically with clean scroll snapping and responsive SVG viewBox scaling.
+  - [x] The "Ver transacciones" action button remains easily accessible in the header at all times, opening the sliding drawer cleanly over the dashboard.
+  - [x] `npm run build` succeeds with zero TypeScript or Turbopack errors.
+  - [x] `npm test` passes all unit tests for monthly trends, vendor ranking, outlier heuristics, and transaction age segments.

@@ -19,6 +19,8 @@ expense-tracker/
 │   ├── privacidad-y-anonimizacion.md
 │   ├── pruebas-unitarias.md
 │   └── uso-del-llm-y-manejo-de-fallos.md
+├── e2e/                          # Pruebas End-to-End automatizadas con Playwright
+│   └── expense-tracker.spec.ts   # Suite completa desatendida del flujo y dashboard
 ├── public/                       # Recursos estáticos servidos por Next.js
 ├── src/
 │   ├── app/                      # Next.js App Router (Páginas y Route Handlers)
@@ -37,22 +39,29 @@ expense-tracker/
 │   │   │       └── route.ts      # Generación de sugerencias de ahorro a partir de totales agregados
 │   │   ├── favicon.ico           # Icono de la aplicación
 │   │   ├── globals.css           # Estilos base y directivas de Tailwind CSS 4
-│   │   ├── layout.tsx            # Plantilla raíz HTML y metadatos
-│   │   └── page.tsx              # Página principal (Cliente), continuidad y orquestador
+│   │   ├── layout.tsx            # Plantilla raíz HTML, tema y metadatos
+│   │   └── page.tsx              # Página principal: orquestador cliente, toasts y flujo al dashboard
 │   ├── components/               # Componentes modulares de interfaz de usuario (React)
-│   │   ├── anonymization-modal.tsx   # Modal de revisión y censura interactiva de PII
-│   │   ├── batch-progress.tsx        # Indicador visual no intrusivo de procesamiento por lotes
-│   │   ├── batch-upload-modal.tsx    # Modal de gestión de cola y progreso para carga múltiple
-│   │   ├── column-mapping-modal.tsx  # Modal para asociar columnas en CSV ambiguos
-│   │   ├── custom-category-modal.tsx # Modal para creación de nuevas categorías
-│   │   ├── expense-dashboard.tsx     # Métricas agregadas, porcentajes y alertas
-│   │   ├── file-upload.tsx           # Área de carga arrastrar-y-soltar con validación
-│   │   ├── icons.tsx                 # Iconos SVG vectoriales basados en Lucide React
-│   │   ├── savings-suggestions.tsx   # Panel interactivo de sugerencias de ahorro
-│   │   ├── session-reset-modal.tsx   # Modal de confirmación para reinicio selectivo o de fábrica
-│   │   └── transaction-table.tsx     # Tabla de movimientos con filtros (categoría, moneda) y edición
+│   │   ├── anonymization-modal.tsx       # Modal de revisión y censura interactiva de PII
+│   │   ├── batch-progress.tsx            # Indicador visual no intrusivo de procesamiento por lotes
+│   │   ├── batch-upload-modal.tsx        # Modal de gestión de cola y progreso para carga múltiple
+│   │   ├── category-trend-chart.tsx      # Panel 1: Curvas Bézier SVG de tendencias mensuales por categoría
+│   │   ├── column-mapping-modal.tsx      # Modal para asociar columnas en CSV ambiguos
+│   │   ├── consumption-patterns-chart.tsx# Panel 3: Patrones por día semana/mes con detección de atípicos
+│   │   ├── custom-category-modal.tsx     # Modal para creación de nuevas categorías
+│   │   ├── dashboard-view.tsx            # Dashboard de 4 paneles SVG en cuadrícula 2x2 y cabecera
+│   │   ├── expense-dashboard.tsx         # [@deprecated] Métricas iniciales sustituidas por el dashboard
+│   │   ├── file-upload.tsx               # Área de carga arrastrar-y-soltar con validación
+│   │   ├── icons.tsx                     # Iconos SVG vectoriales basados en Lucide React
+│   │   ├── savings-suggestions.tsx       # [@deprecated] Panel interactivo de sugerencias de ahorro
+│   │   ├── session-reset-modal.tsx       # Modal de confirmación para reinicio selectivo o de fábrica
+│   │   ├── sliding-drawer.tsx            # Drawer lateral off-canvas para inspección de transacciones
+│   │   ├── theme-toggle.tsx              # Switcher de tema Claro/Oscuro con persistencia en localStorage
+│   │   ├── transaction-age-chart.tsx     # Panel 4: Dona SVG interactiva de 3 segmentos y filtro de mes
+│   │   ├── transaction-table.tsx         # Tabla de movimientos con filtros (categoría, moneda) y edición
+│   │   └── vendor-concentration-chart.tsx# Panel 2: Barras horizontales de comercios por monto y compras
 │   ├── data/
-│   │   └── merchant-catalog.json # Directorio de comercios (11 categorías) de Guatemala
+│   │   └── merchant-catalog.json # Directorio de comercios (12 categorías) de Guatemala
 │   ├── lib/                      # Lógica de negocio, parsers, validadores y clientes
 │   │   ├── anonymizer.ts             # Motor local de detección y sustitución de PII
 │   │   ├── anonymizer.test.ts        # Pruebas de anonimización
@@ -64,7 +73,7 @@ expense-tracker/
 │   │   ├── currency.test.ts          # Pruebas de conversión y formateo de moneda
 │   │   ├── deduplication.ts          # Detección y omisión de transacciones duplicadas
 │   │   ├── deduplication.test.ts     # Pruebas del motor de deduplicación
-│   │   ├── expense-classifier.ts     # Clasificador local por catálogo (11 cat.) y umbral (10)
+│   │   ├── expense-classifier.ts     # Clasificador local por catálogo (12 cat.) y umbral (10)
 │   │   ├── expense-classifier.test.ts # Pruebas del clasificador local
 │   │   ├── expense-review.test.ts    # Pruebas de edición y manipulación manual
 │   │   ├── file-validator.ts         # Validador de formatos permitidos (PDF/CSV)
@@ -75,8 +84,8 @@ expense-tracker/
 │   │   ├── llm-extractor.test.ts     # Pruebas del extractor LLM
 │   │   ├── pdf-parser.ts             # Parser local con pdf-parse, G&T y conversión de dólares
 │   │   ├── pdf-parser.test.ts        # Pruebas del parser PDF
-│   │   ├── reporting.ts              # Agregación de métricas, totales, porcentajes y filtros
-│   │   ├── reporting.test.ts         # Pruebas del motor de reportes
+│   │   ├── reporting.ts              # Agregación temporal multimes, rankings, atípicos y donas
+│   │   ├── reporting.test.ts         # Pruebas del motor de reportes y analítica avanzada
 │   │   ├── savings-advisor.ts        # Construcción de payload y análisis de ahorro
 │   │   ├── savings-advisor.test.ts   # Pruebas del asesor de ahorro
 │   │   ├── storage.ts                # Persistencia, continuidad de sesión y reinicio en localStorage
@@ -86,11 +95,14 @@ expense-tracker/
 ├── .env.example                  # Plantilla de variables de entorno
 ├── .gitignore                    # Reglas de exclusión para Git
 ├── AGENTS.md                     # Directrices y configuración del proyecto
+├── ARCHITECTURE_DIAGRAM.md       # Descripción arquitectónica de componentes y flujos
 ├── architecture-diagram.html     # Diagrama de arquitectura interactivo (HTML/SVG)
 ├── architecture-diagram.png      # Captura visual del diagrama de arquitectura
+├── DASHBOARD_IMPLEMENTATION.md   # Documento técnico de implementación del Dashboard (US-029 a US-040)
 ├── eslint.config.mjs             # Configuración de ESLint
 ├── next.config.ts                # Configuración de Next.js
 ├── package.json                  # Manifiesto de dependencias y scripts de npm
+├── playwright.config.ts          # Configuración de pruebas E2E con Playwright
 ├── README.md                     # Índice principal y resumen del proyecto
 └── tsconfig.json                 # Configuración del compilador de TypeScript
 ```
@@ -134,6 +146,13 @@ Todos los endpoints se ejecutan como **Route Handlers de Next.js** en el servido
 
 ### 2.2. Componentes de Interfaz (`src/components/`)
 
+* **`dashboard-view.tsx`**: Contenedor principal del Dashboard Financiero de 4 paneles SVG estructurado en una cuadrícula 2x2 responsiva (`grid-cols-1 lg:grid-cols-2`). Incluye la barra superior con el título `"Expense Tracker"`, switcher de tema Claro/Oscuro, botón para agregar más estados de cuenta, botón de reinicio de sesión y botón disparador para abrir el drawer de transacciones.
+* **`sliding-drawer.tsx`**: Drawer lateral deslizante off-canvas con transición CSS suave desde la derecha, telón de fondo semitransparente con desenfoque (`bg-black/40 backdrop-blur-sm`), soporte para tecla `Escape` y encapsulación completa de la tabla de movimientos (`TransactionTable`).
+* **`category-trend-chart.tsx`**: **Panel 1 del Dashboard (Tendencias por Categoría)**. Gráfico de líneas SVG nativo con curvas de interpolación Bézier cúbica continua, selector interactivo de categorías para aislar líneas, hit-targets circulares transparentes (`r=14`) para hover estable sin parpadeos, etiquetas de fecha en dos líneas (`Ene\n2026`) y tooltips de variación porcentual.
+* **`vendor-concentration-chart.tsx`**: **Panel 2 del Dashboard (Concentración de Comercios)**. Gráfico de barras horizontales con selector dual de métricas ("Mayor monto gastado (Q)" vs "Mayor cantidad de compras"), ranking de los 5 principales comercios guatemaltecos normalizados y desglose de ticket promedio.
+* **`consumption-patterns-chart.tsx`**: **Panel 3 del Dashboard (Patrones de Consumo)**. Gráfico de barras verticales con selector de vista semanal (7 días) vs mensual (31 días), cálculo de línea base estadística ($\mu, \sigma$), resaltado cromático de picos atípicos (`#f43f5e`) y banner analítico con explicaciones en español.
+* **`transaction-age-chart.tsx`**: **Panel 4 del Dashboard (Antigüedad del Gasto y Financiamiento)**. Gráfico de dona SVG interactivo que particiona los gastos en 3 segmentos de decisión: Visacuotas y Financiamiento, Suscripciones Recurrentes y Compras Inmediatas. Incluye selector desplegable por mes y tarjetas de desglose sincronizadas.
+* **`theme-toggle.tsx`**: Switcher accesible de tema Claro / Oscuro con modo claro por defecto, persistencia automática en `localStorage` (`theme`) y conmutación de clases Tailwind.
 * **`file-upload.tsx`**: Proporciona una zona de arrastrar y soltar archivos, permitiendo seleccionar o arrastrar uno o varios archivos simultáneamente (.pdf y .csv).
 * **`batch-upload-modal.tsx`**: Despliega la cola de procesamiento cuando se cargan múltiples archivos. Muestra la lista de archivos con su estado individual (`pending`, `processing`, `completed`, `error`) y una barra de progreso acumulada.
 * **`batch-progress.tsx`**: Barra de progreso compacta que informa visualmente el avance del procesamiento por lotes sin bloquear la pantalla del usuario.
@@ -142,22 +161,22 @@ Todos los endpoints se ejecutan como **Route Handlers de Next.js** en el servido
 * **`transaction-table.tsx`**: Tabla integral para visualizar y gestionar transacciones. Incluye buscador por texto, filtro por categoría, filtro por moneda (Todas, Solo GTQ, Convertidas de USD), badges indicadores de montos en dólares originales, cambio de categoría individual o masivo, edición de montos y fechas, marcado/desmarcado de suscripciones y eliminación de filas.
 * **`session-reset-modal.tsx`**: Modal de confirmación para reiniciar la sesión de trabajo. Permite borrar los movimientos acumulados conservando las categorías personalizadas del usuario, o marcar la casilla opcional para un restablecimiento de fábrica total.
 * **`custom-category-modal.tsx`**: Permite al usuario registrar nuevas categorías con nombre y color personalizado.
-* **`expense-dashboard.tsx`**: Panel analítico con tarjetas de métricas (gasto total, número de movimientos, gasto mensual en suscripciones), barras de distribución porcentual por categoría y alertas de suscripciones activas.
-* **`savings-suggestions.tsx`**: Panel que permite solicitar y desplegar sugerencias de ahorro generadas por IA, organizadas en oportunidades inmediatas, estrategias a largo plazo y análisis comparativo por categoría.
+* **`expense-dashboard.tsx`**: `[@deprecated]` Panel analítico con tarjetas de métricas iniciales, conservado para referencia histórica y reemplazado por `DashboardView`.
+* **`savings-suggestions.tsx`**: `[@deprecated]` Panel de sugerencias de ahorro de la primera iteración, conservado para referencia histórica.
 * **`icons.tsx`**: Biblioteca de iconos SVG vectoriales basados en Lucide React, garantizando una estética moderna sin emojis ni caracteres no estándares.
 
 ---
 
 ### 2.3. Módulos de Lógica de Negocio (`src/lib/`)
 
+* **`reporting.ts`**: Motor analítico local integral. Realiza los cálculos de agregación temporal multimes (`calculateMonthlyCategoryTrends`), normalización y ranking de comercios por volumen/frecuencia (`calculateTopVendors`), agregación semanal/mensual y detección de anomalías estadísticas (`calculateConsumptionPatterns`), y segmentación en 3 compromisos de antigüedad (`calculateTransactionAgeSegments`).
 * **`batch-processor.ts`**: Gestiona el ciclo de vida de la cola de procesamiento de archivos múltiples. Procesa cada documento en secuencia, captura errores aislados para no detener el lote y notifica al cliente del progreso en tiempo real.
 * **`deduplication.ts`**: Compara transacciones entrantes con las existentes en la sesión y dentro del mismo lote. Si una transacción coincide exactamente en fecha, descripción normalizada y monto, se descarta silenciosamente y se computa en el contador de duplicados descartados, protegiendo las compras legítimas no duplicadas.
 * **`anonymizer.ts`**: Motor central de privacidad. Ejecuta expresiones regulares y análisis heurístico para detectar y reemplazar nombres de titulares, direcciones, cuentas bancarias, IBAN, DPI, NIT, teléfonos y correos electrónicos con marcadores legibles (`[NOMBRE_REDACTADO]`, `[CUENTA_REDACTADA]`, etc.).
 * **`currency.ts`**: Formateo y análisis de montos en Quetzales guatemaltecos (`GTQ` / `Q`), conversión automática de dólares estadounidenses a Quetzales (`convertUSDtoGTQ`) mediante tasa configurable y formateo de etiquetas con moneda de origen.
 * **`csv-parser.ts`**: Lector de archivos CSV basado en PapaParse, con capacidad de deducción automática de columnas, detección de moneda original (USD/GTQ) y normalización de fechas guatemaltecas.
 * **`pdf-parser.ts`**: Parser de documentos PDF con `pdf-parse` y lógica especializada para Banco G&T Continental. Filtra automáticamente pagos de tarjeta, créditos y abonos, y extrae consumos tanto en Quetzales como en dólares convirtiéndolos al tipo de cambio configurado.
-* **`expense-classifier.ts`**: Clasificador determinista que cruza cada descripción de movimiento con un catálogo en memoria de 11 categorías de comercios guatemaltecos. Identifica automáticamente suscripciones digitales (Netflix, Spotify, etc.) y evalúa el umbral de pendientes (10).
-* **`reporting.ts`**: Realiza los cálculos de agregación por categoría, porcentajes del presupuesto total y filtros combinados (incluyendo filtros por tipo de divisa).
+* **`expense-classifier.ts`**: Clasificador determinista que cruza cada descripción de movimiento con el catálogo en memoria de 12 categorías de comercios guatemaltecos (incluyendo Visacuotas y Financiamiento). Identifica automáticamente suscripciones digitales (Netflix, Spotify, etc.) y evalúa el umbral de pendientes (10).
 * **`storage.ts`**: Administra la persistencia segura en `localStorage` (`expense_tracker_session_v1` y `expense_tracker_categories_v1`), soportando continuidad incremental de sesiones, recuperación ante datos corruptos y borrado selectivo preservando categorías personalizadas.
 * **`llm-extractor.ts`**: Construcción de prompts del sistema y usuario, validación de payloads y procesamiento de respuestas JSON para la extracción de transacciones con Gemini.
 * **`llm-classifier.ts`**: Lógica de integración con Gemini para clasificar transacciones pendientes mediante prompts estructurados y fallback de modelos.
@@ -168,13 +187,20 @@ Todos los endpoints se ejecutan como **Route Handlers de Next.js** en el servido
 
 ### 2.4. Datos y Catálogos (`src/data/`)
 
-* **`merchant-catalog.json`**: Base de conocimiento local con comercios populares en Guatemala agrupados en 11 categorías (Supermercado, Restaurantes y Cafés, Servicios Básicos, Transporte y Combustible, Salud y Farmacia, Entretenimiento y Compras, Suscripciones, Hogar y Mantenimiento, Educación y Librerías, Mascotas y Veterinaria, Cuidado Personal) con 15-50 palabras clave por categoría y definición de colores de interfaz.
+* **`merchant-catalog.json`**: Base de conocimiento local con comercios populares en Guatemala agrupados en 12 categorías: Supermercado, Restaurantes y Cafés, Servicios Básicos, Transporte y Combustible, Salud y Farmacia, Entretenimiento y Compras, Suscripciones, Hogar y Mantenimiento, Educación y Librerías, Mascotas y Veterinaria, Cuidado Personal, y **Visacuotas y Financiamiento**. Contiene de 15 a 50 palabras clave por categoría y paleta de colores oficial.
 
 ---
 
 ### 2.5. Definiciones de Tipos (`src/types/`)
 
-* **`transaction.ts`**: Contratos canónicos de TypeScript que garantizan consistencia en toda la aplicación: `Transaction`, `CSVParsingSummary`, `CSVColumnMapping`, `CustomCategory`, `BatchProcessingItem`, `BatchProgress`, `DeduplicationResult`, entre otros.
+* **`transaction.ts`**: Contratos canónicos de TypeScript que garantizan consistencia en toda la aplicación: `Transaction`, `CSVParsingSummary`, `CSVColumnMapping`, `CustomCategory`, `BatchProcessingItem`, `BatchProgress`, `DeduplicationResult`, `MonthlyCategoryTrend`, `VendorRanking`, `ConsumptionPatterns`, `TransactionAgeSegments`, entre otros.
+
+---
+
+### 2.6. Automatización de Pruebas End-to-End (`e2e/`)
+
+* **`e2e/expense-tracker.spec.ts`**: Suite completa de pruebas de extremo a extremo con Playwright. Levanta el entorno de prueba, limpia la sesión en el navegador, sube estados de cuenta PDF reales (`demo/2026-09.pdf` y `demo/2026-07.pdf`), verifica el paso directo al Dashboard, valida la interacción con los 4 paneles SVG y prueba la apertura, edición y cierre del Sliding Drawer de transacciones.
+* **`playwright.config.ts`**: Configuración de ejecución headless/headed, puertos del servidor local y reporter de pruebas.
 
 ---
 

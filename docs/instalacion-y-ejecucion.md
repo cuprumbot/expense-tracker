@@ -129,13 +129,21 @@ npm run lint
 
 ### Pruebas Unitarias
 
-Para ejecutar la suite completa de pruebas unitarias mediante el Node.js Test Runner:
+Para ejecutar la suite completa de pruebas unitarias (131 pruebas) mediante el Node.js Test Runner:
 
 ```bash
 npm test
 ```
 
-Para más detalles sobre los escenarios cubiertos y el funcionamiento de las pruebas, consulta la guía de [Pruebas Unitarias y Cobertura](pruebas-unitarias.md).
+### Pruebas End-to-End (E2E) con Playwright
+
+Para ejecutar la suite automatizada de pruebas de navegador con Playwright:
+
+```bash
+npm run test:e2e
+```
+
+Para más detalles sobre los escenarios cubiertos y el funcionamiento de las pruebas, consulta la guía de [Pruebas Unitarias y Automatización E2E](pruebas-unitarias.md).
 
 ---
 

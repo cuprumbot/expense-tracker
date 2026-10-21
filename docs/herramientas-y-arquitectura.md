@@ -22,7 +22,14 @@ El cliente se ejecuta en React 19 y orquesta toda la interacción del usuario si
 
 | Componente / Módulo del Cliente | Responsabilidad Técnica |
 | :--- | :--- |
-| **`src/app/page.tsx`** | Componente principal reactivo. Mantiene el estado global: lista acumulada de transacciones, continuidad de sesión, resumen de importación, categorías personalizadas, recomendaciones de ahorro, estado de modales y alertas. |
+| **`src/app/page.tsx`** | Componente principal reactivo. Mantiene el estado global: lista acumulada de transacciones, continuidad de sesión, resumen de importación, categorías personalizadas, recomendaciones de ahorro, estado de modales, contenedor de toasts y navegación directa al dashboard. |
+| **`dashboard-view.tsx`** | Vista de control financiero integrada. Organiza los 4 paneles analíticos en cuadrícula 2x2 responsiva (`grid-cols-1 lg:grid-cols-2`), cabecera con acciones de carga, reinicio, switcher de tema y botón de apertura del sliding drawer. |
+| **`sliding-drawer.tsx`** | Drawer lateral deslizante off-canvas (`z-50`) con backdrop desenfocado (`bg-black/40 backdrop-blur-sm`), soporte para tecla `Escape` y renderizado de la tabla completa de transacciones para triage sin perder de vista los gráficos. |
+| **`category-trend-chart.tsx`** | Panel 1: Tendencia de Gastos por Categoría. Curvas Bézier cúbicas SVG, escala adaptativa, hit-targets circulares transparentes (`r=14`) para hover sin saltos ni parpadeos, etiquetas de fecha en dos líneas (`Ene\n2026`) y selector de categorías interactivo. |
+| **`vendor-concentration-chart.tsx`** | Panel 2: Concentración de Comercios. Barras horizontales con ranking top 5 de comercios normalizados en Guatemala y alternancia entre monto total en Quetzales y frecuencia de visitas. |
+| **`consumption-patterns-chart.tsx`** | Panel 3: Patrones de Consumo. Barras verticales con selector de 7 días (semana) o 31 días (mes), detección estadística de anomalías ($\mu + 1.75\sigma$) resaltadas en color rosa/ámbar e insights analíticos en español. |
+| **`transaction-age-chart.tsx`** | Panel 4: Antigüedad del Gasto. Gráfico de dona SVG interactivo de 3 segmentos (Visacuotas, Suscripciones, Compras Inmediatas), selector desplegable de mes y tarjetas de leyenda sincronizadas. |
+| **`theme-toggle.tsx`** | Selector de tema Claro / Oscuro con modo claro por defecto, persistencia automática en `localStorage` (`theme`) y manipulación de clases Tailwind en la raíz `<html>`. |
 | **`file-validator.ts`** | Valida la extensión (`.pdf`, `.csv`), el tipo MIME y el tamaño del archivo antes de iniciar el procesamiento. |
 | **`batch-processor.ts`** | Orquestador de cola de carga múltiple (PDF y CSV). Procesa lotes de archivos de forma secuencial y ordenada reportando estado individual (`pending`, `processing`, `completed`, `error`) y progreso global. |
 | **`deduplication.ts`** | Motor de deduplicación de transacciones. Detecta y descarta automáticamente compras exactamente duplicadas (misma fecha, descripción idéntica y mismo monto) tanto dentro del lote como frente a la sesión activa, preservando coincidencias parciales legítimas y notificando al usuario. |
@@ -30,9 +37,10 @@ El cliente se ejecuta en React 19 y orquesta toda la interacción del usuario si
 | **`csv-parser.ts` (PapaParse)** | Procesa archivos CSV en memoria del navegador de forma instantánea. Detecta automáticamente columnas de fecha, descripción, monto y moneda; si existe ambigüedad, solicita confirmación al usuario mediante mapeo interactivo. |
 | **`anonymizer.ts`** | Aplica expresiones regulares y heurísticas para detectar y redactar información de identificación personal (PII): nombres, direcciones, cuentas, IBAN, DPI, NIT, teléfonos y correos. |
 | **`anonymization-modal.tsx`** | Renderiza una vista previa del texto extraído con las redacciones aplicadas, métricas de datos censurados y un campo para que el usuario añada palabras clave manuales adicionales. |
-| **`expense-classifier.ts`** | Compara descripciones de transacciones contra `merchant-catalog.json` (11 categorías de comercios guatemaltecos). Identifica suscripciones recurrentes y evalúa si los gastos pendientes superan el umbral configurado (10 por defecto). |
+| **`expense-classifier.ts`** | Compara descripciones de transacciones contra `merchant-catalog.json` (12 categorías de comercios guatemaltecos, incluyendo Visacuotas y Financiamiento). Identifica suscripciones recurrentes y evalúa si los gastos pendientes superan el umbral configurado (10 por defecto). |
 | **`transaction-table.tsx`** | Permite al usuario revisar, buscar, filtrar por categoría y por moneda (Todas, Solo GTQ, Convertidas de USD), editar montos/fechas, cambiar categorías de forma individual o masiva, marcar suscripciones y eliminar registros. |
-| **`expense-dashboard.tsx`** | Calcula y renderiza gráficos de distribución presupuestaria, porcentajes por categoría, comparativas de gastos y alertas de suscripciones. |
+| **`reporting.ts`** | Motor analítico local: calcula series de tiempo multimes con relleno de ceros, normalización de marcas/comercios, líneas base estadísticas de consumo semanal/mensual y segmentación de compromisos de antigüedad. |
+| **`expense-dashboard.tsx`** | `[@deprecated]` Panel analítico con tarjetas de métricas iniciales, conservado para compatibilidad y reemplazado por `DashboardView`. |
 | **`savings-advisor.ts` (Payload Builder)** | Construye el objeto JSON estrictamente agregado (totales por categoría y servicios recurrentes) para la solicitud de recomendaciones de ahorro. |
 | **`storage.ts` (Browser localStorage)** | Persiste y restaura la sesión activa (`expense_tracker_session_v1`) y las categorías personalizadas (`expense_tracker_categories_v1`) con continuidad incremental, detección de cuota, resiliencia ante datos corruptos y soporte para reinicio de sesión selectivo (conservando categorías personalizadas) o reinicio de fábrica. |
 
@@ -60,7 +68,7 @@ Bajo la arquitectura Split-Brain, el modelo en la nube jamás recibe archivos PD
 | Caso de Uso del LLM | Datos Exactos Enviados al Modelo | Datos Excluidos y Protegidos | Formato Esperado de Retorno |
 | :--- | :--- | :--- | :--- |
 | **1. Extracción de Bancos No Soportados** | Texto crudo del estado de cuenta con **todos los datos de identidad anonimizados** con marcadores:<br>• `[NOMBRE_REDACTADO]`<br>• `[CUENTA_REDACTADA]`<br>• `[DIRECCION_REDACTADA]`<br>• `[IDENTIFICACION_REDACTADA]`<br>• `[CONTACTO_REDACTADO]` | Archivo binario original, nombres reales del titular, números de cuenta bancaria o IBAN, DPI, NIT, teléfonos, direcciones físicas de residencia y correos. | Array JSON de transacciones válidas:<br>`[{"date": "YYYY-MM-DD", "description": "...", "amount": 0.00}]` |
-| **2. Clasificación de Gastos Pendientes** | • Lista de categorías válidas en español (11 categorías estándar más personalizadas).<br>• Array de movimientos pendientes conteniendo **únicamente**: `id`, `description` (sanitizada) y `amount` en Quetzales. Solo se envía si el número de pendientes supera el umbral (10). | Nombres del titular, números de cuenta, saldos bancarios, historial previo o cualquier identificador fuera de la transacción puntual. | Array JSON de categorías asignadas:<br>`[{"id": "...", "category": "...", "isSubscription": false}]` |
+| **2. Clasificación de Gastos Pendientes** | • Lista de categorías válidas en español (12 categorías estándar incluyendo Visacuotas, más personalizadas).<br>• Array de movimientos pendientes conteniendo **únicamente**: `id`, `description` (sanitizada) y `amount` en Quetzales. Solo se envía si el número de pendientes supera el umbral (10). | Nombres del titular, números de cuenta, saldos bancarios, historial previo o cualquier identificador fuera de la transacción puntual. | Array JSON de categorías asignadas:<br>`[{"id": "...", "category": "...", "isSubscription": false}]` |
 | **3. Recomendaciones de Ahorro** | • Total de gasto del período en Quetzales (`totalSpendGTQ`).<br>• Desglose consolidado por categoría (monto total y porcentaje).<br>• Lista de servicios de suscripción recurrentes identificados (`serviceName`, `monthlyAmountGTQ`, `chargeDate`). | Todas las transacciones individuales no recurrentes, estados de cuenta, nombres del titular, direcciones y datos bancarios. | Objeto JSON estructurado en español con oportunidades inmediatas, estrategias de ahorro y diagnóstico por categoría. |
 
 ---
@@ -70,14 +78,15 @@ Bajo la arquitectura Split-Brain, el modelo en la nube jamás recibe archivos PD
 | Tecnología / Herramienta | Versión | Rol en el Proyecto y Justificación |
 | :--- | :--- | :--- |
 | **Next.js** | `16.4.0` | Framework web full-stack con App Router. Permite ejecutar Route Handlers en Node.js que aíslan las credenciales de API del navegador del cliente y gestionan el procesamiento de archivos. |
-| **React** | `19.3.0` | Biblioteca de interfaz de usuario reactiva, permitiendo un manejo fluido del estado de la sesión, modales interactivos y renderizado en tiempo real. |
-| **TypeScript** | `5.x` | Tipado estático en todo el proyecto, garantizando contratos de datos sólidos (`Transaction`, `SavingsPayload`, etc.) y reduciendo errores en tiempo de ejecución. |
+| **React** | `19.3.0` | Biblioteca de interfaz de usuario reactiva, permitiendo un manejo fluido del estado de la sesión, modales interactivos, dashboard de 4 paneles SVG y drawer lateral. |
+| **TypeScript** | `5.x` | Tipado estático en todo el proyecto, garantizando contratos de datos sólidos (`Transaction`, `MonthlyCategoryTrend`, etc.) y reduciendo errores en tiempo de ejecución. |
 | **Tailwind CSS** | `4.x` | Sistema de diseño utilitario para construir una interfaz limpia, profesional, responsiva y adaptable a modo claro y oscuro sin CSS innecesario. |
 | **Google Gen AI SDK** (`@google/genai`) | `^2.28.0` | SDK oficial de Google para comunicación estructurada con Gemini Pro (`gemini-3.8-flash` y `gemini-2.5-flash`), permitiendo respuestas en formato JSON estricto. |
 | **pdf-parse** | `^2.4.5` | Motor local para extracción de texto a partir de búferes binarios de documentos PDF sin recurrir a dependencias nativas complejas. |
 | **PapaParse** | `^5.7.0` | Parser rápido y robusto de archivos CSV en el navegador, con detección automática de delimitadores, filas vacías y codificación. |
 | **Lucide React** | `^1.55.0` | Colección de iconos vectoriales SVG limpios y consistentes, manteniendo la regla de diseño de evitar emojis en la interfaz. |
 | **Node.js Test Runner + tsx** | `Node 22` / `tsx ^4.23` | Plataforma nativa de pruebas unitarias de alto rendimiento sin requerir configuración compleja de Jest o Vitest. |
+| **Playwright** | `^1.56.0` | Suite de pruebas End-to-End automatizadas para validación desatendida del flujo completo, carga de PDFs reales, reactividad del dashboard y drawer. |
 | **Vercel** | N/A | Plataforma de alojamiento y despliegue continuo (CI/CD) optimizada para el App Router de Next.js. |
 
 ---

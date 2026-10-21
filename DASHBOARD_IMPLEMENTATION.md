@@ -1,6 +1,6 @@
-# Implementación de Paneles del Dashboard Financiero (US-029 a US-039)
+# Implementación de Paneles del Dashboard Financiero (US-029 a US-040) y Optimizaciones UI/UX
 
-Este documento resume la arquitectura, algoritmos, componentes visuales SVG, gestión de ramas de Git y resultados de verificación de las Historias de Usuario **US-029 a US-039** del Gestor Financiero Personal (`SPEC.md` y `USER_STORIES_2_DASHBOARD.md`).
+Este documento resume la arquitectura, algoritmos, componentes visuales SVG, gestión de ramas de Git, optimizaciones de experiencia de usuario y resultados de verificación de las Historias de Usuario **US-029 a US-040** del Gestor Financiero Personal (`SPEC.md` y `USER_STORIES_2_DASHBOARD.md`).
 
 ---
 
@@ -21,6 +21,7 @@ Cada panel del dashboard se implementó en su rama temática correspondiente, co
 | `feature/panel-4-transaction-age` | **US-037** | Extensión del catálogo con categoría "Visacuotas y Financiamiento" | `a357157` |
 | `feature/panel-4-transaction-age` | **US-038** | Agregador de 3 segmentos de antigüedad de decisión con filtro por mes | `879402c` |
 | `feature/panel-4-transaction-age` | **US-039** | Gráfico de dona SVG interactivo, filtro mensual desplegable y desglose | `1f398b4` |
+| `master` | **US-040** | Ensamblaje Unificado del Dashboard 2x2, Drawer, Switcher de Tema y Toast Popups | `5633fed` |
 
 ---
 
@@ -135,3 +136,44 @@ El archivo de prueba `e2e/expense-tracker.spec.ts` ejecuta de forma 100% desaten
 8. **Verificación del Panel 4 (US-037, US-038 y US-039):** Valida el gráfico de dona SVG, total en Quetzales en el centro, selector de meses y las 3 tarjetas de leyenda (Cuotas, Suscripciones, Inmediatas).
 9. **Validación del Drawer Deslizante (US-030):** Abre el drawer, crea la categoría `"Testing"`, clasifica los pendientes restantes, prueba el cierre con botón y con tecla `Escape`, y verifica la reactividad del dashboard.
 10. **Finalización Controlada:** Detiene limpiamente el proceso de desarrollo de Next.js al terminar.
+
+---
+
+## 8. Mejoras de Usabilidad, Switcher de Tema y Notificaciones Flotantes (Commit `5633fed`)
+
+Tras la integración inicial de los cuatro paneles, se implementó una serie de mejoras críticas en la experiencia de usuario (UX) y el diseño visual (`frontend-design`):
+
+1. **Selector de Tema Claro / Oscuro (`ThemeToggle` en `src/components/theme-toggle.tsx`):**
+   - Configurado con tema **Claro** por defecto (`default: "light"`), satisfaciendo la preferencia de visualización estándar.
+   - Persistencia automática de la preferencia seleccionada en `localStorage` bajo la clave `theme`.
+   - Modificación dinámica de la clase `.dark` en el elemento raíz `<html>` con soporte para Tailwind CSS 4.
+   - Íconos SVG vectoriales (`Sun` y `Moon`) sin emojis ni caracteres externos.
+
+2. **Navegación Directa al Dashboard sin Bloqueos:**
+   - Se eliminó la pantalla intermedia de revisión que bloqueaba al usuario cuando existían $\ge 10$ gastos sin clasificar.
+   - El usuario ingresa inmediatamente al **Dashboard Financiero de 4 paneles** en cuanto los archivos terminan de parsearse.
+   - Si quedan gastos pendientes, se muestra un chip no intrusivo en la cabecera indicando que la IA está clasificando en segundo plano (`#llm-classifying-chip`).
+   - Si tras la clasificación automática aún persisten más de 10 pendientes, el chip añade una animación sutil de pulso (`animate-pulse`) para captar la atención del usuario sin interrumpir su navegación.
+   - Al hacer clic en el chip de pendientes, se abre automáticamente el **Sliding Drawer** con el filtro `"Solo pendientes"` preactivado para resolución rápida.
+
+3. **Notificaciones Toast Flotantes:**
+   - Se reemplazaron los paneles estáticos invasivos sobre la tabla de transacciones por un contenedor de toasts flotante en la esquina inferior derecha (`z-50`).
+   - Notificaciones implementadas:
+     - `#duplicate-transactions-popup`: Alerta detallada cuando se detectan transacciones repetidas en el archivo importado.
+     - `#batch-summary-popup`: Notificación de lote de archivos procesado con éxito y total de transacciones añadidas.
+     - `#llm-success-popup`: Confirmación del total de gastos clasificados por Gemini Pro.
+   - Temporizador de auto-cierre tras 7 segundos con botón manual de descarte (`x`) en cada notificación.
+   - **Prioridad de duplicados:** Si se detectan transacciones duplicadas que son omitidas, se suprime el popup de resumen de éxito estándar para evitar mensajes contradictorios.
+
+4. **Estabilización de Hover en Panel 1 (`CategoryTrendChart`):**
+   - Se resolvió el problema de parpadeo y desplazamiento involuntario del cursor al posarse sobre los puntos de datos de las curvas Bézier.
+   - Se incorporó un círculo de impacto transparente dedicado (`hit-target`, `r=14`, `fill="transparent"`, `pointer-events="all"`) superpuesto a cada punto visual (`r=4.5`), garantizando un área de interacción amplia y continua sin oscilaciones de coordenadas.
+
+5. **Etiquetas de Eje X en Dos Líneas en Panel 1:**
+   - Se separó el nombre del mes y el año en dos líneas independientes mediante elementos SVG `<tspan>` (`Ene` en línea superior, `2026` en línea inferior).
+   - Se ajustó el tamaño de fuente a `text-[9px]` con `fill="currentColor"`, eliminando el abarrotamiento visual y optimizando la legibilidad en pantallas compactas y tablets.
+
+6. **Compactación Vertical de Encabezados:**
+   - Se redujo el espaciado vertical (`py-2.5` / `py-3`) en las cabeceras tanto de la pantalla de bienvenida (`page.tsx`) como del dashboard (`dashboard-view.tsx`).
+   - Se eliminaron subtítulos innecesarios como `"Panel de Control Financiero"` y badges redundantes como `"Consolidado multicuenta"`, conservando una identidad visual limpia centrada en `"Expense Tracker"`.
+
