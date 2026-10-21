@@ -649,16 +649,22 @@ export function calculateConsumptionPatterns(
     }
   }
 
-  // Statistical Baseline for Day of Week (N = 7)
-  const dowMean = Number((dowTotals.reduce((a, b) => a + b, 0) / 7).toFixed(2));
+  // Statistical Baseline for Day of Week (N = active days with non-zero expenses)
+  const dowActiveDays = dowTotals.filter((amount) => amount > 0);
+  const dowMean =
+    dowActiveDays.length > 0
+      ? Number((dowActiveDays.reduce((a, b) => a + b, 0) / dowActiveDays.length).toFixed(2))
+      : 0;
   const dowVariance =
-    dowTotals.reduce((acc, val) => acc + Math.pow(val - dowMean, 2), 0) / 7;
+    dowActiveDays.length > 0
+      ? dowActiveDays.reduce((acc, val) => acc + Math.pow(val - dowMean, 2), 0) / dowActiveDays.length
+      : 0;
   const dowStdDev = Number(Math.sqrt(dowVariance).toFixed(2));
   const dowThreshold = dowMean + 1.75 * dowStdDev;
 
-  // Sorted values for median calculation
-  const sortedDow = [...dowTotals].sort((a, b) => a - b);
-  const dowMedian = sortedDow[3]; // Middle value of 7
+  // Sorted values for median calculation among active days
+  const sortedDow = [...dowActiveDays].sort((a, b) => a - b);
+  const dowMedian = sortedDow.length > 0 ? sortedDow[Math.floor(sortedDow.length / 2)] : 0;
 
   let dowPeak = 0;
   const dowItems: TemporalPatternItem[] = DAYS_OF_WEEK_DEF.map((def, idx) => {
@@ -668,6 +674,7 @@ export function calculateConsumptionPatterns(
       totalPeriodSpend > 0 ? Number(((amount / totalPeriodSpend) * 100).toFixed(1)) : 0;
 
     const isOutlier =
+      amount > 0 &&
       dowStdDev > 0 &&
       (amount > dowThreshold || (dowMedian > 0 && amount > 2.5 * dowMedian));
 
@@ -691,10 +698,16 @@ export function calculateConsumptionPatterns(
     };
   });
 
-  // Statistical Baseline for Day of Month (N = 31)
-  const domMean = Number((domTotals.reduce((a, b) => a + b, 0) / 31).toFixed(2));
+  // Statistical Baseline for Day of Month (N = active days with non-zero expenses)
+  const domActiveDays = domTotals.filter((amount) => amount > 0);
+  const domMean =
+    domActiveDays.length > 0
+      ? Number((domActiveDays.reduce((a, b) => a + b, 0) / domActiveDays.length).toFixed(2))
+      : 0;
   const domVariance =
-    domTotals.reduce((acc, val) => acc + Math.pow(val - domMean, 2), 0) / 31;
+    domActiveDays.length > 0
+      ? domActiveDays.reduce((acc, val) => acc + Math.pow(val - domMean, 2), 0) / domActiveDays.length
+      : 0;
   const domStdDev = Number(Math.sqrt(domVariance).toFixed(2));
   const domThreshold = domMean + 1.75 * domStdDev;
 
@@ -706,22 +719,26 @@ export function calculateConsumptionPatterns(
     const percentage =
       totalPeriodSpend > 0 ? Number(((amount / totalPeriodSpend) * 100).toFixed(1)) : 0;
 
-    // Cross-month anomaly detection: check if a specific month spiked heavily on this day
-    const monthsForThisDay = domMonthMap[dayNum] ? Object.values(domMonthMap[dayNum]) : [];
-    let hasCrossMonthSpike = false;
-    if (monthsForThisDay.length >= 2) {
-      const maxMonthAmount = Math.max(...monthsForThisDay);
-      const otherMonthAmounts = monthsForThisDay.filter((a) => a !== maxMonthAmount);
-      const otherAvg =
-        otherMonthAmounts.length > 0
-          ? otherMonthAmounts.reduce((a, b) => a + b, 0) / otherMonthAmounts.length
-          : 0;
-      if (otherAvg > 0 && maxMonthAmount > 3.0 * otherAvg) {
-        hasCrossMonthSpike = true;
-      }
-    }
+    // Cross-month anomaly detection (Rule 2 - disabled for now):
+    // const monthsForThisDay = domMonthMap[dayNum] ? Object.values(domMonthMap[dayNum]) : [];
+    // let hasCrossMonthSpike = false;
+    // if (monthsForThisDay.length >= 2) {
+    //   const maxMonthAmount = Math.max(...monthsForThisDay);
+    //   const otherMonthAmounts = monthsForThisDay.filter((a) => a !== maxMonthAmount);
+    //   const otherAvg =
+    //     otherMonthAmounts.length > 0
+    //       ? otherMonthAmounts.reduce((a, b) => a + b, 0) / otherMonthAmounts.length
+    //       : 0;
+    //   if (otherAvg > 0 && maxMonthAmount > 3.0 * otherAvg) {
+    //     hasCrossMonthSpike = true;
+    //   }
+    // }
 
-    const isOutlier = (domStdDev > 0 && amount > domThreshold) || hasCrossMonthSpike;
+    const isOutlier =
+      amount > 0 &&
+      domStdDev > 0 &&
+      amount > domThreshold;
+      // Previously included Rule 2: || hasCrossMonthSpike
     const anomalyScore =
       isOutlier && domStdDev > 0
         ? Number(((amount - domMean) / domStdDev).toFixed(2))

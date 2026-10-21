@@ -31,6 +31,7 @@ export function ConsumptionPatternsChart({
     patternMode === "dayOfWeek" ? patterns.dayOfWeek : patterns.dayOfMonth;
   const activeItems: TemporalPatternItem[] = activeGroup.items;
 
+  // Auto-scale Y-axis based on the peak amount in the active group
   const maxAmount = useMemo(() => {
     return activeGroup.peakAmount > 0 ? activeGroup.peakAmount : 1;
   }, [activeGroup.peakAmount]);
@@ -56,7 +57,7 @@ export function ConsumptionPatternsChart({
   }
 
   return (
-    <div className="flex flex-col h-full space-y-3.5">
+    <div className="flex flex-col h-full space-y-3">
       {/* Top Controls: Mode Switcher */}
       <div className="flex items-center justify-between gap-2 pb-1">
         <span className="text-3xs font-semibold uppercase tracking-wider text-zinc-400 select-none">
@@ -97,9 +98,9 @@ export function ConsumptionPatternsChart({
       </div>
 
       {/* Bar Chart Container */}
-      <div className="relative flex-1 min-h-[170px] flex flex-col justify-end pt-5 pb-2 px-1 rounded-xl bg-zinc-50/60 dark:bg-zinc-900/30 border border-zinc-100 dark:border-zinc-850">
-        {/* Dynamic Hover Tooltip Banner */}
-        <div className="absolute top-2 left-3 right-3 flex items-center justify-between pointer-events-none text-2xs">
+      <div className="flex-1 min-h-[200px] flex flex-col justify-between p-3 rounded-xl bg-zinc-50/60 dark:bg-zinc-900/30 border border-zinc-100 dark:border-zinc-850">
+        {/* Tooltip & Info Header (Dedicated row in layout flow to completely prevent overlap with bars) */}
+        <div className="h-6 flex items-center justify-between text-2xs mb-2 shrink-0">
           {hoveredItem ? (
             <div className="flex items-center gap-2 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-xs">
               <span className="font-bold text-zinc-900 dark:text-zinc-100">
@@ -131,76 +132,85 @@ export function ConsumptionPatternsChart({
           )}
         </div>
 
-        {/* Vertical Bars */}
-        <div className="flex items-end justify-between gap-1 sm:gap-2 h-32 pt-5">
+        {/* 1. Bar Plot Area: Fixed grid with baseline border so all bars start exactly on the axis */}
+        <div
+          className={`w-full flex-1 min-h-[120px] pt-3 grid items-end border-b border-zinc-200 dark:border-zinc-800 pb-0.5 relative ${
+            patternMode === "dayOfWeek"
+              ? "grid-cols-7 gap-2 sm:gap-3"
+              : "grid-cols-[repeat(31,minmax(0,1fr))] gap-0.5 sm:gap-1"
+          }`}
+        >
           {activeItems.map((item) => {
             const heightPercent =
               maxAmount > 0
-                ? Math.max(
-                    item.totalAmountGTQ > 0 ? 8 : 2,
-                    Math.round((item.totalAmountGTQ / maxAmount) * 100)
-                  )
-                : 2;
+                ? item.totalAmountGTQ > 0
+                  ? Math.max(5, Math.round((item.totalAmountGTQ / maxAmount) * 100))
+                  : 0
+                : 0;
 
             const isHovered = hoveredItem?.key === item.key;
 
             return (
               <div
-                key={`day-${patternMode}-${item.key}`}
-                className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer"
+                key={`plot-col-${patternMode}-${item.key}`}
+                className="h-full w-full flex flex-col justify-end items-center relative group cursor-pointer"
                 onMouseEnter={() => setHoveredItem(item)}
                 onMouseLeave={() => setHoveredItem(null)}
               >
-                {/* Outlier Badge Indicator */}
-                {item.isOutlier && (
-                  <div
-                    className="mb-1 text-rose-500 dark:text-rose-400 animate-pulse transition-transform group-hover:scale-125"
-                    title={item.outlierReason || "Gasto atípico detectado"}
-                  >
-                    <Icons.AlertCircle className="w-3.5 h-3.5" />
-                  </div>
-                )}
+                {/* Vertical Bar: Strictly uniform width & anchored to baseline */}
+                <div
+                  className={`w-full rounded-t-xs sm:rounded-t-sm transition-all duration-200 ${
+                    item.isOutlier
+                      ? isHovered
+                        ? "bg-rose-600 dark:bg-rose-500 ring-2 ring-rose-400"
+                        : "bg-rose-500/90 dark:bg-rose-500"
+                      : isHovered
+                      ? "bg-blue-600 dark:bg-blue-500"
+                      : item.totalAmountGTQ > 0
+                      ? "bg-blue-500/80 dark:bg-blue-600/80 group-hover:bg-blue-500"
+                      : "bg-zinc-200/50 dark:bg-zinc-800/50 h-[2px]"
+                  }`}
+                  style={{
+                    height:
+                      item.totalAmountGTQ > 0 ? `${heightPercent}%` : "2px",
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
 
-                {/* Bar */}
-                <div className="w-full relative flex items-end justify-center h-full">
-                  <div
-                    className={`w-full rounded-t-md transition-all duration-200 ${
-                      item.isOutlier
-                        ? isHovered
-                          ? "bg-rose-600 dark:bg-rose-500 ring-2 ring-rose-400"
-                          : "bg-rose-500/90 dark:bg-rose-500 ring-1 ring-rose-400/50"
-                        : isHovered
-                        ? "bg-blue-600 dark:bg-blue-500"
-                        : item.totalAmountGTQ > 0
-                        ? "bg-blue-500/70 dark:bg-blue-600/70 group-hover:bg-blue-500"
-                        : "bg-zinc-200 dark:bg-zinc-800"
-                    }`}
-                    style={{ height: `${heightPercent}%` }}
-                  />
-                </div>
+        {/* 2. X-Axis Label Area: All 31 days appear with compact legible font */}
+        <div
+          className={`w-full pt-1.5 grid ${
+            patternMode === "dayOfWeek"
+              ? "grid-cols-7 gap-2 sm:gap-3"
+              : "grid-cols-[repeat(31,minmax(0,1fr))] gap-0.5 sm:gap-1"
+          }`}
+        >
+          {activeItems.map((item) => {
+            const isHovered = hoveredItem?.key === item.key;
 
-                {/* X-Axis Label */}
-                <div className="mt-1.5 text-center">
-                  <span
-                    className={`block font-mono select-none leading-none ${
-                      patternMode === "dayOfWeek"
-                        ? "text-2xs font-semibold"
-                        : "text-3xs"
-                    } ${
-                      item.isOutlier
-                        ? "text-rose-600 dark:text-rose-400 font-bold"
-                        : isHovered
-                        ? "text-zinc-900 dark:text-zinc-100 font-bold"
-                        : "text-zinc-500 dark:text-zinc-400"
-                    }`}
-                  >
-                    {patternMode === "dayOfWeek"
-                      ? item.shortLabel
-                      : parseInt(item.key, 10) % 2 === 1 || item.isOutlier
-                      ? item.shortLabel
-                      : ""}
-                  </span>
-                </div>
+            return (
+              <div
+                key={`lbl-col-${patternMode}-${item.key}`}
+                className="text-center h-4 flex items-center justify-center select-none"
+              >
+                <span
+                  className={`block font-mono leading-none ${
+                    patternMode === "dayOfWeek"
+                      ? "text-2xs font-semibold"
+                      : "text-[9px] sm:text-[10px]"
+                  } ${
+                    item.isOutlier
+                      ? "text-rose-600 dark:text-rose-400 font-bold"
+                      : isHovered
+                      ? "text-zinc-900 dark:text-zinc-100 font-bold"
+                      : "text-zinc-500 dark:text-zinc-400"
+                  }`}
+                >
+                  {item.shortLabel}
+                </span>
               </div>
             );
           })}
