@@ -55,7 +55,6 @@ export default function Home() {
 
   const [savedSession, setSavedSession] = useState<StoredSession | null>(null);
   const [hasHydratedStorage, setHasHydratedStorage] = useState(false);
-  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [isResetSessionModalOpen, setIsResetSessionModalOpen] = useState(false);
   const [wipeCustomCategoriesOnReset, setWipeCustomCategoriesOnReset] = useState(false);
   const [storageNotification, setStorageNotification] = useState<string | null>(null);
@@ -214,12 +213,6 @@ export default function Home() {
     setSavedSession(null);
   };
 
-  const handleStartFresh = () => {
-    clearStoredSession(false);
-    setSavedSession(null);
-    setDuplicateNotification(null);
-  };
-
   const handleConfirmResetSession = () => {
     if (wipeCustomCategoriesOnReset) {
       clearStoredSession(true);
@@ -242,20 +235,6 @@ export default function Home() {
     setTimeout(() => {
       setStorageNotification(null);
     }, 4000);
-  };
-
-  const handleConfirmClearData = () => {
-    clearStoredSession();
-    handleReset();
-    setCustomCategories([]);
-    setSavingsRecommendations(null);
-    setSavedSession(null);
-    setDuplicateNotification(null);
-    setIsClearConfirmOpen(false);
-    setStorageNotification("Se han borrado todos los datos guardados en este navegador.");
-    setTimeout(() => {
-      setStorageNotification(null);
-    }, 5000);
   };
 
   const classifyPendingWithLLM = async (
@@ -871,7 +850,6 @@ export default function Home() {
             setWipeCustomCategoriesOnReset(false);
             setIsResetSessionModalOpen(true);
           }}
-          onClearData={() => setIsClearConfirmOpen(true)}
           renderDrawerContent={(categoryFilter) => (
             <TransactionTable
               transactions={transactions!}
@@ -905,7 +883,6 @@ export default function Home() {
               onBulkAssignCategory={handleBulkAssignCategory}
               onBulkDeleteTransactions={handleBulkDeleteTransactions}
               onToggleSubscription={handleToggleSubscription}
-              onClearData={() => setIsClearConfirmOpen(true)}
               onClassifyPendingWithLLM={() => {
                 if (transactions) {
                   const pending = transactions.filter(
@@ -1027,19 +1004,16 @@ export default function Home() {
               </button>
               <button
                 type="button"
-                onClick={handleStartFresh}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                id="btn-banner-reset-session"
+                onClick={() => {
+                  setWipeCustomCategoriesOnReset(false);
+                  setIsResetSessionModalOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 rounded-lg dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition-colors cursor-pointer ml-auto"
+                title="Reiniciar sesión de transacciones"
               >
-                <Icons.Upload className="w-3.5 h-3.5" />
-                <span>Nueva carga de estado de cuenta</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsClearConfirmOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-900/60 ml-auto transition-colors cursor-pointer"
-              >
-                <Icons.Trash2 className="w-3.5 h-3.5" />
-                <span>Borrar mis datos</span>
+                <Icons.RotateCcw className="w-3.5 h-3.5" />
+                <span>Reiniciar sesión</span>
               </button>
             </div>
           </section>
@@ -1323,7 +1297,6 @@ export default function Home() {
             onBulkAssignCategory={handleBulkAssignCategory}
             onBulkDeleteTransactions={handleBulkDeleteTransactions}
             onToggleSubscription={handleToggleSubscription}
-            onClearData={() => setIsClearConfirmOpen(true)}
             onClassifyPendingWithLLM={() => {
               if (transactions) {
                 const pending = transactions.filter(
@@ -1341,47 +1314,6 @@ export default function Home() {
       </main>
     </div>
     )}
-
-      {/* Clear Data Confirmation Modal (US-011) */}
-      {isClearConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 mt-0.5">
-                <Icons.Trash2 className="w-5 h-5" />
-              </div>
-              <div className="space-y-1.5 flex-1">
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  ¿Borrar todos mis datos?
-                </h3>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                  Esta acción eliminará de forma permanente todas las transacciones, categorías personalizadas y preferencias almacenadas localmente en este navegador.
-                </p>
-                <p className="text-2xs text-red-600 dark:text-red-400 font-medium">
-                  No se puede deshacer esta operación.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-              <button
-                type="button"
-                onClick={() => setIsClearConfirmOpen(false)}
-                className="px-3 py-2 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmClearData}
-                className="px-3.5 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-xs cursor-pointer"
-              >
-                Borrar mis datos
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Ambiguous Column Mapping Modal */}
       <ColumnMappingModal

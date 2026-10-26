@@ -27,18 +27,18 @@ It details the UI/UX enhancements, session button consolidation, collapsible pan
 
 ## Phase 20: Session Safety & Button Consolidation (General UI/UX)
 
-### [ ] US-041: Session Reset Consolidation & Removal of Dangerous Actions
+### [x] US-041: Session Reset Consolidation & Removal of Dangerous Actions
 - **As a** user managing my bank statements,
 - **I want** clear, safe session controls that never erase my data without explicit confirmation,
 - **So that** I do not accidentally lose my uploaded statements, custom categories, or active progress.
 - **Split-Brain Boundary:** 100% Local (Client state and `localStorage` session management).
 - **Acceptance Criteria:**
-  - [ ] In the dashboard header (`src/components/dashboard-view.tsx`), removes the redundant "Borrar mis datos" button, retaining only "Reiniciar sesión".
-  - [ ] The "Reiniciar sesión" button in the dashboard opens the confirmation modal with the option to preserve or wipe custom categories (retaining categories by default).
-  - [ ] In the file upload / saved session banner (`src/app/page.tsx`), removes the dangerous "Nueva carga de estado de cuenta" button (`handleStartFresh`) that previously wiped active session state without asking for user confirmation.
-  - [ ] In the file upload / saved session banner (`src/app/page.tsx`), replaces the "Borrar mis datos" button with "Reiniciar sesión", invoking the same confirmation modal with category preservation options.
-  - [ ] In the transaction table header (`src/components/transaction-table.tsx`), removes redundant "Borrar mis datos" triggers to ensure a consistent, non-redundant session reset workflow across the application.
-  - [ ] All confirmation dialogues, buttons, and helper tooltips are 100% in Spanish with no emojis.
+  - [x] In the dashboard header (`src/components/dashboard-view.tsx`), removes the redundant "Borrar mis datos" button, retaining only "Reiniciar sesión".
+  - [x] The "Reiniciar sesión" button in the dashboard opens the confirmation modal with the option to preserve or wipe custom categories (retaining categories by default).
+  - [x] In the file upload / saved session banner (`src/app/page.tsx`), removes the dangerous "Nueva carga de estado de cuenta" button (`handleStartFresh`) that previously wiped active session state without asking for user confirmation.
+  - [x] In the file upload / saved session banner (`src/app/page.tsx`), replaces the "Borrar mis datos" button with "Reiniciar sesión", invoking the same confirmation modal with category preservation options.
+  - [x] In the transaction table header (`src/components/transaction-table.tsx`), removes redundant "Borrar mis datos" triggers to ensure a consistent, non-redundant session reset workflow across the application.
+  - [x] All confirmation dialogues, buttons, and helper tooltips are 100% in Spanish with no emojis.
 
 ---
 

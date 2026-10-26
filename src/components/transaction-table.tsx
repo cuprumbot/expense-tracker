@@ -43,7 +43,6 @@ interface TransactionTableProps {
   onBulkAssignCategory?: (transactionIds: string[], newCategory: string) => void;
   onBulkDeleteTransactions?: (transactionIds: string[]) => void;
   onToggleSubscription?: (transactionId: string) => void;
-  onClearData?: () => void;
   onClassifyPendingWithLLM?: () => void;
   isClassifyingWithLLM?: boolean;
   llmClassificationError?: string | null;
@@ -185,7 +184,6 @@ export function TransactionTable({
   onToggleSubscription,
   savingsRecommendations = null,
   onSavingsRecommendationsChange,
-  onClearData,
   onClassifyPendingWithLLM,
   isClassifyingWithLLM = false,
   llmClassificationError = null,
@@ -1002,17 +1000,6 @@ export function TransactionTable({
               <Icons.RotateCcw className="w-3.5 h-3.5" />
               <span>Reiniciar sesión</span>
             </button>
-            {onClearData && (
-              <button
-                type="button"
-                onClick={onClearData}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 border border-red-200 hover:bg-red-50 dark:border-red-900/60 dark:text-red-400 dark:hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
-                title="Borrar todos los datos guardados en el navegador"
-              >
-                <Icons.Trash2 className="w-3.5 h-3.5" />
-                <span>Borrar mis datos</span>
-              </button>
-            )}
           </div>
         </div>
 

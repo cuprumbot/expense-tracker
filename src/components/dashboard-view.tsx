@@ -18,7 +18,6 @@ interface DashboardViewProps {
   customCategories: CustomCategory[];
   onAddMoreStatements: () => void;
   onResetSession: () => void;
-  onClearData?: () => void;
   renderDrawerContent: (categoryFilter?: string | null) => React.ReactNode;
   isClassifyingWithLLM?: boolean;
 }
@@ -30,7 +29,6 @@ export function DashboardView({
   customCategories,
   onAddMoreStatements,
   onResetSession,
-  onClearData,
   renderDrawerContent,
   isClassifyingWithLLM = false,
 }: DashboardViewProps) {
@@ -144,20 +142,6 @@ export function DashboardView({
             <Icons.RotateCcw className="w-3 h-3" />
             <span className="hidden sm:inline">Reiniciar sesión</span>
           </button>
-
-          {/* Clear all data (US-011) */}
-          {onClearData && (
-            <button
-              type="button"
-              id="btn-dashboard-clear-data"
-              onClick={onClearData}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-2xs sm:text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 border border-red-200 hover:bg-red-50 dark:border-red-900/50 dark:hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
-              title="Borrar todos mis datos permanentemente"
-            >
-              <Icons.Trash2 className="w-3 h-3" />
-              <span className="hidden sm:inline">Borrar mis datos</span>
-            </button>
-          )}
 
           {/* Open Sliding Transaction Drawer */}
           <button

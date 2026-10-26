@@ -26,27 +26,37 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await themeBtn.click();
     await expect(htmlElement).not.toHaveClass(/dark/);
 
-    // 2. Start a clean, new session: If previous data exists, use "Borrar mis datos"
-    const clearDataBtn = page.getByRole("button", { name: "Borrar mis datos" });
-    const hasPreviousData = await clearDataBtn
+    // 2. Start a clean, new session: If previous data exists, use "Reiniciar sesión" (US-041)
+    await expect(page.getByText("Borrar mis datos")).not.toBeVisible();
+    await expect(page.getByText("Nueva carga de estado de cuenta")).not.toBeVisible();
+
+    const resetSessionBtn = page.getByRole("button", { name: "Reiniciar sesión" });
+    const hasPreviousData = await resetSessionBtn
       .first()
       .isVisible({ timeout: 2500 })
       .catch(() => false);
 
     if (hasPreviousData) {
-      console.log("[E2E Test] Previous session detected. Clicking 'Borrar mis datos'...");
-      await clearDataBtn.first().click();
+      console.log("[E2E Test] Previous session detected. Clicking 'Reiniciar sesión'...");
+      await resetSessionBtn.first().click();
 
-      // Confirm deletion in the modal
-      const modalConfirmBtn = page.locator("button.bg-red-600", {
-        hasText: "Borrar mis datos",
-      });
+      // Confirm reset in the modal
+      const modal = page.getByText("¿Deseas reiniciar la sesión?");
+      await expect(modal).toBeVisible({ timeout: 5000 });
+
+      // Check factory reset option to wipe categories for a clean test
+      const wipeCategoriesCheckbox = page.locator("#checkbox-wipe-custom-categories");
+      if (await wipeCategoriesCheckbox.isVisible().catch(() => false)) {
+        await wipeCategoriesCheckbox.check();
+      }
+
+      const modalConfirmBtn = page.locator("#btn-confirm-reset-session");
       await expect(modalConfirmBtn).toBeVisible({ timeout: 5000 });
       await modalConfirmBtn.click();
 
       // Wait for modal to disappear and upload screen to be ready
-      await expect(page.getByText("¿Borrar todos mis datos?")).not.toBeVisible();
-      console.log("[E2E Test] ✓ Previous session data cleared successfully.");
+      await expect(modal).not.toBeVisible();
+      console.log("[E2E Test] ✓ Previous session data reset successfully via Reiniciar sesión.");
     } else {
       console.log("[E2E Test] Clean session confirmed (no previous session data).");
     }
@@ -102,6 +112,8 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await expect(page.locator("#dashboard-root header").getByText("Consolidado multicuenta")).not.toBeVisible();
     await expect(page.locator("#btn-dashboard-add-statements")).toBeVisible();
     await expect(page.locator("#btn-dashboard-reset-session")).toBeVisible();
+    await expect(page.locator("#btn-dashboard-clear-data")).not.toBeAttached();
+    await expect(page.locator("#dashboard-root").getByText("Borrar mis datos")).not.toBeVisible();
     await expect(page.locator("#btn-toggle-transactions-drawer")).toBeVisible();
     await expect(page.locator("#dashboard-root #btn-theme-toggle")).toBeVisible();
 
