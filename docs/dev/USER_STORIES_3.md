@@ -164,19 +164,19 @@ It details the UI/UX enhancements, session button consolidation, collapsible pan
 
 ## Phase 25: Panel 4 Palette Refinement & Comprehensive UI Audit (Transaction Age & Verification)
 
-### [ ] US-050: High-Contrast Color Palette for Decision Age Donut Chart
+### [x] US-050: High-Contrast Color Palette for Decision Age Donut Chart
 - **As a** user reviewing my transaction age breakdown,
 - **I want** the three donut chart segments and legend items to use easily distinguishable, high-contrast colors,
 - **So that** I can clearly tell apart past installment financing, recurring subscriptions, and immediate purchases in both light and dark themes.
 - **Split-Brain Boundary:** 100% Local (Color tokens and SVG styling).
 - **Acceptance Criteria:**
-  - [ ] Audits and updates the three segment color tokens in `TRANSACTION_AGE_COLORS` (`src/lib/reporting.ts`) and `src/components/transaction-age-chart.tsx`:
+  - [x] Audits and updates the three segment color tokens in `TRANSACTION_AGE_COLORS` (`src/lib/reporting.ts`) and `src/components/transaction-age-chart.tsx`:
     - **Visacuotas y Financiamiento:** High-contrast Sky Blue / Cyan (e.g., `#0284c7`).
     - **Suscripciones Recurrentes:** Distinct Vibrant Purple / Violet (e.g., `#8b5cf6` or `#a855f7`), replacing colors too close to blue.
     - **Compras Inmediatas:** Distinct Emerald / Teal (e.g., `#10b981`).
-  - [ ] Ensures colors achieve strong contrast against light (`bg-white` / `bg-zinc-50`) and dark (`bg-zinc-950` / `bg-zinc-900`) backgrounds.
-  - [ ] Verifies visual differentiation for users with color vision deficiencies (protanopia, deuteranopia, tritanopia).
-  - [ ] Donut slices, legend badges, and hover focus rings all reflect the unified, refined color palette consistently.
+  - [x] Ensures colors achieve strong contrast against light (`bg-white` / `bg-zinc-50`) and dark (`bg-zinc-950` / `bg-zinc-900`) backgrounds.
+  - [x] Verifies visual differentiation for users with color vision deficiencies (protanopia, deuteranopia, tritanopia).
+  - [x] Donut slices, legend badges, and hover focus rings all reflect the unified, refined color palette consistently.
 
 ### [ ] US-051: End-to-End Third Iteration Integration & Regression Verification
 - **As a** user,

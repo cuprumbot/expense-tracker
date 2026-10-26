@@ -125,9 +125,14 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
                       strokeWidth={isHovered ? hoverStrokeWidth : strokeWidth}
                       strokeDasharray={slice.strokeDasharray}
                       strokeDashoffset={slice.strokeDashoffset}
-                      className="transition-all duration-200 cursor-pointer origin-center"
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`${slice.label}: ${formatCurrency(slice.totalAmountGTQ)} (${slice.percentageShare}%)`}
+                      className="transition-all duration-200 cursor-pointer origin-center focus:outline-hidden"
                       onMouseEnter={() => setHoveredSegment(slice)}
                       onMouseLeave={() => setHoveredSegment(null)}
+                      onFocus={() => setHoveredSegment(slice)}
+                      onBlur={() => setHoveredSegment(null)}
                     />
                   );
                 })}
@@ -165,9 +170,14 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
               <div
                 key={`legend-${seg.id}`}
                 id={`legend-segment-${seg.id}`}
+                tabIndex={0}
+                role="button"
+                aria-label={`${seg.label}: ${formatCurrency(seg.totalAmountGTQ)}`}
                 onMouseEnter={() => setHoveredSegment(seg)}
                 onMouseLeave={() => setHoveredSegment(null)}
-                className={`px-3 py-2 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                onFocus={() => setHoveredSegment(seg)}
+                onBlur={() => setHoveredSegment(null)}
+                className={`px-3 py-2 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 focus:outline-hidden focus:ring-1 focus:ring-zinc-400 ${
                   isHovered
                     ? "bg-zinc-50 dark:bg-zinc-900/70 border-zinc-300 dark:border-zinc-700 shadow-2xs"
                     : "bg-white dark:bg-zinc-950 border-zinc-150 dark:border-zinc-850 hover:border-zinc-200"
