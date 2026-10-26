@@ -58,20 +58,20 @@ It details the UI/UX enhancements, session button consolidation, collapsible pan
   - [x] Minimization state is tracked independently for each panel without resetting chart filters or underlying data calculations.
   - [x] Maintains full responsiveness across desktop 2x2 grid, landscape tablet, and single-column mobile viewports without visual artifacts.
 
-### [ ] US-043: Contextual Panel Information & Quick Tutorial Modals
+### [x] US-043: Contextual Panel Information & Quick Tutorial Modals
 - **As a** user exploring my financial analytics,
 - **I want** an `Info` button on each dashboard panel that displays a concise tutorial guide,
 - **So that** I understand how to interpret the data and how to use the interactive features of each panel.
 - **Split-Brain Boundary:** 100% Local (Client UI and static Spanish copy).
 - **Acceptance Criteria:**
-  - [ ] Adds an `Info` button (using an SVG info icon and Spanish tooltip "Información") in the upper right header of each panel, positioned beside the minimize button.
-  - [ ] Clicking the `Info` button opens a clean, lightweight tutorial popover or card with concise explanatory text for that specific panel:
+  - [x] Adds an `Info` button (using an SVG info icon and Spanish tooltip "Información") in the upper right header of each panel, positioned beside the minimize button.
+  - [x] Clicking the `Info` button opens a clean, lightweight tutorial popover or card with concise explanatory text for that specific panel:
     - **Panel 1 (Histórico por categoría):** "Muestra la evolución mensual de tus gastos por categoría. Haz clic en una línea para aislarla o en un punto para inspeccionar los movimientos de ese mes en el panel lateral."
     - **Panel 2 (¿A dónde va mi dinero?):** "Visualiza tus comercios con mayor gasto o compras más frecuentes. Haz clic en un comercio para descartarlo temporalmente y explorar el resto de tus gastos."
     - **Panel 3 (Patrones de consumo):** "Analiza tus hábitos según el día del mes o de la semana para detectar gastos atípicos. Haz clic en una barra para ver los movimientos de ese día."
     - **Panel 4 (Antigüedad del gasto):** "Compara tus compromisos previos (cuotas y suscripciones) frente a compras inmediatas para evaluar cuánto de tu dinero ya estaba comprometido antes de iniciar el mes."
-  - [ ] The tutorial popover includes a clear dismiss/close action, closes upon clicking outside or pressing `Escape`, and matches the neutral light/dark theme tokens.
-  - [ ] Content is structured so that additional informational copy can be seamlessly added in the future without altering layout.
+  - [x] The tutorial popover includes a clear dismiss/close action, closes upon clicking outside or pressing `Escape`, and matches the neutral light/dark theme tokens.
+  - [x] Content is structured so that additional informational copy can be seamlessly added in the future without altering layout.
 
 ---
 
