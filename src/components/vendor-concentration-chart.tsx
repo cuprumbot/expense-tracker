@@ -105,12 +105,8 @@ export function VendorConcentrationChart({
   return (
     <div className="flex flex-col h-full space-y-2">
       {/* Top Controls: Selector + 'Mostrar todo' button */}
-      <div className="flex items-center justify-between gap-2 pb-0.5 flex-wrap">
-        <div className="flex items-center gap-2">
-          <span className="text-3xs font-semibold uppercase tracking-wider text-zinc-400 select-none">
-            Ordenar por:
-          </span>
-
+      <div className="flex items-center justify-between gap-2 pb-0.5">
+        <div>
           {dismissedVendors.size > 0 && (
             <button
               type="button"
