@@ -320,3 +320,20 @@ These two messages shouldn't be shown at the same time:
 If there were duplicated transactions just say that, don't pop up the success message.
 
 ---
+
+Execute User Story #18 from `USER_STORIES_2.md`, Banco Industrial parser.
+Also check which parts of User Story #17 should be implemented at this time.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    Use the `BI-2025-xx.pdf` files in `demo` as reference.
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+Only stop when User Story #18 is fully verified, then report what was done.
+
+Remember not to commit anything until I check manually. Remember to beep when finished or if you need some user input.
