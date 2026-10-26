@@ -74,14 +74,14 @@ export function VendorConcentrationChart({
     setDismissedVendors(new Set());
   };
 
-  // Max value for scaling bar widths
+  // Max value for scaling bar widths (anchored to top ranked vendor so bar sizes remain stable when vendors are dismissed)
   const maxMetricValue = useMemo(() => {
-    if (activeVendors.length === 0) return 1;
+    if (rankedVendors.length === 0) return 1;
     if (metricMode === "amount") {
-      return activeVendors[0]?.totalAmountGTQ || 1;
+      return rankedVendors[0]?.totalAmountGTQ || 1;
     }
-    return activeVendors[0]?.transactionCount || 1;
-  }, [activeVendors, metricMode]);
+    return rankedVendors[0]?.transactionCount || 1;
+  }, [rankedVendors, metricMode]);
 
   const resolveCategoryColor = (categoryName: string): string => {
     const custom = customCategories.find(
