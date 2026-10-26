@@ -281,8 +281,8 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     console.log("[E2E Test] ✓ 'Mostrar todo' restored original top 5 vendors.");
     console.log("[E2E Test] ✓ Panel 2 Top Vendors Bar Chart verified successfully.");
 
-    // 5.3 Assertions for US-035 & US-036 (Panel 3: Consumption Patterns & Outliers)
-    console.log("[E2E Test] Verifying Panel 3 Consumption Patterns Bar Chart (US-035 & US-036)...");
+    // 5.3 Assertions for US-035, US-036, US-048 & US-049 (Panel 3: Consumption Patterns & Temporal Drill-down)
+    console.log("[E2E Test] Verifying Panel 3 Consumption Patterns Bar Chart (US-048 & US-049)...");
     const panel3 = page.locator("#panel-consumption-patterns");
     await expect(panel3).toBeVisible();
 
@@ -291,21 +291,63 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await expect(btnPatternDayOfWeek).toBeVisible();
     await expect(btnPatternDayOfMonth).toBeVisible();
 
-    // Default is day of week: check for day abbreviations (Lun, Mar, Mié, etc.)
-    await expect(panel3.getByText("Lun")).toBeVisible();
-    await expect(panel3.getByText("Vie")).toBeVisible();
+    // US-048: Default view mode is "dayOfMonth" (Día del mes 1 a 31)
+    await expect(btnPatternDayOfMonth).toHaveClass(/bg-white/);
+    console.log("[E2E Test] ✓ Panel 3 defaults to 'Día del mes' (US-048).");
 
     // Verify presence of anomaly banner
     const anomalyBanner = page.locator("#consumption-anomaly-banner");
     await expect(anomalyBanner).toBeVisible();
 
-    // Toggle to Day of Month (1 to 31)
-    await btnPatternDayOfMonth.click();
-    await expect(btnPatternDayOfMonth).toHaveClass(/bg-white/);
+    // US-049: Test drill-down on Day of Month bar
+    console.log("[E2E Test] Verifying Day of Month bar drill-down into drawer (US-049)...");
+    const domBars = panel3.locator('[role="button"][aria-label^="Ver movimientos de"]');
+    await expect(domBars.first()).toBeVisible();
+    await domBars.first().click();
 
-    // Toggle back to Day of Week
+    const drawerAsideDom = page.locator('aside[aria-label="Detalle de movimientos"]');
+    await expect(drawerAsideDom).toHaveClass(/translate-x-0/);
+    const filterBadgeDom = page.locator("#drawer-active-filter-badge");
+    await expect(filterBadgeDom).toBeVisible();
+    await expect(filterBadgeDom).toContainText("Filtrado por: Día");
+    console.log("[E2E Test] ✓ Drawer opened filtered by Day of Month.");
+
+    // Clear filter and close drawer
+    await page.locator("#btn-drawer-show-all-transactions").click();
+    await expect(filterBadgeDom).not.toBeVisible();
+    await page.locator("#btn-close-sliding-drawer").click();
+    await expect(drawerAsideDom).toHaveClass(/translate-x-full/);
+
+    // Toggle to Day of Week (7 days) and verify persistence (US-048)
     await btnPatternDayOfWeek.click();
     await expect(btnPatternDayOfWeek).toHaveClass(/bg-white/);
+    const storedPatternMode = await page.evaluate(() =>
+      window.localStorage.getItem("expense_tracker_pattern_view_mode")
+    );
+    expect(storedPatternMode).toBe("dayOfWeek");
+
+    // Check for day abbreviations (Lun, Mar, Mié, etc.)
+    await expect(panel3.getByText("Lun")).toBeVisible();
+    await expect(panel3.getByText("Vie")).toBeVisible();
+
+    // US-049: Test drill-down on Day of Week bar (e.g. Viernes)
+    console.log("[E2E Test] Verifying Day of Week bar drill-down into drawer (US-049)...");
+    const dowBars = panel3.locator('[role="button"][aria-label^="Ver movimientos de"]');
+    await dowBars.nth(4).click(); // Index 4 is Friday (Vie)
+
+    const drawerAsideDow = page.locator('aside[aria-label="Detalle de movimientos"]');
+    await expect(drawerAsideDow).toHaveClass(/translate-x-0/);
+    const filterBadgeDow = page.locator("#drawer-active-filter-badge");
+    await expect(filterBadgeDow).toBeVisible();
+    await expect(filterBadgeDow).toContainText("Filtrado por: Viernes");
+    console.log("[E2E Test] ✓ Drawer opened filtered by Viernes.");
+
+    // Clear filter and close drawer
+    await page.locator("#btn-drawer-show-all-transactions").click();
+    await expect(filterBadgeDow).not.toBeVisible();
+    await page.locator("#btn-close-sliding-drawer").click();
+    await expect(drawerAsideDow).toHaveClass(/translate-x-full/);
+
     console.log("[E2E Test] ✓ Panel 3 Consumption Patterns Bar Chart verified successfully.");
 
     // 5.4 Assertions for US-037, US-038 & US-039 (Panel 4: Transaction Age Donut Chart)

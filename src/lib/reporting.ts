@@ -558,7 +558,7 @@ export interface ConsumptionPatternsResult {
   insights: ConsumptionPatternInsight[];
 }
 
-const DAYS_OF_WEEK_DEF = [
+export const DAYS_OF_WEEK_DEF = [
   { key: "lun", label: "Lunes", shortLabel: "Lun" },
   { key: "mar", label: "Martes", shortLabel: "Mar" },
   { key: "mie", label: "Miércoles", shortLabel: "Mié" },

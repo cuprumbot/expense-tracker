@@ -148,17 +148,17 @@ It details the UI/UX enhancements, session button consolidation, collapsible pan
   - [x] If no stored preference is present, it defaults to `"dayOfMonth"` ("Día del mes").
   - [x] The segmented toggle control visually reflects the restored mode immediately upon page load.
 
-### [ ] US-049: Temporal Bar Click Transaction Drill-Down
+### [x] US-049: Temporal Bar Click Transaction Drill-Down
 - **As a** user noticing a spending spike on a particular day of the week or date of the month,
 - **I want to** click on any bar in Panel 3 to open the sliding drawer filtered to that specific day,
 - **So that** I can examine the exact transactions contributing to that day's total or outlier spend.
 - **Split-Brain Boundary:** 100% Local (Client filtering and drawer coordination).
 - **Acceptance Criteria:**
-  - [ ] Each bar in both "Día de la semana" and "Día del mes" charts is interactive with hover highlights, cursor pointer styling, and keyboard accessibility.
-  - [ ] In "Día de la semana" mode: Clicking a bar (e.g., "Viernes") opens the sliding drawer and filters transactions to only those that occurred on that specific weekday across all uploaded statements.
-  - [ ] In "Día del mes" mode: Clicking a bar (e.g., "Día 15") opens the sliding drawer and filters transactions to only those with that day of the month across all statements.
-  - [ ] The sliding drawer opens automatically with a clear filter header banner (e.g., "Filtrado por: Viernes (12 movimientos)" or "Filtrado por: Día 15 del mes (5 movimientos)").
-  - [ ] A "Quitar filtro" button in the drawer header resets temporal filters and restores all transactions.
+  - [x] Each bar in both "Día de la semana" and "Día del mes" charts is interactive with hover highlights, cursor pointer styling, and keyboard accessibility.
+  - [x] In "Día de la semana" mode: Clicking a bar (e.g., "Viernes") opens the sliding drawer and filters transactions to only those that occurred on that specific weekday across all uploaded statements.
+  - [x] In "Día del mes" mode: Clicking a bar (e.g., "Día 15") opens the sliding drawer and filters transactions to only those with that day of the month across all statements.
+  - [x] The sliding drawer opens automatically with a clear filter header banner (e.g., "Filtrado por: Viernes (12 movimientos)" or "Filtrado por: Día 15 del mes (5 movimientos)").
+  - [x] A "Quitar filtro" button in the drawer header resets temporal filters and restores all transactions.
 
 ---
 

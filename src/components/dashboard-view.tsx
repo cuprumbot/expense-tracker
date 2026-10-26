@@ -201,6 +201,25 @@ export function DashboardView({
     setIsDrawerOpen(true);
   };
 
+  const handleSelectTemporalFilter = (temporal: {
+    type: "dayOfWeek" | "dayOfMonth";
+    value: number;
+    label: string;
+  }) => {
+    if (temporal.type === "dayOfWeek") {
+      setDrawerFilter({
+        dayOfWeek: temporal.value,
+        displayLabel: temporal.label,
+      });
+    } else {
+      setDrawerFilter({
+        dayOfMonth: temporal.value,
+        displayLabel: temporal.label,
+      });
+    }
+    setIsDrawerOpen(true);
+  };
+
   const toggleMinimize = (panelId: string) => {
     setMinimizedPanels((prev) => ({
       ...prev,
@@ -385,7 +404,10 @@ export function DashboardView({
             }
             tutorialContent={PANEL_TUTORIALS["panel-consumption-patterns"].content}
           >
-            <ConsumptionPatternsChart transactions={transactions} />
+            <ConsumptionPatternsChart
+              transactions={transactions}
+              onSelectTemporalFilter={handleSelectTemporalFilter}
+            />
           </DashboardPanelSection>
         </div>
 
