@@ -850,11 +850,12 @@ export default function Home() {
             setWipeCustomCategoriesOnReset(false);
             setIsResetSessionModalOpen(true);
           }}
-          renderDrawerContent={(categoryFilter) => (
+          renderDrawerContent={(filter, onClearFilter) => (
             <TransactionTable
               transactions={transactions!}
               summary={summary!}
-              externalCategoryFilter={categoryFilter}
+              externalFilter={filter}
+              onClearExternalFilter={onClearFilter}
               sourceLabel={
                 bankName
                   ? `${bankName} · ${routedFile?.file.name || "Múltiples archivos"}`

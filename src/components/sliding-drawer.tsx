@@ -8,6 +8,9 @@ interface SlidingDrawerProps {
   onClose: () => void;
   title?: string;
   totalCount?: number;
+  activeFilterLabel?: string | null;
+  filteredCount?: number;
+  onClearFilter?: () => void;
   children: React.ReactNode;
 }
 
@@ -16,6 +19,9 @@ export function SlidingDrawer({
   onClose,
   title = "Transacciones detalladas",
   totalCount,
+  activeFilterLabel,
+  filteredCount,
+  onClearFilter,
   children,
 }: SlidingDrawerProps) {
   // Listen for Escape key to close drawer
@@ -64,21 +70,61 @@ export function SlidingDrawer({
         }`}
       >
         {/* Drawer Header */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/60 shrink-0">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-            {title}
-          </h2>
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/60 shrink-0 gap-3">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {title}
+            </h2>
+            {activeFilterLabel && (
+              <div
+                id="drawer-active-filter-badge"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-medium bg-blue-50 text-blue-800 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/80 shadow-2xs"
+              >
+                <span>
+                  Filtrado por: <strong>{activeFilterLabel}</strong>
+                  {typeof filteredCount === "number" ? ` (${filteredCount} movimientos)` : ""}
+                </span>
+                {onClearFilter && (
+                  <button
+                    type="button"
+                    id="btn-drawer-clear-filter"
+                    onClick={onClearFilter}
+                    className="p-0.5 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-600 dark:text-blue-400 cursor-pointer"
+                    title="Quitar filtro"
+                    aria-label="Quitar filtro"
+                  >
+                    <Icons.X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
 
-          <button
-            type="button"
-            id="btn-close-sliding-drawer"
-            onClick={onClose}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-lg transition-colors cursor-pointer"
-            title="Cerrar panel de transacciones (Esc)"
-          >
-            <Icons.X className="w-4 h-4" />
-            <span>Ocultar transacciones</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {activeFilterLabel && onClearFilter && (
+              <button
+                type="button"
+                id="btn-drawer-show-all-transactions"
+                onClick={onClearFilter}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 rounded-lg transition-colors cursor-pointer"
+                title="Quitar filtro y mostrar todas las transacciones"
+              >
+                <Icons.RotateCcw className="w-3.5 h-3.5" />
+                <span>Mostrar todas</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              id="btn-close-sliding-drawer"
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-lg transition-colors cursor-pointer"
+              title="Cerrar panel de transacciones (Esc)"
+            >
+              <Icons.X className="w-4 h-4" />
+              <span>Ocultar transacciones</span>
+            </button>
+          </div>
         </div>
 
         {/* Drawer Content */}

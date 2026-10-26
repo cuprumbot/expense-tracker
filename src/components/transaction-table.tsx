@@ -5,6 +5,7 @@ import {
   Transaction,
   CSVParsingSummary,
   CustomCategory,
+  DrawerFilter,
 } from "@/types/transaction";
 import { formatCurrency } from "@/lib/currency";
 import {
@@ -57,6 +58,8 @@ interface TransactionTableProps {
   onDismissBatchError?: (fileName: string) => void;
   hideTopDashboard?: boolean;
   externalCategoryFilter?: string | null;
+  externalFilter?: DrawerFilter | null;
+  onClearExternalFilter?: () => void;
 }
 
 type SortField = "date" | "description" | "amount";
@@ -198,18 +201,22 @@ export function TransactionTable({
   onDismissBatchError,
   hideTopDashboard = false,
   externalCategoryFilter = null,
+  externalFilter = null,
+  onClearExternalFilter,
 }: TransactionTableProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>(
-    externalCategoryFilter || "all"
+    externalFilter?.category || externalCategoryFilter || "all"
   );
 
   useEffect(() => {
-    if (externalCategoryFilter) {
+    if (externalFilter?.category) {
+      setSelectedCategory(externalFilter.category);
+    } else if (externalCategoryFilter) {
       setSelectedCategory(externalCategoryFilter);
-    } else if (externalCategoryFilter === null) {
+    } else if (externalFilter === null && externalCategoryFilter === null) {
       setSelectedCategory("all");
     }
-  }, [externalCategoryFilter]);
+  }, [externalFilter, externalCategoryFilter]);
   const [selectedCurrency, setSelectedCurrency] = useState<"all" | "GTQ" | "USD">("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [sortField, setSortField] = useState<SortField | null>(null);
@@ -272,14 +279,25 @@ export function TransactionTable({
     return Array.from(set);
   }, [customCategories, uniqueCategories]);
 
-  // Filtered transactions by category, search term, and currency (US-012, US-023)
+  // Filtered transactions by category, search term, currency, and temporal criteria (US-012, US-023, US-044, US-049)
   const filteredTransactions = useMemo(() => {
     return filterTransactions(transactions, {
       category: selectedCategory,
       searchTerm,
       currency: selectedCurrency,
+      monthKey: externalFilter?.monthKey,
+      dayOfWeek: externalFilter?.dayOfWeek,
+      dayOfMonth: externalFilter?.dayOfMonth,
     });
-  }, [transactions, selectedCategory, searchTerm, selectedCurrency]);
+  }, [
+    transactions,
+    selectedCategory,
+    searchTerm,
+    selectedCurrency,
+    externalFilter?.monthKey,
+    externalFilter?.dayOfWeek,
+    externalFilter?.dayOfMonth,
+  ]);
 
   // Sorted transactions
   const sortedTransactions = useMemo(() => {
@@ -725,6 +743,33 @@ export function TransactionTable({
       )
       )}
 
+
+      {/* Active Temporal / Drill-down Filter Banner (US-044, US-049) */}
+      {externalFilter?.displayLabel && (
+        <div
+          id="table-external-filter-banner"
+          className="flex items-center justify-between p-3 rounded-xl border border-blue-200 bg-blue-50/80 dark:border-blue-900/50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 text-xs shadow-2xs"
+        >
+          <div className="flex items-center gap-2">
+            <Icons.Filter className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span>
+              Filtrado por: <strong>{externalFilter.displayLabel}</strong> ({filteredTransactions.length} movimientos)
+            </span>
+          </div>
+          {onClearExternalFilter && (
+            <button
+              type="button"
+              id="btn-clear-table-filter"
+              onClick={onClearExternalFilter}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-2xs font-semibold text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 bg-white dark:bg-zinc-900 border border-blue-200 dark:border-blue-800 rounded-lg shadow-2xs cursor-pointer hover:bg-blue-100/50 dark:hover:bg-blue-900/60 transition-colors"
+              title="Quitar filtro y mostrar todas las transacciones"
+            >
+              <Icons.X className="w-3.5 h-3.5" />
+              <span>Quitar filtro</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Category Pills & Search Filter Bar (US-012) */}
       <div className="space-y-3">

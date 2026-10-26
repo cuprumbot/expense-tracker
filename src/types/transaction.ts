@@ -46,3 +46,11 @@ export interface CSVParsingResult {
   ambiguityReason?: string;
   error?: string;
 }
+
+export interface DrawerFilter {
+  category?: string | null;
+  monthKey?: string | null;
+  dayOfWeek?: number | null;
+  dayOfMonth?: number | null;
+  displayLabel?: string | null;
+}

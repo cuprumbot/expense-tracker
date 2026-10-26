@@ -99,9 +99,12 @@ export function filterTransactions(
     category?: string;
     searchTerm?: string;
     currency?: "all" | "GTQ" | "USD" | string;
+    monthKey?: string | null;
+    dayOfWeek?: number | null;
+    dayOfMonth?: number | null;
   }
 ): Transaction[] {
-  const { category, searchTerm, currency } = filters;
+  const { category, searchTerm, currency, monthKey, dayOfWeek, dayOfMonth } = filters;
   const normalizedSearch = searchTerm?.trim().toLowerCase();
 
   return transactions.filter((tx) => {
@@ -116,6 +119,24 @@ export function filterTransactions(
       } else if (currency === "GTQ") {
         if (tx.originalCurrency === "USD") return false;
       }
+    }
+
+    if (monthKey) {
+      if (extractMonthKey(tx.date) !== monthKey) return false;
+    }
+
+    if (typeof dayOfWeek === "number") {
+      const parts = parseTransactionDateParts(tx.date);
+      if (!parts) return false;
+      const d = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, 12, 0, 0));
+      const jsDay = d.getUTCDay();
+      const dow = jsDay === 0 ? 6 : jsDay - 1; // 0=Lun ... 6=Dom
+      if (dow !== dayOfWeek) return false;
+    }
+
+    if (typeof dayOfMonth === "number") {
+      const parts = parseTransactionDateParts(tx.date);
+      if (!parts || parts.day !== dayOfMonth) return false;
     }
 
     if (normalizedSearch) {

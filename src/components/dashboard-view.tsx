@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Icons } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Transaction, CSVParsingSummary, CustomCategory } from "@/types/transaction";
+import { Transaction, CSVParsingSummary, CustomCategory, DrawerFilter } from "@/types/transaction";
 import { formatCurrency } from "@/lib/currency";
 import { SlidingDrawer } from "@/components/sliding-drawer";
 import { CategoryTrendChart } from "@/components/category-trend-chart";
@@ -166,7 +166,10 @@ interface DashboardViewProps {
   customCategories: CustomCategory[];
   onAddMoreStatements: () => void;
   onResetSession: () => void;
-  renderDrawerContent: (categoryFilter?: string | null) => React.ReactNode;
+  renderDrawerContent: (
+    filter: DrawerFilter | null,
+    onClearFilter: () => void
+  ) => React.ReactNode;
   isClassifyingWithLLM?: boolean;
 }
 
@@ -181,9 +184,22 @@ export function DashboardView({
   isClassifyingWithLLM = false,
 }: DashboardViewProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [drawerCategoryFilter, setDrawerCategoryFilter] = useState<string | null>(null);
+  const [drawerFilter, setDrawerFilter] = useState<DrawerFilter | null>(null);
   const [minimizedPanels, setMinimizedPanels] = useState<Record<string, boolean>>({});
   const [activeInfoPanel, setActiveInfoPanel] = useState<string | null>(null);
+
+  const handleSelectTrendPoint = (point: {
+    category: string;
+    monthKey: string;
+    monthLabel: string;
+  }) => {
+    setDrawerFilter({
+      category: point.category,
+      monthKey: point.monthKey,
+      displayLabel: `${point.category} · ${point.monthLabel}`,
+    });
+    setIsDrawerOpen(true);
+  };
 
   const toggleMinimize = (panelId: string) => {
     setMinimizedPanels((prev) => ({
@@ -258,7 +274,7 @@ export function DashboardView({
                     type="button"
                     id="btn-filter-unclassified"
                     onClick={() => {
-                      setDrawerCategoryFilter("Pendiente");
+                      setDrawerFilter({ category: "Pendiente", displayLabel: "Sin clasificar" });
                       setIsDrawerOpen(true);
                     }}
                     className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-3xs sm:text-2xs font-medium cursor-pointer transition-all border ${
@@ -315,7 +331,7 @@ export function DashboardView({
             type="button"
             id="btn-toggle-transactions-drawer"
             onClick={() => {
-              setDrawerCategoryFilter(null);
+              setDrawerFilter(null);
               setIsDrawerOpen(true);
             }}
             className="inline-flex items-center gap-1.5 px-3 py-1 text-2xs sm:text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 rounded-lg transition-colors cursor-pointer shadow-xs"
@@ -350,6 +366,7 @@ export function DashboardView({
             <CategoryTrendChart
               transactions={transactions}
               customCategories={customCategories}
+              onSelectDataPoint={handleSelectTrendPoint}
             />
           </DashboardPanelSection>
 
@@ -418,12 +435,14 @@ export function DashboardView({
         isOpen={isDrawerOpen}
         onClose={() => {
           setIsDrawerOpen(false);
-          setDrawerCategoryFilter(null);
+          setDrawerFilter(null);
         }}
         title="Detalle de movimientos"
         totalCount={totalCount}
+        activeFilterLabel={drawerFilter?.displayLabel}
+        onClearFilter={() => setDrawerFilter(null)}
       >
-        {renderDrawerContent(drawerCategoryFilter)}
+        {renderDrawerContent(drawerFilter, () => setDrawerFilter(null))}
       </SlidingDrawer>
     </div>
   );

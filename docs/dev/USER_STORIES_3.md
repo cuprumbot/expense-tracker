@@ -77,18 +77,18 @@ It details the UI/UX enhancements, session button consolidation, collapsible pan
 
 ## Phase 22: Panel 1 Interactive Deep-Dive: Point Filtering & Category Isolation (Category Trends)
 
-### [ ] US-044: Interactive Data-Point Transaction Drill-Down in Category Trends
+### [x] US-044: Interactive Data-Point Transaction Drill-Down in Category Trends
 - **As a** user reviewing my category spending over time,
 - **I want to** click any data point on the trend chart to open the sliding drawer filtered to that specific month and category,
 - **So that** I can instantly inspect the individual transactions that comprise that month's spending.
 - **Split-Brain Boundary:** 100% Local (Client event dispatching and drawer filtering).
 - **Acceptance Criteria:**
-  - [ ] All coordinate data points (circles) rendered on the SVG trend lines are interactive, featuring hover enlargement, cursor pointer styling, and accessible button roles.
-  - [ ] Clicking any point captures both its category identifier and its corresponding month key (e.g., `"Supermercado"` and `"2026-06"`).
-  - [ ] Automatically opens the sliding transaction drawer (`SlidingDrawer`).
-  - [ ] Filters the `TransactionTable` to display only transactions belonging to that specific category AND dated within that calendar month.
-  - [ ] The sliding drawer header displays a clear, removable active filter indicator (e.g., "Filtrado por: Supermercado · Junio 2026" with transaction count).
-  - [ ] Provides a "Quitar filtro" / "Mostrar todas" button inside the drawer that resets filters and restores the full transaction list.
+  - [x] All coordinate data points (circles) rendered on the SVG trend lines are interactive, featuring hover enlargement, cursor pointer styling, and accessible button roles.
+  - [x] Clicking any point captures both its category identifier and its corresponding month key (e.g., `"Supermercado"` and `"2026-06"`).
+  - [x] Automatically opens the sliding transaction drawer (`SlidingDrawer`).
+  - [x] Filters the `TransactionTable` to display only transactions belonging to that specific category AND dated within that calendar month.
+  - [x] The sliding drawer header displays a clear, removable active filter indicator (e.g., "Filtrado por: Supermercado · Junio 2026" with transaction count).
+  - [x] Provides a "Quitar filtro" / "Mostrar todas" button inside the drawer that resets filters and restores the full transaction list.
 
 ### [ ] US-045: Single-Category Focus Isolation & "Mostrar todo" Toggle
 - **As a** user analyzing a busy multi-category trend chart,
