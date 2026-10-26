@@ -13,6 +13,11 @@ import { Icons } from "@/components/icons";
 interface CategoryTrendChartProps {
   transactions: Transaction[];
   customCategories?: CustomCategory[];
+  onSelectDataPoint?: (filter: {
+    category: string;
+    monthKey: string;
+    monthLabel: string;
+  }) => void;
 }
 
 interface HoveredDataPoint {
@@ -80,8 +85,10 @@ function createSmoothPath(points: Array<{ x: number; y: number }>): string {
 export function CategoryTrendChart({
   transactions,
   customCategories = [],
+  onSelectDataPoint,
 }: CategoryTrendChartProps) {
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
+  const [isolatedCategoryId, setIsolatedCategoryId] = useState<string | null>(null);
   const [hoveredPoint, setHoveredPoint] = useState<HoveredDataPoint | null>(null);
 
   // Compute multi-month trend metrics
@@ -107,10 +114,13 @@ export function CategoryTrendChart({
     });
   };
 
-  // Visible trends
+  // Visible trends (respects isolation if active)
   const visibleTrends = useMemo(() => {
+    if (isolatedCategoryId) {
+      return trends.filter((t) => t.categoryId === isolatedCategoryId);
+    }
     return trends.filter((t) => !hiddenCategories.has(t.categoryId));
-  }, [trends, hiddenCategories]);
+  }, [trends, isolatedCategoryId, hiddenCategories]);
 
   // Compute dynamic peak ceiling
   const yCeiling = useMemo(() => {
@@ -186,8 +196,25 @@ export function CategoryTrendChart({
         <span className="text-3xs font-semibold uppercase tracking-wider text-zinc-400 mr-1 select-none">
           Categorías:
         </span>
+
+        {isolatedCategoryId && (
+          <button
+            type="button"
+            id="btn-show-all-categories"
+            onClick={() => setIsolatedCategoryId(null)}
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all cursor-pointer shadow-2xs mr-1 animate-in fade-in"
+            title="Mostrar todas las líneas de categorías"
+          >
+            <Icons.RotateCcw className="w-3 h-3" />
+            <span>Mostrar todo</span>
+          </button>
+        )}
+
         {trends.map((cat) => {
           const isHidden = hiddenCategories.has(cat.categoryId);
+          const isIsolatedMode = isolatedCategoryId !== null;
+          const isCurrentIsolated = isolatedCategoryId === cat.categoryId;
+          const isDimmed = isIsolatedMode && !isCurrentIsolated;
           const totalCategorySpend = cat.monthlyTotals.reduce(
             (acc, m) => acc + m.totalAmount,
             0
@@ -197,14 +224,28 @@ export function CategoryTrendChart({
             <button
               key={cat.categoryId}
               type="button"
-              onClick={() => toggleCategory(cat.categoryId)}
+              onClick={() => {
+                if (isIsolatedMode) {
+                  setIsolatedCategoryId(isCurrentIsolated ? null : cat.categoryId);
+                } else {
+                  toggleCategory(cat.categoryId);
+                }
+              }}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-medium border transition-all cursor-pointer ${
-                isHidden
+                isDimmed
+                  ? "bg-zinc-100/60 text-zinc-400 border-zinc-200/60 dark:bg-zinc-900/30 dark:text-zinc-600 dark:border-zinc-800/40 opacity-40 grayscale"
+                  : isCurrentIsolated
+                  ? "bg-white text-zinc-900 border-zinc-900 dark:border-zinc-100 ring-2 ring-zinc-900 dark:ring-zinc-100 font-bold shadow-xs dark:bg-zinc-900 dark:text-zinc-100"
+                  : isHidden
                   ? "bg-zinc-100 text-zinc-400 border-zinc-200 dark:bg-zinc-900/50 dark:text-zinc-500 dark:border-zinc-800 line-through opacity-50"
                   : "bg-white text-zinc-800 border-zinc-200 shadow-2xs hover:border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-800"
               }`}
               title={
-                isHidden
+                isIsolatedMode
+                  ? isCurrentIsolated
+                    ? "Línea aislada. Haz clic para restaurar todas"
+                    : `Aislar ${cat.categoryName}`
+                  : isHidden
                   ? `Mostrar ${cat.categoryName} en el gráfico`
                   : `Ocultar ${cat.categoryName} del gráfico`
               }
@@ -303,23 +344,42 @@ export function CategoryTrendChart({
               getCoordinates(mIdx, mt.totalAmount)
             );
             const pathD = createSmoothPath(points);
+            const isIsolatedThis = isolatedCategoryId === cat.categoryId;
 
             return (
               <g key={`path-group-${cat.categoryId}`}>
-                {/* Line Path */}
+                {/* Line Path with Direct Click Isolation (US-045) */}
                 {months.length > 1 && (
                   <path
                     d={pathD}
                     fill="none"
                     stroke={cat.color}
-                    strokeWidth="2.5"
+                    strokeWidth={isIsolatedThis ? "3.5" : "2.5"}
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="transition-all duration-300"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Aislar línea de ${cat.categoryName}`}
+                    className="transition-all duration-200 cursor-pointer focus:outline-none hover:stroke-[3.5]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsolatedCategoryId((prev) =>
+                        prev === cat.categoryId ? null : cat.categoryId
+                      );
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsolatedCategoryId((prev) =>
+                          prev === cat.categoryId ? null : cat.categoryId
+                        );
+                      }
+                    }}
                   />
                 )}
 
-                {/* Data Points */}
+                {/* Coordinate Data Points (US-044) */}
                 {cat.monthlyTotals.map((mt, mIdx) => {
                   const { x, y } = points[mIdx];
                   const prevAmount =
@@ -341,19 +401,41 @@ export function CategoryTrendChart({
                       <circle
                         cx={x}
                         cy={y}
-                        r={isHovered ? 6 : isSingleMonth ? 5.5 : 4}
+                        r={isHovered ? 6.5 : isSingleMonth ? 5.5 : 4}
                         fill={cat.color}
                         stroke="#ffffff"
                         strokeWidth={isHovered ? 2.5 : 1.5}
                         className="pointer-events-none transition-[r,stroke-width] duration-150 dark:stroke-zinc-950"
                       />
-                      {/* Generous & Stable Hit Target (avoids SVG transform origin flicker) */}
+                      {/* Interactive Data-Point Hit Target with Button Role & Drill-down Click (US-044) */}
                       <circle
                         cx={x}
                         cy={y}
                         r={14}
                         fill="transparent"
-                        className="cursor-pointer"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Ver movimientos de ${cat.categoryName} en ${getFullMonthLabel(mt.monthKey)}`}
+                        className="cursor-pointer focus:outline-none"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectDataPoint?.({
+                            category: cat.categoryName,
+                            monthKey: mt.monthKey,
+                            monthLabel: getFullMonthLabel(mt.monthKey),
+                          });
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onSelectDataPoint?.({
+                              category: cat.categoryName,
+                              monthKey: mt.monthKey,
+                              monthLabel: getFullMonthLabel(mt.monthKey),
+                            });
+                          }
+                        }}
                         onMouseEnter={() =>
                           setHoveredPoint({
                             categoryName: cat.categoryName,

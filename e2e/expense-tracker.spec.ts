@@ -173,6 +173,47 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await expect(trendTooltip).toBeVisible();
     console.log("[E2E Test] ✓ Panel 1 point hover tooltip verified without flickering.");
 
+    // US-045: Click category line to isolate, verify "Mostrar todo" chip, then reset
+    console.log("[E2E Test] Verifying Panel 1 single-category line isolation (US-045)...");
+    const categoryLine = trendSvg.locator('path[role="button"]').first();
+    if (await categoryLine.isVisible().catch(() => false)) {
+      // Hovering should NOT isolate or display the "Mostrar todo" chip
+      await categoryLine.hover({ force: true });
+      await expect(page.locator("#btn-show-all-categories")).not.toBeVisible();
+
+      // Click isolates the category
+      await categoryLine.dispatchEvent('click');
+      const showAllCategoriesBtn = page.locator("#btn-show-all-categories");
+      await expect(showAllCategoriesBtn).toBeVisible();
+      console.log("[E2E Test] ✓ Category line isolation activated; 'Mostrar todo' chip appeared.");
+
+      // Clicking 'Mostrar todo' resets isolation
+      await showAllCategoriesBtn.click();
+      await expect(showAllCategoriesBtn).not.toBeVisible();
+      console.log("[E2E Test] ✓ 'Mostrar todo' reset category isolation successfully.");
+    }
+
+    // US-044: Click coordinate data-point to drill-down into sliding drawer
+    console.log("[E2E Test] Verifying Panel 1 coordinate data-point drill-down into drawer (US-044)...");
+    await pointHitTarget.click();
+    const drillDownDrawer = page.locator('aside[aria-label="Detalle de movimientos"]');
+    await expect(drillDownDrawer).toHaveClass(/translate-x-0/);
+    const activeFilterBadge = page.locator("#drawer-active-filter-badge");
+    await expect(activeFilterBadge).toBeVisible();
+    await expect(activeFilterBadge).toContainText("Filtrado por:");
+    console.log("[E2E Test] ✓ Sliding drawer opened with active filter badge.");
+
+    // Click "Mostrar todas" to reset drawer filter
+    const showAllTxBtn = page.locator("#btn-drawer-show-all-transactions");
+    await expect(showAllTxBtn).toBeVisible();
+    await showAllTxBtn.click();
+    await expect(activeFilterBadge).not.toBeVisible();
+    console.log("[E2E Test] ✓ Active filter cleared; full transactions restored.");
+
+    // Close drawer to return to dashboard
+    await page.locator("#btn-close-sliding-drawer").click();
+    await expect(drillDownDrawer).toHaveClass(/translate-x-full/);
+
     // Check category filter pill toggling in Panel 1
     const panel1Pills = page.locator("#panel-category-trends button").filter({ hasText: /Supermercado/ });
     if (await panel1Pills.first().isVisible().catch(() => false)) {

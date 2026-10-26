@@ -90,18 +90,18 @@ It details the UI/UX enhancements, session button consolidation, collapsible pan
   - [x] The sliding drawer header displays a clear, removable active filter indicator (e.g., "Filtrado por: Supermercado · Junio 2026" with transaction count).
   - [x] Provides a "Quitar filtro" / "Mostrar todas" button inside the drawer that resets filters and restores the full transaction list.
 
-### [ ] US-045: Single-Category Focus Isolation & "Mostrar todo" Toggle
+### [x] US-045: Single-Category Focus Isolation & "Mostrar todo" Toggle
 - **As a** user analyzing a busy multi-category trend chart,
 - **I want to** click directly on a category's line to isolate it and hide all other lines,
 - **So that** I can focus exclusively on that category's historical trajectory without visual distractions.
 - **Split-Brain Boundary:** 100% Local (Client SVG path interaction and state management).
 - **Acceptance Criteria:**
-  - [ ] Clicking directly on a category's SVG trend line (`<path>`) isolates that line, immediately hiding all other category lines on the chart.
-  - [ ] When a category is isolated, a small, accessible chip button appears with the text "Mostrar todo" within the panel controls.
-  - [ ] Clicking "Mostrar todo" unhides all category lines and removes the chip.
-  - [ ] Category isolation and the appearance of the "Mostrar todo" chip are triggered exclusively upon mouse click, never upon mouse hover or cursor movement.
-  - [ ] Hovering over a trend line retains standard tooltip preview behavior without isolating the line or displaying the "Mostrar todo" chip.
-  - [ ] The category legend pills reflect the isolated state, visually dimming non-isolated categories while keeping the active one highlighted.
+  - [x] Clicking directly on a category's SVG trend line (`<path>`) isolates that line, immediately hiding all other category lines on the chart.
+  - [x] When a category is isolated, a small, accessible chip button appears with the text "Mostrar todo" within the panel controls.
+  - [x] Clicking "Mostrar todo" unhides all category lines and removes the chip.
+  - [x] Category isolation and the appearance of the "Mostrar todo" chip are triggered exclusively upon mouse click, never upon mouse hover or cursor movement.
+  - [x] Hovering over a trend line retains standard tooltip preview behavior without isolating the line or displaying the "Mostrar todo" chip.
+  - [x] The category legend pills reflect the isolated state, visually dimming non-isolated categories while keeping the active one highlighted.
 
 ---
 
