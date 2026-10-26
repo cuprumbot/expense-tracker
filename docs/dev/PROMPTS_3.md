@@ -34,3 +34,28 @@ Make the following UI/UX changes:
 - When the panels get minimized, a chip that says `Minimizado` appears, remove it.
 - When the panels get minimized, a little blue circle appears besides the title, remove it.
 - The `Restaurar` button should be only an icon with no text.
+
+---
+
+Make this changes to Panel 1:
+- Hide the `Categorías` text so we can better use this space. 
+- When the user clicks some category to hide it, the `Mostrar todo` chip should show.
+- Show this text when the info button for the panel is pressed:
+
+```
+Clic en una categoría para ocultarla o mostrarla.
+
+Clic en un punto para ver transacciones de esa categoría y mes.
+
+Clic en una línea para ocultar las demás categorías.
+```
+
+---
+
+Make this changes to Panel 2:
+- The hidden vendors should be stored in localStorage and restored when the user visits the dashboard again.
+- Show this text when the info button for the panel is pressed:
+
+```
+Clic en un negocio para ocultarlo de la lista.
+```

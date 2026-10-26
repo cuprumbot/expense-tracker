@@ -30,8 +30,8 @@ Si deseas ejecutar únicamente las pruebas de un módulo en particular durante e
 # Ejemplo: Probar únicamente el motor de anonimización
 node --import tsx --test src/lib/anonymizer.test.ts
 
-# Ejemplo: Probar el parser de PDF y estados de cuenta G&T
-node --import tsx --test src/lib/pdf-parser.test.ts
+# Ejemplo: Probar el parser de Banco G&T Continental
+node --import tsx --test src/lib/gyt-parser.test.ts
 
 # Ejemplo: Probar los cálculos avanzados de analítica y series de tiempo
 node --import tsx --test src/lib/reporting.test.ts
@@ -79,7 +79,7 @@ A continuación se detalla cada uno de los archivos de prueba y los escenarios c
 * **Parseo con mapeo personalizado**: Verifica la conversión correcta de transacciones cuando el usuario asigna manualmente las columnas.
 * **Detección de transacciones en dólares en CSV**: Identifica columnas o montos rotulados en dólares y asigna automáticamente `originalCurrency: "USD"` calculando la conversión a GTQ.
 
-### 2.4. Parser de PDF y Estados de Cuenta (`src/lib/pdf-parser.test.ts`)
+### 2.4. Parser de Banco G&T Continental (`src/lib/gyt-parser.test.ts`)
 * **Detección de Banco**: Identifica correctamente **Banco G&T Continental** mediante palabras clave (`g&t continental`, `gtc.com.gt`, `plaza continental`) y clasifica otros bancos como no soportados.
 * **Filtrado de créditos y pagos**: Descarta débitos erróneos, abonos, pagos por internet (`PAGO POR INTERNET`) y créditos de cashback (`CREDITO CASH BACK`).
 * **Extracción y conversión de consumos en dólares**: Extrae consumos facturados en dólares estadounidenses (`$`), preserva el monto en divisa original (`originalAmount` y `originalCurrency: "USD"`) y los convierte a Quetzales al tipo de cambio oficial.

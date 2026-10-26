@@ -82,8 +82,13 @@ expense-tracker/
 │   │   ├── llm-classifier.test.ts    # Pruebas del clasificador LLM
 │   │   ├── llm-extractor.ts          # Integración y prompts de extracción con Gemini
 │   │   ├── llm-extractor.test.ts     # Pruebas del extractor LLM
-│   │   ├── pdf-parser.ts             # Parser local con pdf-parse, G&T y conversión de dólares
-│   │   ├── pdf-parser.test.ts        # Pruebas del parser PDF
+│   │   ├── banrural-parser.ts        # Parser local de estados de cuenta de Banrural
+│   │   ├── banrural-parser.test.ts   # Pruebas del parser de Banrural
+│   │   ├── bi-parser.ts              # Parser local de estados de cuenta de Banco Industrial
+│   │   ├── bi-parser.test.ts         # Pruebas del parser de Banco Industrial
+│   │   ├── gyt-parser.ts             # Parser local de Banco G&T Continental con soporte GTQ y USD
+│   │   ├── gyt-parser.test.ts        # Pruebas del parser de Banco G&T Continental
+│   │   ├── pdf-parser.ts             # Motor y despachador multi-banco de documentos PDF con pdf-parse
 │   │   ├── reporting.ts              # Agregación temporal multimes, rankings, atípicos y donas
 │   │   ├── reporting.test.ts         # Pruebas del motor de reportes y analítica avanzada
 │   │   ├── savings-advisor.ts        # Construcción de payload y análisis de ahorro
@@ -174,9 +179,10 @@ Todos los endpoints se ejecutan como **Route Handlers de Next.js** en el servido
 * **`deduplication.ts`**: Compara transacciones entrantes con las existentes en la sesión y dentro del mismo lote. Si una transacción coincide exactamente en fecha, descripción normalizada y monto, se descarta silenciosamente y se computa en el contador de duplicados descartados, protegiendo las compras legítimas no duplicadas.
 * **`anonymizer.ts`**: Motor central de privacidad. Ejecuta expresiones regulares y análisis heurístico para detectar y reemplazar nombres de titulares, direcciones, cuentas bancarias, IBAN, DPI, NIT, teléfonos y correos electrónicos con marcadores legibles (`[NOMBRE_REDACTADO]`, `[CUENTA_REDACTADA]`, etc.).
 * **`currency.ts`**: Formateo y análisis de montos en Quetzales guatemaltecos (`GTQ` / `Q`), conversión automática de dólares estadounidenses a Quetzales (`convertUSDtoGTQ`) mediante tasa configurable y formateo de etiquetas con moneda de origen.
-* **`csv-parser.ts`**: Lector de archivos CSV basado en PapaParse, con capacidad de deducción automática de columnas, detección de moneda original (USD/GTQ) y normalización de fechas guatemaltecas.
-* **`pdf-parser.ts`**: Parser de documentos PDF con `pdf-parse` y lógica especializada para Banco G&T Continental. Filtra automáticamente pagos de tarjeta, créditos y abonos, y extrae consumos tanto en Quetzales como en dólares convirtiéndolos al tipo de cambio configurado.
-* **`expense-classifier.ts`**: Clasificador determinista que cruza cada descripción de movimiento con el catálogo en memoria de 12 categorías de comercios guatemaltecos (incluyendo Visacuotas y Financiamiento). Identifica automáticamente suscripciones digitales (Netflix, Spotify, etc.) y evalúa el umbral de pendientes (10).
+* **`gyt-parser.ts`**: Parser especializado para estados de cuenta de Banco G&T Continental. Filtra automáticamente pagos de tarjeta, créditos y abonos, y extrae consumos tanto en Quetzales como en dólares convirtiéndolos al tipo de cambio configurado.
+* **`bi-parser.ts`**: Parser especializado para cuentas monetarias y tarjetas de crédito de Banco Industrial.
+* **`banrural-parser.ts`**: Parser especializado para cuentas y estados de cuenta de Banrural, con soporte de transacciones de doble línea.
+* **`pdf-parser.ts`**: Motor central y despachador multi-banco de documentos PDF con `pdf-parse`. Detecta automáticamente el banco de origen (Banco Industrial, Banrural, Banco G&T Continental, BAM) y enruta la extracción al parser especializado correspondiente de manera 100% local.
 * **`storage.ts`**: Administra la persistencia segura en `localStorage` (`expense_tracker_session_v1` y `expense_tracker_categories_v1`), soportando continuidad incremental de sesiones, recuperación ante datos corruptos y borrado selectivo preservando categorías personalizadas.
 * **`llm-extractor.ts`**: Construcción de prompts del sistema y usuario, validación de payloads y procesamiento de respuestas JSON para la extracción de transacciones con Gemini.
 * **`llm-classifier.ts`**: Lógica de integración con Gemini para clasificar transacciones pendientes mediante prompts estructurados y fallback de modelos.

@@ -38,7 +38,7 @@ This document outlines the user stories, implementation phases, and testable acc
     - **Banco Agromercantil (BAM):** `Banco Agromercantil`, `BAM`, `bam.com.gt`.
     - **Banrural:** `Banrural`, `Banco de Desarrollo Rural`, `banrural.com.gt`.
     - **Banco G&T Continental:** `G&T Continental`, `Banco G&T Continental`, `gtc.com.gt`.
-  - [ ] Dispatches the document to the corresponding specialized parser (`parseBiStatement` [x], `parseBamStatement` [US-020], `parseBanruralStatement` [US-019], `parseGyTStatement` [x]).
+  - [ ] Dispatches the document to the corresponding specialized parser (`parseBiStatement` [x], `parseBamStatement` [US-020], `parseBanruralStatement` [x], `parseGyTStatement` [x]).
   - [x] Attaches the identified bank name to the parsing result metadata (`bankName: string`).
   - [x] If no supported bank layout matches, flags the document as an "unsupported bank" and smoothly transitions to the Local PII Anonymization and Preview flow (US-005).
   - [x] Bank detection executes 100% locally with zero network requests or LLM invocations.
@@ -58,19 +58,19 @@ This document outlines the user stories, implementation phases, and testable acc
   - [x] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
   - [x] Includes unit tests with simulated Banco Industrial statement text fixtures covering single-page and multi-page statements.
 
-### [ ] US-019: Banrural Local PDF Statement Parser
+### [x] US-019: Banrural Local PDF Statement Parser
 - **As a** Banrural customer,
 - **I want to** upload my Banrural statement PDF and have my expenses extracted locally,
 - **So that** my financial data is processed securely without exposing sensitive banking records.
 - **Split-Brain Boundary:** 100% Local (Local PDF text extraction and regex parsing).
 - **Acceptance Criteria:**
-  - [ ] Extracts transactions from Banrural account statements (cuentas monetarias / ahorro) and Banrural credit card statements.
-  - [ ] Correctly parses transaction date, merchant/concept description, and transaction amount.
-  - [ ] Filters out non-expense records (depósitos, remesas familiares, créditos por intereses, transferencias entrantes, pagos a tarjeta).
-  - [ ] Ignores bank header tables, agency details, summary lines (`Saldo Inicial`, `Saldo Final`, `Total Débitos`, `Total Créditos`), and legal footers.
-  - [ ] Normalizes transaction concept strings into clean Spanish descriptions.
-  - [ ] Generates canonical `Transaction[]` with unique IDs, normalized dates, and `classificationSource: 'local'`.
-  - [ ] Includes unit tests covering representative Banrural statement layouts and edge cases.
+  - [x] Extracts transactions from Banrural account statements (cuentas monetarias / ahorro) and Banrural credit card statements.
+  - [x] Correctly parses transaction date, merchant/concept description, and transaction amount.
+  - [x] Filters out non-expense records (depósitos, remesas familiares, créditos por intereses, transferencias entrantes, pagos a tarjeta).
+  - [x] Ignores bank header tables, agency details, summary lines (`Saldo Inicial`, `Saldo Final`, `Total Débitos`, `Total Créditos`), and legal footers.
+  - [x] Normalizes transaction concept strings into clean Spanish descriptions.
+  - [x] Generates canonical `Transaction[]` with unique IDs, normalized dates, and `classificationSource: 'local'`.
+  - [x] Includes unit tests covering representative Banrural statement layouts and edge cases.
 
 ### [ ] US-020: Banco Agromercantil (BAM) Local PDF Statement Parser
 - **As a** Banco Agromercantil (BAM) customer,

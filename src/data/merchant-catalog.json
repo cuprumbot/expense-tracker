@@ -421,7 +421,8 @@
         "bi-app transf",
         "cajero",
         "atm",
-        "pago cheque"
+        "pago cheque",
+        "retiro de efectivo"
       ]
     }
   ],

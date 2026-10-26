@@ -73,7 +73,7 @@ describe("US-017 & US-018: Multi-Bank Identification Engine", () => {
     const rBanrural = detectBankFromText("Estado de cuenta Banrural www.banrural.com.gt");
     assert.strictEqual(rBanrural.bankName, "Banrural");
     assert.strictEqual(rBanrural.isBanrural, true);
-    assert.strictEqual(rBanrural.isSupported, false);
+    assert.strictEqual(rBanrural.isSupported, true);
 
     const rBam = detectBankFromText("Banco Agromercantil BAM de Guatemala");
     assert.strictEqual(rBam.bankName, "Banco Agromercantil (BAM)");

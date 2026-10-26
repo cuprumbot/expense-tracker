@@ -28,7 +28,7 @@ Expense Tracker is a Next.js (App Router) app deployed on Vercel. It uses a **sp
 - `GET /api/exchange-rate` - returns the configured USD to GTQ exchange rate (default 7.85).
 - `POST /api/parse-pdf` - local only, no external calls.
   - `pdf-parse` extracts the text.
-  - `pdf-parser` detects the bank. Banco G&T Continental has a custom parser extracting both GTQ and USD transactions (converting USD to GTQ).
+  - `pdf-parser` detects the bank and dispatches to specialized parsers (`gyt-parser` for Banco G&T Continental, `bi-parser` for Banco Industrial, `banrural-parser` for Banrural) extracting both GTQ and USD transactions (converting USD to GTQ).
   - If the bank is supported, it returns structured transactions locally classified. Otherwise it returns the raw text and `isSupportedBank=false`, and the client runs anonymization.
 - `POST /api/extract-transactions` - receives sanitized text. `validateSanitizedPayload` rejects any text with IBAN, account number, DPI or email. Calls Gemini and returns JSON transactions, which are then classified locally.
 - `POST /api/classify-expenses` - called in the background when more than 10 transactions remain "Pendiente". `validateExpenseClassificationPayload` allows only id, description and amount. Calls Gemini.

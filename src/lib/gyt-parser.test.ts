@@ -3,9 +3,15 @@ import assert from "node:assert/strict";
 import fs from "fs";
 import {
   detectBankFromText,
-  parseGyTStatementText,
   parsePDFStatement,
 } from "./pdf-parser";
+import {
+  parseGyTStatementText,
+  parseGyTStatementFromBuffer,
+  cleanGyTDescription,
+  isNonExpenseGyTLine,
+  normalizeStatementDate,
+} from "./gyt-parser";
 
 const SAMPLE_GYT_TEXT = `
 Banco G&T Continental, S.A.
@@ -30,7 +36,7 @@ Estado de Cuenta Mensual
 Fecha: 2026-09-15
 `;
 
-describe("detectBankFromText", () => {
+describe("US-017 & US-002: Banco G&T Continental Bank Identification", () => {
   it("identifies Banco G&T Continental from keywords", () => {
     const result = detectBankFromText(SAMPLE_GYT_TEXT);
     assert.strictEqual(result.isGyT, true);
@@ -44,7 +50,33 @@ describe("detectBankFromText", () => {
   });
 });
 
-describe("parseGyTStatementText", () => {
+describe("US-002: Banco G&T Continental Helpers", () => {
+  it("normalizes statement dates to ISO YYYY-MM-DD", () => {
+    assert.strictEqual(normalizeStatementDate("02-09-2026"), "2026-09-02");
+    assert.strictEqual(normalizeStatementDate("15/10/2026"), "2026-10-15");
+    assert.strictEqual(normalizeStatementDate("05-oct-2026"), "2026-10-05");
+  });
+
+  it("cleans merchant descriptions by removing location tokens and trailing country codes", () => {
+    assert.strictEqual(
+      cleanGyTDescription("POLLO CAMPERO 112 AV P\\AVE PETAPA 31 GTM"),
+      "POLLO CAMPERO 112 AV P"
+    );
+    assert.strictEqual(
+      cleanGyTDescription("SUPERMERCADOS LA TORRE GUA"),
+      "SUPERMERCADOS LA TORRE"
+    );
+  });
+
+  it("filters non-expense statement lines (payments, cashback, subtotals)", () => {
+    assert.strictEqual(isNonExpenseGyTLine("PAGO POR INTERNET"), true);
+    assert.strictEqual(isNonExpenseGyTLine("CREDITO CASH BACK"), true);
+    assert.strictEqual(isNonExpenseGyTLine("Sub - total Quetzales"), true);
+    assert.strictEqual(isNonExpenseGyTLine("POLLO CAMPERO"), false);
+  });
+});
+
+describe("US-002 & US-022: parseGyTStatementText", () => {
   it("extracts valid merchant expenses in Q and $, converts $ to GTQ, and filters out payments/credits", () => {
     const result = parseGyTStatementText(SAMPLE_GYT_TEXT);
 
@@ -93,7 +125,7 @@ describe("parseGyTStatementText", () => {
   });
 });
 
-describe("parsePDFStatement integration with demo files", () => {
+describe("US-002 & US-017: parsePDFStatement integration with demo files (Banco G&T Continental)", () => {
   it("successfully parses demo1_muchos_pendientes.pdf including dollar expenses converted to GTQ", async () => {
     const filePath = fs.existsSync("./demo/demo1_muchos_pendientes.pdf")
       ? "./demo/demo1_muchos_pendientes.pdf"
