@@ -858,9 +858,9 @@ export interface TransactionAgeResult {
 }
 
 export const TRANSACTION_AGE_COLORS: Record<TransactionAgeSegmentId, string> = {
-  cuotas: "#0284c7",
-  suscripciones: "#8b5cf6",
-  inmediatas: "#10b981",
+  cuotas: "#2563eb",
+  suscripciones: "#eab308",
+  inmediatas: "#ef4444",
 };
 
 /**
