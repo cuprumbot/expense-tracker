@@ -130,3 +130,32 @@ If the user has less than 10 unclassified expenses, the dashboard will be shown.
         - Immediate purchases: All other purchases, made in the current month.
     - Option to filter which months are included in the calculations.
 
+## Third Iteration
+
+### UI/UX Tasks
+
+Implement the following UI/UX changes. If the UI would change, use the `frontend-design` skill.
+
+General UI/UX tasks:
+- In the dashboard screen we have two redundant buttons: `Reiniciar sesión` and `Borrar mis datos`. Remove `Borrar mis datos` which deletes everything, and keep `Reiniciar sesión` which asks if the user wants to also remove personalized categories.
+- In the load file screen we have `Borrar mis datos`, put `Reiniciar sesión` with the same functionality instead.
+- In the load file screen we have `Nueva carga de estado de cuenta`. Remove this button since its behaviour is dangerous: it removes the previous session without confirming with the user.
+
+Tasks for all the panels:
+- For each panel add a small button to minimize it, in the upper right corner. When minimize is clicked, the panel should hide and only the chip/title should remain visible. The panel should be restored when the chip/title is clicked. When a panel is minimized, the panels below move up. When a panel is restored, the panels below move down.
+- Besides the minimize button, add a `Info` button. When it is clicked a small tutorial for that panel should appear. Put some very basic info for each panel at this time (a couple lines at most), I will add information later.
+
+Tasks for panel 1:
+- Add this functionality when clicking the points in the graph: When a point is clicked, the view transactions side panel opens and filters to show only the transactions of that month and that type.
+- Add this functionality when clicking the trend line in the graph: When a trend line is clicked, hide the other category lines so the user can focus on a single category. When that happens, a small chip appears with "Mostrar todo"; when that chip is clicked, show all the category lines again. Do not show the chip if the user hovers over the trend line, only when it's clicked.
+
+Tasks for panel 2:
+- Most of the useful information for the user is not on the top 5 expenses, so add this functionality: When some vendor is clicked (in either the two views on this panel), it is dismissed. It stops showing, the vendors below move up, and the next vendor in order shows up. There must be 5 vendors visible at a time (unless the user has clicked a lot of them and has dismissed them all). When some vendor is dismissed, a small chip appears with "Mostrar todo"; when that chip is clicked, show all the dismissed vendors again.
+- Save in localStorage which tab the user viewed last (`Mayor monto gastado` or `Mayor cantidad de compras`). When the user goes to the dashboard again, open the last used tab.
+
+Tasks for panel 3:
+- Set the `Día del mes` tab as the default. ave in localStorage which tab the user viewed last (`Día de la semana` or `Día del mes`). When the user goes to the dashboard again, open the last used tab.
+- When the user clicks on a bar, the view transactions side panel opens and filters to show only the transactions of that day of the week/month.
+
+Tasks for panel 4:
+- Check the colors used on the donut chart. They should be easy to distinguish.

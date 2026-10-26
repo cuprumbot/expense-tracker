@@ -40,3 +40,5 @@ next-env.d.ts
 
 # demo pdf bank statements
 demo/*.pdf
+demo/otros_bancos/*.pdf
+demo/tarjetas_credito/*.pdf

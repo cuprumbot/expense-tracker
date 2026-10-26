@@ -203,8 +203,6 @@ Report the results to me.
 
 ---
 
-TO DO 1
-
 Execute the following User Stories from `USER_STORIES_2_DASHBOARD.md` sequentially: US-029, US-030.
 
 Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
@@ -227,8 +225,6 @@ The stories US-029 and US-030 create the base dashboard. After each of these spe
 After completing the entire batch, execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.
 
 ---
-
-TO DO 2
 
 Execute the following User Stories from `USER_STORIES_2_DASHBOARD.md` sequentially: US-031 through US-039.
 
@@ -322,3 +318,5 @@ These two messages shouldn't be shown at the same time:
 - Todas las transacciones del archivo '2026-04.pdf' ya se encontraban registradas y fueron omitidas.
 
 If there were duplicated transactions just say that, don't pop up the success message.
+
+---
