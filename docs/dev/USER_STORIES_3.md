@@ -136,17 +136,17 @@ It details the UI/UX enhancements, session button consolidation, collapsible pan
 
 ## Phase 24: Panel 3 Temporal Drill-Down & Default Tab Configuration (Consumption Patterns)
 
-### [ ] US-048: Default Tab Configuration & Temporal View Persistence
+### [x] US-048: Default Tab Configuration & Temporal View Persistence
 - **As a** user analyzing spending habits,
 - **I want** Panel 3 to default to the "Día del mes" tab and remember my last selected tab,
 - **So that** I immediately see my monthly calendar cycle upon opening the dashboard.
 - **Split-Brain Boundary:** 100% Local (`window.localStorage` preference).
 - **Acceptance Criteria:**
-  - [ ] Updates the initial default view mode of Panel 3 from "Día de la semana" to "Día del mes (1 a 31)".
-  - [ ] Whenever the user switches between "Día de la semana" and "Día del mes", the active mode is saved to `window.localStorage` under key `expense_tracker_pattern_view_mode`.
-  - [ ] On component mount, reads the stored preference and sets the active tab.
-  - [ ] If no stored preference is present, it defaults to `"dayOfMonth"` ("Día del mes").
-  - [ ] The segmented toggle control visually reflects the restored mode immediately upon page load.
+  - [x] Updates the initial default view mode of Panel 3 from "Día de la semana" to "Día del mes (1 a 31)".
+  - [x] Whenever the user switches between "Día de la semana" and "Día del mes", the active mode is saved to `window.localStorage` under key `expense_tracker_pattern_view_mode`.
+  - [x] On component mount, reads the stored preference and sets the active tab.
+  - [x] If no stored preference is present, it defaults to `"dayOfMonth"` ("Día del mes").
+  - [x] The segmented toggle control visually reflects the restored mode immediately upon page load.
 
 ### [ ] US-049: Temporal Bar Click Transaction Drill-Down
 - **As a** user noticing a spending spike on a particular day of the week or date of the month,

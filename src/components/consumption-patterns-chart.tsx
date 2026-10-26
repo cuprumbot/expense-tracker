@@ -6,21 +6,69 @@ import {
   calculateConsumptionPatterns,
   ConsumptionPatternsResult,
   TemporalPatternItem,
+  DAYS_OF_WEEK_DEF,
 } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/currency";
 import { Icons } from "@/components/icons";
 
 interface ConsumptionPatternsChartProps {
   transactions: Transaction[];
+  onSelectTemporalFilter?: (filter: {
+    type: "dayOfWeek" | "dayOfMonth";
+    value: number;
+    label: string;
+  }) => void;
 }
 
 type PatternMode = "dayOfWeek" | "dayOfMonth";
 
 export function ConsumptionPatternsChart({
   transactions,
+  onSelectTemporalFilter,
 }: ConsumptionPatternsChartProps) {
-  const [patternMode, setPatternMode] = useState<PatternMode>("dayOfWeek");
+  // Default to "dayOfMonth" per US-048
+  const [patternMode, setPatternMode] = useState<PatternMode>("dayOfMonth");
   const [hoveredItem, setHoveredItem] = useState<TemporalPatternItem | null>(null);
+
+  // Restore stored view mode from localStorage on mount (US-048)
+  React.useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("expense_tracker_pattern_view_mode");
+      if (stored === "dayOfWeek" || stored === "dayOfMonth") {
+        setPatternMode(stored);
+      }
+    } catch {
+      // Graceful fallback for restricted storage
+    }
+  }, []);
+
+  const handleSwitchPatternMode = (mode: PatternMode) => {
+    setPatternMode(mode);
+    setHoveredItem(null);
+    try {
+      window.localStorage.setItem("expense_tracker_pattern_view_mode", mode);
+    } catch {
+      // Graceful fallback
+    }
+  };
+
+  const handleBarClick = (item: TemporalPatternItem) => {
+    if (patternMode === "dayOfWeek") {
+      const dowIdx = DAYS_OF_WEEK_DEF.findIndex((d) => d.key === item.key);
+      onSelectTemporalFilter?.({
+        type: "dayOfWeek",
+        value: dowIdx >= 0 ? dowIdx : 0,
+        label: item.label,
+      });
+    } else {
+      const domDay = parseInt(item.key, 10);
+      onSelectTemporalFilter?.({
+        type: "dayOfMonth",
+        value: !isNaN(domDay) ? domDay : 1,
+        label: `Día ${domDay} del mes`,
+      });
+    }
+  };
 
   // Compute spending patterns and anomaly heuristics
   const patterns: ConsumptionPatternsResult = useMemo(() => {
@@ -67,10 +115,7 @@ export function ConsumptionPatternsChart({
           <button
             type="button"
             id="btn-pattern-day-of-week"
-            onClick={() => {
-              setPatternMode("dayOfWeek");
-              setHoveredItem(null);
-            }}
+            onClick={() => handleSwitchPatternMode("dayOfWeek")}
             className={`px-2.5 py-1 text-2xs font-medium rounded-md transition-all cursor-pointer ${
               patternMode === "dayOfWeek"
                 ? "bg-white text-zinc-900 shadow-2xs font-semibold dark:bg-zinc-800 dark:text-zinc-100"
@@ -82,10 +127,7 @@ export function ConsumptionPatternsChart({
           <button
             type="button"
             id="btn-pattern-day-of-month"
-            onClick={() => {
-              setPatternMode("dayOfMonth");
-              setHoveredItem(null);
-            }}
+            onClick={() => handleSwitchPatternMode("dayOfMonth")}
             className={`px-2.5 py-1 text-2xs font-medium rounded-md transition-all cursor-pointer ${
               patternMode === "dayOfMonth"
                 ? "bg-white text-zinc-900 shadow-2xs font-semibold dark:bg-zinc-800 dark:text-zinc-100"
@@ -153,7 +195,18 @@ export function ConsumptionPatternsChart({
             return (
               <div
                 key={`plot-col-${patternMode}-${item.key}`}
-                className="h-full w-full flex flex-col justify-end items-center relative group cursor-pointer"
+                role="button"
+                tabIndex={0}
+                aria-label={`Ver movimientos de ${item.label}`}
+                title={`Haz clic para ver los movimientos de ${item.label}`}
+                onClick={() => handleBarClick(item)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleBarClick(item);
+                  }
+                }}
+                className="h-full w-full flex flex-col justify-end items-center relative group cursor-pointer focus:outline-none"
                 onMouseEnter={() => setHoveredItem(item)}
                 onMouseLeave={() => setHoveredItem(null)}
               >
