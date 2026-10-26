@@ -33,30 +33,30 @@ This document outlines the user stories, implementation phases, and testable acc
 - **So that** the document is parsed using a specialized local parser without routing to the LLM extraction pipeline.
 - **Split-Brain Boundary:** 100% Local (Client / Server text detection and routing).
 - **Acceptance Criteria:**
-  - [x] Analyzes extracted PDF text headers, metadata, URLs, and identifying institution keywords to detect the originating bank:
+  - [ ] Analyzes extracted PDF text headers, metadata, URLs, and identifying institution keywords to detect the originating bank:
     - **Banco Industrial:** `Banco Industrial`, `Bi en Línea`, `Corporación Bi`, `bi.com.gt`.
     - **Banco Agromercantil (BAM):** `Banco Agromercantil`, `BAM`, `bam.com.gt`.
     - **Banrural:** `Banrural`, `Banco de Desarrollo Rural`, `banrural.com.gt`.
     - **Banco G&T Continental:** `G&T Continental`, `Banco G&T Continental`, `gtc.com.gt`.
-  - [ ] Dispatches the document to the corresponding specialized parser (`parseBiStatement` [x], `parseBamStatement` [US-020], `parseBanruralStatement` [US-019], `parseGyTStatement` [x]).
-  - [x] Attaches the identified bank name to the parsing result metadata (`bankName: string`).
-  - [x] If no supported bank layout matches, flags the document as an "unsupported bank" and smoothly transitions to the Local PII Anonymization and Preview flow (US-005).
-  - [x] Bank detection executes 100% locally with zero network requests or LLM invocations.
+  - [ ] Dispatches the document to the corresponding specialized parser (`parseBiStatement` [ ], `parseBamStatement` [US-020], `parseBanruralStatement` [US-019], `parseGyTStatement` [ ]).
+  - [ ] Attaches the identified bank name to the parsing result metadata (`bankName: string`).
+  - [ ] If no supported bank layout matches, flags the document as an "unsupported bank" and smoothly transitions to the Local PII Anonymization and Preview flow (US-005).
+  - [ ] Bank detection executes 100% locally with zero network requests or LLM invocations.
 
-### [x] US-018: Banco Industrial (BI) Local PDF Statement Parser
+### [ ] US-018: Banco Industrial (BI) Local PDF Statement Parser
 - **As a** Banco Industrial customer,
 - **I want to** upload my BI bank statement or credit card PDF and have my debit expenses extracted locally,
 - **So that** my transactions are parsed quickly, accurately, and with complete privacy.
 - **Split-Brain Boundary:** 100% Local (Local PDF text extraction and regex parsing).
 - **Acceptance Criteria:**
-  - [x] Extracts transactions from both Banco Industrial deposit/monetario statements and Bi Credit card statements (Visa / Mastercard).
-  - [x] Extracts transaction dates and normalizes them to ISO format `YYYY-MM-DD`.
-  - [x] Cleans and normalizes merchant descriptions, removing terminal codes, internal POS identifiers, and location tokens (e.g., `\GUATEMALA GTM`, `POS BI`).
-  - [x] Accurately extracts debit amounts, handling thousand-separator commas and decimal formats.
-  - [x] Distinguishes debit expenses from payments, credit refunds, interest payments, and transfers between own accounts.
-  - [x] Discards non-transactional statement rows (saldo anterior, saldo corte, saldo al corte, pago mínimo, crédito disponible, resúmenes de cargos).
-  - [x] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
-  - [x] Includes unit tests with simulated Banco Industrial statement text fixtures covering single-page and multi-page statements.
+  - [ ] Extracts transactions from both Banco Industrial deposit/monetario statements and Bi Credit card statements (Visa / Mastercard).
+  - [ ] Extracts transaction dates and normalizes them to ISO format `YYYY-MM-DD`.
+  - [ ] Cleans and normalizes merchant descriptions, removing terminal codes, internal POS identifiers, and location tokens (e.g., `\GUATEMALA GTM`, `POS BI`).
+  - [ ] Accurately extracts debit amounts, handling thousand-separator commas and decimal formats.
+  - [ ] Distinguishes debit expenses from payments, credit refunds, interest payments, and transfers between own accounts.
+  - [ ] Discards non-transactional statement rows (saldo anterior, saldo corte, saldo al corte, pago mínimo, crédito disponible, resúmenes de cargos).
+  - [ ] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
+  - [ ] Includes unit tests with simulated Banco Industrial statement text fixtures covering single-page and multi-page statements.
 
 ### [ ] US-019: Banrural Local PDF Statement Parser
 - **As a** Banrural customer,
