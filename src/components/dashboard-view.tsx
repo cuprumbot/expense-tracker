@@ -68,15 +68,9 @@ function DashboardPanelSection({
     >
       {isMinimized ? (
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-            <h2 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              {title}
-            </h2>
-            <span className="text-3xs font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
-              Minimizado
-            </span>
-          </div>
+          <h2 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            {title}
+          </h2>
           <button
             type="button"
             id={`btn-restore-${id}`}
@@ -84,12 +78,11 @@ function DashboardPanelSection({
               e.stopPropagation();
               onToggleMinimize();
             }}
-            className="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 rounded-md bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+            className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-850 transition-colors cursor-pointer"
             title="Restaurar panel"
             aria-label={`Restaurar ${title}`}
           >
-            <Icons.Maximize2 className="w-3 h-3" />
-            <span className="hidden sm:inline">Restaurar</span>
+            <Icons.Maximize2 className="w-3.5 h-3.5" />
           </button>
         </div>
       ) : (
@@ -182,7 +175,37 @@ export function DashboardView({
 }: DashboardViewProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerCategoryFilter, setDrawerCategoryFilter] = useState<string | null>(null);
-  const [minimizedPanels, setMinimizedPanels] = useState<Record<string, boolean>>({});
+  const STORAGE_KEY_MINIMIZED_PANELS = "expense_tracker_minimized_panels";
+
+  const [minimizedPanels, setMinimizedPanels] = useState<Record<string, boolean>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = window.localStorage.getItem("expense_tracker_minimized_panels");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            return parsed;
+          }
+        }
+      } catch (err) {
+        console.warn("Error reading minimized panels from localStorage:", err);
+      }
+    }
+    return {};
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY_MINIMIZED_PANELS,
+        JSON.stringify(minimizedPanels)
+      );
+    } catch (err) {
+      console.warn("Error saving minimized panels to localStorage:", err);
+    }
+  }, [minimizedPanels]);
+
   const [activeInfoPanel, setActiveInfoPanel] = useState<string | null>(null);
 
   const toggleMinimize = (panelId: string) => {

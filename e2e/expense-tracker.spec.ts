@@ -144,11 +144,24 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await minBtn1.click();
     // In minimized state, trend SVG is hidden, restore button is visible
     await expect(page.locator("#btn-restore-panel-category-trends")).toBeVisible();
-    await expect(page.locator("#panel-category-trends").getByText("Minimizado")).toBeVisible();
+
+    // Verify localStorage persistence of minimized state
+    const storedState = await page.evaluate(() =>
+      localStorage.getItem("expense_tracker_minimized_panels")
+    );
+    expect(storedState).toBeTruthy();
+    expect(JSON.parse(storedState || "{}")["panel-category-trends"]).toBe(true);
+
     // Restore Panel 1
     await page.locator("#btn-restore-panel-category-trends").click();
     await expect(page.locator("#btn-restore-panel-category-trends")).not.toBeVisible();
     await expect(page.locator('#panel-category-trends svg[aria-label="Gráfico de tendencia mensual por categoría"]')).toBeVisible();
+
+    // Verify localStorage persistence updated upon restore
+    const restoredState = await page.evaluate(() =>
+      localStorage.getItem("expense_tracker_minimized_panels")
+    );
+    expect(JSON.parse(restoredState || "{}")["panel-category-trends"]).toBe(false);
     console.log("[E2E Test] ✓ US-042 & US-043 Panel controls verified successfully.");
 
     // 5.1 Assertions for US-031 & US-032 (Panel 1: Category Trends Line Chart)
