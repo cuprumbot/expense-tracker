@@ -44,19 +44,19 @@ It details the UI/UX enhancements, session button consolidation, collapsible pan
 
 ## Phase 21: Modular Panel Controls: Minimization & Contextual Tutorials (All Panels)
 
-### [ ] US-042: Collapsible Panel Architecture & Dynamic Layout Reordering
+### [x] US-042: Collapsible Panel Architecture & Dynamic Layout Reordering
 - **As a** user analyzing my financial dashboard,
 - **I want to** minimize any of the four dashboard panels to a compact title chip and restore it on demand,
 - **So that** I can declutter my workspace and prioritize the visualizations most relevant to me.
 - **Split-Brain Boundary:** 100% Local (Client React state and CSS layout transitions).
 - **Acceptance Criteria:**
-  - [ ] Adds a small minimize button in the upper right corner of each of the four dashboard panel headers (Panel 1, Panel 2, Panel 3, and Panel 4).
-  - [ ] When the minimize button is clicked, the panel body (charts, controls, legends) hides smoothly, leaving only a compact chip/title header visible.
-  - [ ] The minimized chip displays the panel title, an expand/restore icon, and an accessible tooltip ("Restaurar panel").
-  - [ ] Clicking anywhere on the minimized chip/title restores the panel to its fully expanded state.
-  - [ ] Dynamic layout reflow: When a panel is minimized, the panels located below it in the layout automatically move up to take advantage of available vertical space. When restored, panels smoothly push back down.
-  - [ ] Minimization state is tracked independently for each panel without resetting chart filters or underlying data calculations.
-  - [ ] Maintains full responsiveness across desktop 2x2 grid, landscape tablet, and single-column mobile viewports without visual artifacts.
+  - [x] Adds a small minimize button in the upper right corner of each of the four dashboard panel headers (Panel 1, Panel 2, Panel 3, and Panel 4).
+  - [x] When the minimize button is clicked, the panel body (charts, controls, legends) hides smoothly, leaving only a compact chip/title header visible.
+  - [x] The minimized chip displays the panel title, an expand/restore icon, and an accessible tooltip ("Restaurar panel").
+  - [x] Clicking anywhere on the minimized chip/title restores the panel to its fully expanded state.
+  - [x] Dynamic layout reflow: When a panel is minimized, the panels located below it in the layout automatically move up to take advantage of available vertical space. When restored, panels smoothly push back down.
+  - [x] Minimization state is tracked independently for each panel without resetting chart filters or underlying data calculations.
+  - [x] Maintains full responsiveness across desktop 2x2 grid, landscape tablet, and single-column mobile viewports without visual artifacts.
 
 ### [ ] US-043: Contextual Panel Information & Quick Tutorial Modals
 - **As a** user exploring my financial analytics,

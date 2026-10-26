@@ -124,6 +124,33 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await expect(page.locator("#panel-transaction-age")).toBeVisible();
     console.log("[E2E Test] ✓ US-029 Dashboard layout & 4 panels verified successfully.");
 
+    // 5.0 Assertions for US-042 (Collapsible Panels) & US-043 (Contextual Info / Tutorial)
+    console.log("[E2E Test] Verifying Panel Minimization (US-042) and Info Tutorials (US-043)...");
+    
+    // Test Info button on Panel 1
+    const infoBtn1 = page.locator("#btn-info-panel-category-trends");
+    await expect(infoBtn1).toBeVisible();
+    await infoBtn1.click();
+    const tutorialDialog = page.locator('#panel-category-trends [role="dialog"]');
+    await expect(tutorialDialog).toBeVisible();
+    await expect(tutorialDialog.getByText("Muestra la evolución mensual de tus gastos por categoría")).toBeVisible();
+    // Dismiss via X button
+    await tutorialDialog.getByTitle("Cerrar tutorial").click();
+    await expect(tutorialDialog).not.toBeVisible();
+
+    // Test Minimize button on Panel 1
+    const minBtn1 = page.locator("#btn-minimize-panel-category-trends");
+    await expect(minBtn1).toBeVisible();
+    await minBtn1.click();
+    // In minimized state, trend SVG is hidden, restore button is visible
+    await expect(page.locator("#btn-restore-panel-category-trends")).toBeVisible();
+    await expect(page.locator("#panel-category-trends").getByText("Minimizado")).toBeVisible();
+    // Restore Panel 1
+    await page.locator("#btn-restore-panel-category-trends").click();
+    await expect(page.locator("#btn-restore-panel-category-trends")).not.toBeVisible();
+    await expect(page.locator('#panel-category-trends svg[aria-label="Gráfico de tendencia mensual por categoría"]')).toBeVisible();
+    console.log("[E2E Test] ✓ US-042 & US-043 Panel controls verified successfully.");
+
     // 5.1 Assertions for US-031 & US-032 (Panel 1: Category Trends Line Chart)
     console.log("[E2E Test] Verifying Panel 1 Category Trend Line Chart (US-031 & US-032)...");
     const trendSvg = page.locator('#panel-category-trends svg[aria-label="Gráfico de tendencia mensual por categoría"]');

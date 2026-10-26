@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Icons } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Transaction, CSVParsingSummary, CustomCategory } from "@/types/transaction";
@@ -10,6 +10,154 @@ import { CategoryTrendChart } from "@/components/category-trend-chart";
 import { VendorConcentrationChart } from "@/components/vendor-concentration-chart";
 import { ConsumptionPatternsChart } from "@/components/consumption-patterns-chart";
 import { TransactionAgeChart } from "@/components/transaction-age-chart";
+
+const PANEL_TUTORIALS: Record<string, { title: string; content: string }> = {
+  "panel-category-trends": {
+    title: "Histórico por categoría",
+    content:
+      "Muestra la evolución mensual de tus gastos por categoría. Haz clic en una línea para aislarla o en un punto para inspeccionar los movimientos de ese mes en el panel lateral.",
+  },
+  "panel-vendor-concentration": {
+    title: "¿A dónde va mi dinero?",
+    content:
+      "Visualiza tus comercios con mayor gasto o compras más frecuentes. Haz clic en un comercio para descartarlo temporalmente y explorar el resto de tus gastos.",
+  },
+  "panel-consumption-patterns": {
+    title: "Patrones de consumo",
+    content:
+      "Analiza tus hábitos según el día del mes o de la semana para detectar gastos atípicos. Haz clic en una barra para ver los movimientos de ese día.",
+  },
+  "panel-transaction-age": {
+    title: "Antigüedad del gasto",
+    content:
+      "Compara tus compromisos previos (cuotas y suscripciones) frente a compras inmediatas para evaluar cuánto de tu dinero ya estaba comprometido antes de iniciar el mes.",
+  },
+};
+
+interface DashboardPanelSectionProps {
+  id: string;
+  title: string;
+  isMinimized: boolean;
+  onToggleMinimize: () => void;
+  isInfoActive: boolean;
+  onToggleInfo: () => void;
+  tutorialContent: string;
+  children: React.ReactNode;
+}
+
+function DashboardPanelSection({
+  id,
+  title,
+  isMinimized,
+  onToggleMinimize,
+  isInfoActive,
+  onToggleInfo,
+  tutorialContent,
+  children,
+}: DashboardPanelSectionProps) {
+  return (
+    <section
+      id={id}
+      aria-label={title}
+      className={`rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xs transition-all duration-200 ${
+        isMinimized
+          ? "p-2.5 sm:p-3 cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
+          : "p-3.5 sm:p-4 flex flex-col justify-between"
+      }`}
+      onClick={isMinimized ? onToggleMinimize : undefined}
+    >
+      {isMinimized ? (
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+            <h2 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {title}
+            </h2>
+            <span className="text-3xs font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+              Minimizado
+            </span>
+          </div>
+          <button
+            type="button"
+            id={`btn-restore-${id}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleMinimize();
+            }}
+            className="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 rounded-md bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+            title="Restaurar panel"
+            aria-label={`Restaurar ${title}`}
+          >
+            <Icons.Maximize2 className="w-3 h-3" />
+            <span className="hidden sm:inline">Restaurar</span>
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-850">
+            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {title}
+            </h2>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                id={`btn-info-${id}`}
+                onClick={onToggleInfo}
+                className={`p-1 rounded-md transition-colors cursor-pointer ${
+                  isInfoActive
+                    ? "text-blue-600 bg-blue-50 dark:bg-blue-950/50 dark:text-blue-400"
+                    : "text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-850"
+                }`}
+                title="Información"
+                aria-label={`Información de ${title}`}
+              >
+                <Icons.Info className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                id={`btn-minimize-${id}`}
+                onClick={onToggleMinimize}
+                className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-850 transition-colors cursor-pointer"
+                title="Minimizar panel"
+                aria-label={`Minimizar ${title}`}
+              >
+                <Icons.Minus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {isInfoActive && (
+            <div
+              role="dialog"
+              aria-label={`Información: ${title}`}
+              className="p-3 my-2 rounded-xl border border-blue-200 bg-blue-50/90 dark:border-blue-900/60 dark:bg-blue-950/80 text-blue-950 dark:text-blue-100 shadow-2xs animate-in fade-in duration-150"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2">
+                  <Icons.Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <p className="text-xs leading-relaxed text-blue-900 dark:text-blue-200">
+                    {tutorialContent}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onToggleInfo}
+                  className="p-1 rounded-md text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-100 cursor-pointer"
+                  title="Cerrar tutorial"
+                  aria-label="Cerrar tutorial"
+                >
+                  <Icons.X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex-1 pt-2.5 sm:pt-3">{children}</div>
+        </>
+      )}
+    </section>
+  );
+}
 
 interface DashboardViewProps {
   transactions: Transaction[];
@@ -34,6 +182,25 @@ export function DashboardView({
 }: DashboardViewProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerCategoryFilter, setDrawerCategoryFilter] = useState<string | null>(null);
+  const [minimizedPanels, setMinimizedPanels] = useState<Record<string, boolean>>({});
+  const [activeInfoPanel, setActiveInfoPanel] = useState<string | null>(null);
+
+  const toggleMinimize = (panelId: string) => {
+    setMinimizedPanels((prev) => ({
+      ...prev,
+      [panelId]: !prev[panelId],
+    }));
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveInfoPanel(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const totalAmount = summary?.totalAmount ?? transactions.reduce((acc, t) => acc + t.amount, 0);
   const totalCount = transactions.length;
@@ -163,85 +330,87 @@ export function DashboardView({
         </div>
       </header>
 
-      {/* Main 4-Panel 2x2 Responsive Grid */}
-      <main className="flex-1 p-3.5 sm:p-4 lg:p-5 grid grid-cols-1 lg:grid-cols-2 gap-3.5 lg:gap-4 auto-rows-fr">
-        {/* Panel 1: Histórico por categoría */}
-        <section
-          id="panel-category-trends"
-          aria-label="Histórico por categoría"
-          className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3.5 sm:p-4 shadow-xs flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-850">
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              Histórico por categoría
-            </h2>
-          </div>
-
-          {/* Panel 1 Body / Interactive Multi-Line SVG Chart */}
-          <div className="flex-1 pt-2.5 sm:pt-3">
+      {/* Main 4-Panel 2x2 Responsive Grid with Fluid Vertical Reflow */}
+      <main className="flex-1 p-3.5 sm:p-4 lg:p-5 grid grid-cols-1 lg:grid-cols-2 gap-3.5 lg:gap-4 items-start">
+        {/* Left Column: Panel 1 (Top) & Panel 3 (Bottom) */}
+        <div className="flex flex-col gap-3.5 lg:gap-4">
+          <DashboardPanelSection
+            id="panel-category-trends"
+            title="Histórico por categoría"
+            isMinimized={!!minimizedPanels["panel-category-trends"]}
+            onToggleMinimize={() => toggleMinimize("panel-category-trends")}
+            isInfoActive={activeInfoPanel === "panel-category-trends"}
+            onToggleInfo={() =>
+              setActiveInfoPanel((prev) =>
+                prev === "panel-category-trends" ? null : "panel-category-trends"
+              )
+            }
+            tutorialContent={PANEL_TUTORIALS["panel-category-trends"].content}
+          >
             <CategoryTrendChart
               transactions={transactions}
               customCategories={customCategories}
             />
-          </div>
-        </section>
+          </DashboardPanelSection>
 
-        {/* Panel 2: ¿A dónde va mi dinero? */}
-        <section
-          id="panel-vendor-concentration"
-          aria-label="¿A dónde va mi dinero?"
-          className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3.5 sm:p-4 shadow-xs flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-850">
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              ¿A dónde va mi dinero?
-            </h2>
-          </div>
+          <DashboardPanelSection
+            id="panel-consumption-patterns"
+            title="Patrones de consumo"
+            isMinimized={!!minimizedPanels["panel-consumption-patterns"]}
+            onToggleMinimize={() => toggleMinimize("panel-consumption-patterns")}
+            isInfoActive={activeInfoPanel === "panel-consumption-patterns"}
+            onToggleInfo={() =>
+              setActiveInfoPanel((prev) =>
+                prev === "panel-consumption-patterns"
+                  ? null
+                  : "panel-consumption-patterns"
+              )
+            }
+            tutorialContent={PANEL_TUTORIALS["panel-consumption-patterns"].content}
+          >
+            <ConsumptionPatternsChart transactions={transactions} />
+          </DashboardPanelSection>
+        </div>
 
-          {/* Panel 2 Body / Interactive Dual-Metric Bar Chart */}
-          <div className="flex-1 pt-2.5 sm:pt-3">
+        {/* Right Column: Panel 2 (Top) & Panel 4 (Bottom) */}
+        <div className="flex flex-col gap-3.5 lg:gap-4">
+          <DashboardPanelSection
+            id="panel-vendor-concentration"
+            title="¿A dónde va mi dinero?"
+            isMinimized={!!minimizedPanels["panel-vendor-concentration"]}
+            onToggleMinimize={() => toggleMinimize("panel-vendor-concentration")}
+            isInfoActive={activeInfoPanel === "panel-vendor-concentration"}
+            onToggleInfo={() =>
+              setActiveInfoPanel((prev) =>
+                prev === "panel-vendor-concentration"
+                  ? null
+                  : "panel-vendor-concentration"
+              )
+            }
+            tutorialContent={PANEL_TUTORIALS["panel-vendor-concentration"].content}
+          >
             <VendorConcentrationChart
               transactions={transactions}
               customCategories={customCategories}
             />
-          </div>
-        </section>
+          </DashboardPanelSection>
 
-        {/* Panel 3: Patrones de consumo */}
-        <section
-          id="panel-consumption-patterns"
-          aria-label="Patrones de consumo"
-          className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3.5 sm:p-4 shadow-xs flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-850">
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              Patrones de consumo
-            </h2>
-          </div>
-
-          {/* Panel 3 Body / Consumption Patterns Bar Chart */}
-          <div className="flex-1 pt-2.5 sm:pt-3">
-            <ConsumptionPatternsChart transactions={transactions} />
-          </div>
-        </section>
-
-        {/* Panel 4: Antigüedad del gasto */}
-        <section
-          id="panel-transaction-age"
-          aria-label="Antigüedad del gasto"
-          className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3.5 sm:p-4 shadow-xs flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-850">
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              Antigüedad del gasto
-            </h2>
-          </div>
-
-          {/* Panel 4 Body / Transaction Age Donut Chart */}
-          <div className="flex-1 pt-2.5 sm:pt-3">
+          <DashboardPanelSection
+            id="panel-transaction-age"
+            title="Antigüedad del gasto"
+            isMinimized={!!minimizedPanels["panel-transaction-age"]}
+            onToggleMinimize={() => toggleMinimize("panel-transaction-age")}
+            isInfoActive={activeInfoPanel === "panel-transaction-age"}
+            onToggleInfo={() =>
+              setActiveInfoPanel((prev) =>
+                prev === "panel-transaction-age" ? null : "panel-transaction-age"
+              )
+            }
+            tutorialContent={PANEL_TUTORIALS["panel-transaction-age"].content}
+          >
             <TransactionAgeChart transactions={transactions} />
-          </div>
-        </section>
+          </DashboardPanelSection>
+        </div>
       </main>
 
       {/* Off-canvas Sliding Transaction Drawer */}

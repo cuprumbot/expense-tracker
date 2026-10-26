@@ -47,9 +47,13 @@ import {
   List,
   Sun,
   Moon,
+  Minus,
+  Maximize2,
 } from "lucide-react";
 
 export const Icons = {
+  Minus,
+  Maximize2,
   Table,
   LayoutDashboard,
   List,
