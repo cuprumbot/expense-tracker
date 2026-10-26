@@ -26,3 +26,11 @@ Adhere strictly to the rules in `AGENTS.md` and the requirements in `SPEC.md`. W
 Only stop when all specified User Stories are fully implemented, verified, and committed across their respective branches. Then, provide a comprehensive report of what was done and the test results for each story. Summarize it in `UI_UX_IMPLEMENTATION.md`.
 
 If you get stuck and need some user input, or after completing the entire batch, execute a `[console]::beep(800, 800)` or similar to notify me that the task is complete.
+
+--- 
+
+Make the following UI/UX changes:
+
+- When the panels get minimized, a chip that says `Minimizado` appears, remove it.
+- When the panels get minimized, a little blue circle appears besides the title, remove it.
+- The `Restaurar` button should be only an icon with no text.
