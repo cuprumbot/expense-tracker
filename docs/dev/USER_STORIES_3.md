@@ -107,18 +107,18 @@ It details the UI/UX enhancements, session button consolidation, collapsible pan
 
 ## Phase 23: Panel 2 Vendor Dismissal & Preference Persistence (Top Vendors)
 
-### [ ] US-046: Interactive Vendor Dismissal & Rolling Top-5 Display
+### [x] US-046: Interactive Vendor Dismissal & Rolling Top-5 Display
 - **As a** user inspecting where my money goes,
 - **I want to** click on a vendor in either metric view to dismiss it and have the next highest vendor move into view,
 - **So that** I can explore long-tail merchant expenses beyond the dominant top 5 while always keeping 5 vendors visible.
 - **Split-Brain Boundary:** 100% Local (Client-side ranking array slicing and animations).
 - **Acceptance Criteria:**
-  - [ ] In both views of Panel 2 ("Mayor monto gastado" and "Mayor cantidad de compras"), clicking on any vendor bar or row dismisses that vendor from the active display.
-  - [ ] The dismissed vendor stops displaying, remaining vendors move up smoothly, and the next vendor in ranking order appears.
-  - [ ] The view continuously maintains exactly 5 visible vendors at a time (unless the user has dismissed so many vendors that fewer than 5 remain in total).
-  - [ ] Whenever one or more vendors are dismissed, a prominent chip button appears with the label "Mostrar todo".
-  - [ ] Clicking "Mostrar todo" clears all dismissed vendors, restoring the original top 5 merchants and hiding the chip.
-  - [ ] Vendor rows animate smoothly during dismissal and reordering using subtle CSS transitions without layout flickering.
+  - [x] In both views of Panel 2 ("Mayor monto gastado" and "Mayor cantidad de compras"), clicking on any vendor bar or row dismisses that vendor from the active display.
+  - [x] The dismissed vendor stops displaying, remaining vendors move up smoothly, and the next vendor in ranking order appears.
+  - [x] The view continuously maintains exactly 5 visible vendors at a time (unless the user has dismissed so many vendors that fewer than 5 remain in total).
+  - [x] Whenever one or more vendors are dismissed, a prominent chip button appears with the label "Mostrar todo".
+  - [x] Clicking "Mostrar todo" clears all dismissed vendors, restoring the original top 5 merchants and hiding the chip.
+  - [x] Vendor rows animate smoothly during dismissal and reordering using subtle CSS transitions without layout flickering.
 
 ### [ ] US-047: Vendor Concentration Metric Tab Persistence
 - **As a** user who frequently sorts vendors by purchase count,

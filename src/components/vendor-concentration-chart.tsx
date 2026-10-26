@@ -23,15 +23,56 @@ export function VendorConcentrationChart({
   customCategories = [],
 }: VendorConcentrationChartProps) {
   const [metricMode, setMetricMode] = useState<MetricMode>("amount");
+  const [dismissedVendors, setDismissedVendors] = useState<Set<string>>(new Set());
   const [hoveredVendor, setHoveredVendor] = useState<VendorAggregationItem | null>(null);
 
-  // Compute top vendors
+  // Restore stored metric mode from localStorage on mount (US-047)
+  React.useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("expense_tracker_vendor_metric_tab");
+      if (stored === "amount" || stored === "frequency") {
+        setMetricMode(stored);
+      }
+    } catch {
+      // Graceful fallback for restricted storage
+    }
+  }, []);
+
+  const handleSwitchMetric = (mode: MetricMode) => {
+    setMetricMode(mode);
+    try {
+      window.localStorage.setItem("expense_tracker_vendor_metric_tab", mode);
+    } catch {
+      // Graceful fallback
+    }
+  };
+
+  // Compute ranked vendors (limit = 100 to support progressive rolling top-5 on dismissal)
   const vendorsResult: TopVendorsResult = useMemo(() => {
-    return calculateTopVendors(transactions, 5);
+    return calculateTopVendors(transactions, 100);
   }, [transactions]);
 
-  const activeVendors =
+  const rankedVendors =
     metricMode === "amount" ? vendorsResult.byAmount : vendorsResult.byFrequency;
+
+  // Active vendors: filter out dismissed merchants and slice top 5 (US-046)
+  const activeVendors = useMemo(() => {
+    return rankedVendors
+      .filter((v) => !dismissedVendors.has(v.merchantName))
+      .slice(0, 5);
+  }, [rankedVendors, dismissedVendors]);
+
+  const handleDismissVendor = (merchantName: string) => {
+    setDismissedVendors((prev) => {
+      const next = new Set(prev);
+      next.add(merchantName);
+      return next;
+    });
+  };
+
+  const handleClearDismissed = () => {
+    setDismissedVendors(new Set());
+  };
 
   // Max value for scaling bar widths
   const maxMetricValue = useMemo(() => {
@@ -50,7 +91,7 @@ export function VendorConcentrationChart({
     return DEFAULT_CATEGORY_COLORS[categoryName] || "#f59e0b";
   };
 
-  if (activeVendors.length === 0) {
+  if (activeVendors.length === 0 && dismissedVendors.size === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-zinc-400">
         <Icons.Building2 className="w-8 h-8 mb-2 opacity-50" />
@@ -63,16 +104,32 @@ export function VendorConcentrationChart({
 
   return (
     <div className="flex flex-col h-full space-y-2">
-      {/* Top Segmented Dual Metric Selector */}
-      <div className="flex items-center justify-between gap-2 pb-0.5">
-        <span className="text-3xs font-semibold uppercase tracking-wider text-zinc-400 select-none">
-          Ordenar por:
-        </span>
+      {/* Top Controls: Selector + 'Mostrar todo' button */}
+      <div className="flex items-center justify-between gap-2 pb-0.5 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="text-3xs font-semibold uppercase tracking-wider text-zinc-400 select-none">
+            Ordenar por:
+          </span>
+
+          {dismissedVendors.size > 0 && (
+            <button
+              type="button"
+              id="btn-show-all-vendors"
+              onClick={handleClearDismissed}
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all cursor-pointer shadow-2xs animate-in fade-in"
+              title="Restaurar todos los comercios descartados"
+            >
+              <Icons.RotateCcw className="w-3 h-3" />
+              <span>Mostrar todo</span>
+            </button>
+          )}
+        </div>
+
         <div className="inline-flex p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
           <button
             type="button"
             id="btn-vendor-sort-amount"
-            onClick={() => setMetricMode("amount")}
+            onClick={() => handleSwitchMetric("amount")}
             className={`px-2.5 py-1 text-2xs font-medium rounded-md transition-all cursor-pointer ${
               metricMode === "amount"
                 ? "bg-white text-zinc-900 shadow-2xs font-semibold dark:bg-zinc-800 dark:text-zinc-100"
@@ -84,7 +141,7 @@ export function VendorConcentrationChart({
           <button
             type="button"
             id="btn-vendor-sort-frequency"
-            onClick={() => setMetricMode("frequency")}
+            onClick={() => handleSwitchMetric("frequency")}
             className={`px-2.5 py-1 text-2xs font-medium rounded-md transition-all cursor-pointer ${
               metricMode === "frequency"
                 ? "bg-white text-zinc-900 shadow-2xs font-semibold dark:bg-zinc-800 dark:text-zinc-100"
@@ -110,7 +167,18 @@ export function VendorConcentrationChart({
           return (
             <div
               key={`vendor-${item.merchantName}`}
-              className="group relative p-1.5 sm:p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors"
+              role="button"
+              tabIndex={0}
+              aria-label={`Descartar ${item.merchantName}`}
+              title={`Haz clic para descartar temporalmente a ${item.merchantName} y ver el siguiente`}
+              onClick={() => handleDismissVendor(item.merchantName)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleDismissVendor(item.merchantName);
+                }
+              }}
+              className="group relative p-1.5 sm:p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900/60 transition-all duration-200 cursor-pointer select-none"
               onMouseEnter={() => setHoveredVendor(item)}
               onMouseLeave={() => setHoveredVendor(null)}
             >
