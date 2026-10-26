@@ -42,6 +42,8 @@ const CATEGORY_HEX_COLORS: Record<string, string> = {
   "Hogar y Mascotas": "#84cc16", // Lime
   "Educación y Librerías": "#f43f5e", // Rose
   "Cuidado Personal y Belleza": "#d946ef", // Fuchsia
+  "Visacuotas y Financiamiento": "#0284c7", // Sky
+  "Transferencias y cajeros": "#64748b", // Slate
   Pendiente: "#94a3b8", // Slate
 };
 

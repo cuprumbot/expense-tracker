@@ -407,6 +407,22 @@
         "visacuotas",
         "mastercuotas"
       ]
+    },
+    {
+      "id": "transferencias_cajeros",
+      "name": "Transferencias y cajeros",
+      "description": "Transferencias bancarias, débitos en cuenta, cajeros automáticos y cheques",
+      "color": "slate",
+      "keywords": [
+        "banca movil",
+        "ach",
+        "transferencia",
+        "nota debito",
+        "bi-app transf",
+        "cajero",
+        "atm",
+        "pago cheque"
+      ]
     }
   ],
   "defaultCategory": "Pendiente",

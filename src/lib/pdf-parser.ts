@@ -1,6 +1,7 @@
 import { createRequire } from "module";
 import { parseCurrency, convertUsdToGtq, getExchangeRate } from "@/lib/currency";
 import { Transaction, CSVParsingSummary } from "@/types/transaction";
+import { extractBiTransactionsFromParser } from "./bi-parser";
 
 interface GlobalWithDOMPolyfills {
   DOMMatrix?: new () => unknown;
@@ -21,25 +22,25 @@ if (typeof customGlobal.Path2D === "undefined") {
   customGlobal.Path2D = class Path2D {};
 }
 
-interface PDFTextItem {
+export interface PDFTextItem {
   str: string;
   transform: number[];
 }
 
-interface PDFTextContent {
+export interface PDFTextContent {
   items: PDFTextItem[];
 }
 
-interface PDFPage {
+export interface PDFPage {
   getTextContent(): Promise<PDFTextContent>;
 }
 
-interface PDFDocument {
+export interface PDFDocument {
   numPages: number;
   getPage(pageNumber: number): Promise<PDFPage>;
 }
 
-interface PDFParserInstance {
+export interface PDFParserInstance {
   doc: PDFDocument;
   load(): Promise<void>;
   getText(): Promise<string | { text: string }>;
@@ -82,13 +83,20 @@ export async function extractTextFromPDF(dataBuffer: Uint8Array): Promise<string
   return typeof textResult === "string" ? textResult : (textResult.text || "");
 }
 
-/**
- * Detects whether the statement is from Banco G&T Continental.
- */
-export function detectBankFromText(text: string): {
-  isGyT: boolean;
+export interface BankDetectionResult {
   bankName: string;
-} {
+  isSupported: boolean;
+  isGyT: boolean;
+  isBI: boolean;
+  isBAM: boolean;
+  isBanrural: boolean;
+}
+
+/**
+ * Detects the originating bank of a statement based on header text, metadata, and keywords.
+ * Identifies Banco Industrial, Banco G&T Continental, Banrural, and Banco Agromercantil (BAM).
+ */
+export function detectBankFromText(text: string): BankDetectionResult {
   const normalized = text.toLowerCase();
 
   const isGyT =
@@ -96,9 +104,79 @@ export function detectBankFromText(text: string): {
     normalized.includes("gtc.com.gt") ||
     normalized.includes("plaza continental");
 
+  const isBI =
+    normalized.includes("banco industrial") ||
+    normalized.includes("corporación bi") ||
+    normalized.includes("corporacion bi") ||
+    normalized.includes("bi en línea") ||
+    normalized.includes("bi en linea") ||
+    normalized.includes("bi.com.gt") ||
+    normalized.includes("club bi") ||
+    normalized.includes("bi-app") ||
+    normalized.includes("serbipago") ||
+    /\bgt\d{2}\s*indl\b/i.test(text);
+
+  const isBAM =
+    normalized.includes("banco agromercantil") ||
+    normalized.includes("bam.com.gt") ||
+    /\bbam\b/i.test(text);
+
+  const isBanrural =
+    normalized.includes("banrural") ||
+    normalized.includes("banco de desarrollo rural") ||
+    normalized.includes("banrural.com.gt");
+
+  if (isBI) {
+    return {
+      bankName: "Banco Industrial",
+      isSupported: true,
+      isGyT: false,
+      isBI: true,
+      isBAM: false,
+      isBanrural: false,
+    };
+  }
+
+  if (isGyT) {
+    return {
+      bankName: "Banco G&T Continental",
+      isSupported: true,
+      isGyT: true,
+      isBI: false,
+      isBAM: false,
+      isBanrural: false,
+    };
+  }
+
+  if (isBanrural) {
+    return {
+      bankName: "Banrural",
+      isSupported: false,
+      isGyT: false,
+      isBI: false,
+      isBAM: false,
+      isBanrural: true,
+    };
+  }
+
+  if (isBAM) {
+    return {
+      bankName: "Banco Agromercantil (BAM)",
+      isSupported: false,
+      isGyT: false,
+      isBI: false,
+      isBAM: true,
+      isBanrural: false,
+    };
+  }
+
   return {
-    isGyT,
-    bankName: isGyT ? "Banco G&T Continental" : "Banco no identificado",
+    bankName: "Banco no identificado",
+    isSupported: false,
+    isGyT: false,
+    isBI: false,
+    isBAM: false,
+    isBanrural: false,
   };
 }
 
@@ -453,7 +531,7 @@ export async function parsePDFStatement(dataBuffer: Uint8Array): Promise<PDFPars
     const rawText = typeof textResult === "string" ? textResult : (textResult.text || "");
     const bankDetection = detectBankFromText(rawText);
 
-    if (!bankDetection.isGyT) {
+    if (!bankDetection.isSupported) {
       return {
         success: true,
         isSupportedBank: false,
@@ -470,7 +548,20 @@ export async function parsePDFStatement(dataBuffer: Uint8Array): Promise<PDFPars
       };
     }
 
-    // Reuse the loaded parser for high-precision coordinate extraction
+    if (bankDetection.isBI) {
+      const parsed = await extractBiTransactionsFromParser(parser, rawText);
+      return {
+        success: true,
+        isSupportedBank: true,
+        bankName: "Banco Industrial",
+        rawText,
+        transactions: parsed.transactions,
+        summary: parsed.summary,
+        debugLogs: parsed.debugLogs,
+      };
+    }
+
+    // Reuse the loaded parser for high-precision coordinate extraction for Banco G&T Continental
     const parsed = await extractGyTTransactionsFromParser(parser);
 
     return {
@@ -500,3 +591,10 @@ export async function parsePDFStatement(dataBuffer: Uint8Array): Promise<PDFPars
     };
   }
 }
+
+export {
+  extractBiTransactionsFromParser,
+  parseBiStatementFromBuffer,
+  parseBiStatementText,
+  cleanBiDescription,
+} from "./bi-parser";

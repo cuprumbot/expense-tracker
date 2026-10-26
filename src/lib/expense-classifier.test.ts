@@ -87,10 +87,17 @@ describe("expense-classifier unit tests", () => {
     assert.equal(matchMerchantCategory("Spotify Premium").category, "Suscripciones");
     assert.equal(matchMerchantCategory("Disney Plus Mensual").category, "Suscripciones");
     assert.equal(matchMerchantCategory("ChatGPT Subscription").category, "Suscripciones");
+
+    // Transferencias y cajeros
+    assert.equal(matchMerchantCategory("Banca Móvil Pago").category, "Transferencias y cajeros");
+    assert.equal(matchMerchantCategory("ACH Jhosselin Transferencia").category, "Transferencias y cajeros");
+    assert.equal(matchMerchantCategory("Retiro Cajero 5B").category, "Transferencias y cajeros");
+    assert.equal(matchMerchantCategory("Retiro ATM Agencia").category, "Transferencias y cajeros");
+    assert.equal(matchMerchantCategory("Pago Cheque 12345").category, "Transferencias y cajeros");
   });
 
   it("assigns 'Pendiente' category to unrecognized merchant descriptions", () => {
-    const unknown = "TRANSFERENCIA INTERNA EXTRAÑA 99882";
+    const unknown = "CONCEPTO COMPLETAMENTE DESCONOCIDO 99882";
     const match = matchMerchantCategory(unknown);
     assert.equal(match.category, "Pendiente");
     assert.equal(match.source, "unclassified");

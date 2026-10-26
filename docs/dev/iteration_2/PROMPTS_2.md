@@ -321,6 +321,8 @@ If there were duplicated transactions just say that, don't pop up the success me
 
 ---
 
+I manually deleted some files since last execution failed.
+
 Execute User Story #18 from `USER_STORIES_2.md`, Banco Industrial parser.
 Also check which parts of User Story #17 should be implemented at this time.
 
