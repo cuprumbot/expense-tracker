@@ -59,3 +59,13 @@ Make this changes to Panel 2:
 ```
 Clic en un negocio para ocultarlo de la lista.
 ```
+
+---
+
+Our documentation is getting bloated. Modify `README.md` and other relevant files.
+
+We are moving away from being a tech demo, and becoming a product. Remove information about the split-brain architecture from the main README.
+
+Simplify the information presented in `¿Qué hace la aplicación?` section.
+
+Get some screenshots from the dashboard to add in the documentation. Use Playwright if possible to get the screenshots instead of the native web agent.

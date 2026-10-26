@@ -15,7 +15,7 @@ const PANEL_TUTORIALS: Record<string, { title: string; content: string }> = {
   "panel-category-trends": {
     title: "Histórico por categoría",
     content:
-      "Muestra la evolución mensual de tus gastos por categoría. Haz clic en una línea para aislarla o en un punto para inspeccionar los movimientos de ese mes en el panel lateral.",
+      "Clic en una categoría para ocultarla o mostrarla.\n\nClic en un punto para ver transacciones de esa categoría y mes.\n\nClic en una línea para ocultar las demás categorías.",
   },
   "panel-vendor-concentration": {
     title: "¿A dónde va mi dinero?",
@@ -128,7 +128,7 @@ function DashboardPanelSection({
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-start gap-2">
                   <Icons.Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-                  <p className="text-xs leading-relaxed text-blue-900 dark:text-blue-200">
+                  <p className="text-xs leading-relaxed text-blue-900 dark:text-blue-200 whitespace-pre-line">
                     {tutorialContent}
                   </p>
                 </div>

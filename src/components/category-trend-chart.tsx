@@ -193,15 +193,14 @@ export function CategoryTrendChart({
 
       {/* Interactive Category Filter Pills Bar */}
       <div className="flex flex-wrap items-center gap-1.5 max-h-16 overflow-y-auto pr-1">
-        <span className="text-3xs font-semibold uppercase tracking-wider text-zinc-400 mr-1 select-none">
-          Categorías:
-        </span>
-
-        {isolatedCategoryId && (
+        {(isolatedCategoryId !== null || hiddenCategories.size > 0) && (
           <button
             type="button"
             id="btn-show-all-categories"
-            onClick={() => setIsolatedCategoryId(null)}
+            onClick={() => {
+              setIsolatedCategoryId(null);
+              setHiddenCategories(new Set());
+            }}
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all cursor-pointer shadow-2xs mr-1 animate-in fade-in"
             title="Mostrar todas las líneas de categorías"
           >
