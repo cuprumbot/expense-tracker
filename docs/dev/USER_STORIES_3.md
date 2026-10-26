@@ -120,17 +120,17 @@ It details the UI/UX enhancements, session button consolidation, collapsible pan
   - [x] Clicking "Mostrar todo" clears all dismissed vendors, restoring the original top 5 merchants and hiding the chip.
   - [x] Vendor rows animate smoothly during dismissal and reordering using subtle CSS transitions without layout flickering.
 
-### [ ] US-047: Vendor Concentration Metric Tab Persistence
+### [x] US-047: Vendor Concentration Metric Tab Persistence
 - **As a** user who frequently sorts vendors by purchase count,
 - **I want** the dashboard to remember whether I last viewed "Mayor monto gastado" or "Mayor cantidad de compras",
 - **So that** my preferred ranking mode is automatically restored whenever I return to the dashboard.
 - **Split-Brain Boundary:** 100% Local (`window.localStorage` persistence).
 - **Acceptance Criteria:**
-  - [ ] Saves the user's active tab selection (`"amount"` vs. `"frequency"`) in `localStorage` under a dedicated key (e.g., `expense_tracker_vendor_metric_tab`).
-  - [ ] When Panel 2 mounts, it reads the stored preference from `localStorage` and initializes the active tab accordingly.
-  - [ ] If no preference is stored in `localStorage`, it defaults cleanly to `"amount"` ("Mayor monto gastado").
-  - [ ] Gracefully handles restricted storage environments (incognito/private browsing) without throwing exceptions.
-  - [ ] Switching between tabs preserves or cleanly recalculates dismissal state according to the selected metric.
+  - [x] Saves the user's active tab selection (`"amount"` vs. `"frequency"`) in `localStorage` under a dedicated key (e.g., `expense_tracker_vendor_metric_tab`).
+  - [x] When Panel 2 mounts, it reads the stored preference from `localStorage` and initializes the active tab accordingly.
+  - [x] If no preference is stored in `localStorage`, it defaults cleanly to `"amount"` ("Mayor monto gastado").
+  - [x] Gracefully handles restricted storage environments (incognito/private browsing) without throwing exceptions.
+  - [x] Switching between tabs preserves or cleanly recalculates dismissal state according to the selected metric.
 
 ---
 

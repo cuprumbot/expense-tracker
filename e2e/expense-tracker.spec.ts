@@ -238,14 +238,47 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     // Default is sort by amount: check for Quetzales format in items
     await expect(panel2.getByText(/Q\s*[\d,]+\.\d{2}/).first()).toBeVisible();
 
-    // Toggle to sort by frequency
+    // Toggle to sort by frequency (US-047 persistence test)
     await btnSortFrequency.click();
     await expect(btnSortFrequency).toHaveClass(/bg-white/);
     await expect(panel2.getByText(/compras?/i).first()).toBeVisible();
+    const storedTabFreq = await page.evaluate(() =>
+      window.localStorage.getItem("expense_tracker_vendor_metric_tab")
+    );
+    expect(storedTabFreq).toBe("frequency");
 
     // Toggle back to amount
     await btnSortAmount.click();
     await expect(btnSortAmount).toHaveClass(/bg-white/);
+    const storedTabAmount = await page.evaluate(() =>
+      window.localStorage.getItem("expense_tracker_vendor_metric_tab")
+    );
+    expect(storedTabAmount).toBe("amount");
+
+    // US-046: Test vendor dismissal and rolling top-5
+    console.log("[E2E Test] Verifying Panel 2 vendor dismissal & rolling top-5 (US-046)...");
+    const vendorRows = panel2.locator('[role="button"][aria-label^="Descartar"]');
+    await expect(vendorRows).toHaveCount(5);
+
+    const firstVendorName = await vendorRows.first().locator(".font-semibold").innerText();
+    console.log(`[E2E Test] Dismissing top vendor: "${firstVendorName}"...`);
+    await vendorRows.first().click();
+
+    // Verify "Mostrar todo" chip appears
+    const showAllVendorsBtn = page.locator("#btn-show-all-vendors");
+    await expect(showAllVendorsBtn).toBeVisible();
+
+    // Verify dismissed vendor is no longer visible in the list
+    await expect(panel2.locator(".font-semibold").filter({ hasText: firstVendorName })).not.toBeVisible();
+    // Verify rolling 5 vendors are still maintained
+    await expect(vendorRows).toHaveCount(5);
+    console.log("[E2E Test] ✓ Dismissed vendor removed; next ranked vendor rolled into view (5 total).");
+
+    // Click "Mostrar todo" to restore original top 5
+    await showAllVendorsBtn.click();
+    await expect(showAllVendorsBtn).not.toBeVisible();
+    await expect(panel2.locator(".font-semibold").filter({ hasText: firstVendorName })).toBeVisible();
+    console.log("[E2E Test] ✓ 'Mostrar todo' restored original top 5 vendors.");
     console.log("[E2E Test] ✓ Panel 2 Top Vendors Bar Chart verified successfully.");
 
     // 5.3 Assertions for US-035 & US-036 (Panel 3: Consumption Patterns & Outliers)
