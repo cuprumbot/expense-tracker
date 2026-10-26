@@ -1,96 +1,84 @@
-# Control de Gastos Personales (Expense Tracker)
+# Expense Tracker — Control de Gastos Personales
 
-Aplicación para el control y reducción de gastos mensuales a partir de estados de cuenta bancarios (PDF) o archivos de movimientos (CSV).
+Aplicación web moderna para el control, análisis y optimización de gastos personales a partir de estados de cuenta bancarios (PDF) y archivos de movimientos (CSV). Diseñada para operar en Quetzales (GTQ) con procesamiento local que protege la privacidad de tu información financiera.
 
-La aplicación implementa una arquitectura **Split-Brain (Cerebro Dividido)**: todos los datos personales y el procesamiento principal se gestionan de forma local, utilizando inteligencia artificial externa (Google Gemini Pro) únicamente sobre datos previamente anonimizados o métricas agregadas para clasificar gastos pendientes y generar recomendaciones de ahorro.
+![Dashboard Principal de Expense Tracker](docs/screenshots/dashboard-overview.png)
 
 ---
 
 ## 1. ¿Qué hace la aplicación?
 
-* **Importación y Carga por Lotes de Estados de Cuenta**:
-  * **Carga Múltiple y Cola por Lotes**: Permite cargar uno o varios archivos simultáneamente (.pdf y .csv). Un modal de gestión muestra la cola de procesamiento, estado individual de cada documento y progreso global acumulado.
-  * **Deduplicación Inteligente**: Descarta de forma automática transacciones exactamente duplicadas (misma fecha, descripción idéntica y mismo monto) tanto dentro del lote como frente a la sesión activa, protegiendo compras legítimas con datos similares y notificando al usuario con transparencia.
-  * **Conversión Multi-Moneda (USD a GTQ)**: Extrae transacciones en dólares estadounidenses (`$`) tanto de estados de cuenta PDF de Banco G&T como de archivos CSV, convirtiéndolas automáticamente a Quetzales según la tasa de cambio oficial (por defecto Q 7.85 por USD) y conservando la divisa original en metadatos para visualización y filtrado.
-  * **Estados de Cuenta en PDF**: Extrae el texto de manera local. Si el documento proviene de un banco con parser propio (**Banco G&T Continental**), procesa los consumos automáticamente filtrando pagos de tarjeta y créditos. Si proviene de otro banco, anonimiza localmente el texto y utiliza Gemini Pro para extraer las transacciones en formato estructurado.
-  * **Archivos CSV**: Permite cargar hojas de cálculo de movimientos mediante **PapaParse**. Si las columnas son ambiguas, ofrece un asistente visual para mapear fecha, descripción, monto y divisa.
-* **Privacidad Estricta (Split-Brain)**:
-  * Redacta de forma local nombres del titular, transferencias ACH, números de cuenta, IBAN, números de tarjeta, DPI (CUI), NIT, direcciones físicas, correos electrónicos y teléfonos antes de cualquier llamada externa.
-  * Cuenta con un **modal interactivo de censura** donde el usuario valida el texto redactado y puede agregar términos personalizados antes de autorizar su envío al LLM.
-* **Clasificación Inteligente y Adaptativa**:
-  * Cruza las transacciones con un **catálogo local de 11 categorías de comercios de Guatemala** (`merchant-catalog.json`), reconociendo de inmediato supermercados, restaurantes, gasolineras, servicios básicos, salud, hogar, educación, mascotas y suscripciones.
-  * Si quedan más de 10 gastos sin categorizar, consulta a Gemini Pro para sugerir categorías. Si son 10 o menos, evita llamadas innecesarias para ahorrar costos y permite clasificación manual.
-* **Dashboard Analítico Financiero (Cuadrícula 2x2)**:
-  * **Panel 1: Tendencia Histórica por Categoría**: Gráfico de líneas SVG con curvas Bézier cúbicas, filtrado interactivo por píldoras de categoría, escala vertical adaptativa, áreas de hover estables y etiquetas de fecha multilínea optimizadas.
-  * **Panel 2: ¿A dónde va mi dinero?**: Gráfico de barras horizontales de los 5 comercios principales con selector dual: por volumen total gastado (Q) o por frecuencia de visitas con ticket promedio.
-  * **Panel 3: Patrones de Consumo**: Gráfico de barras temporales con alternancia entre 7 días de la semana y 31 días del mes, con heurísticas estadísticas ($\mu + 1.75\sigma$) para detección de consumos atípicos.
-  * **Panel 4: Antigüedad del Gasto**: Gráfico de dona SVG interactivo que particiona los consumos en 3 segmentos de decisión (*Visacuotas y Financiamiento*, *Suscripciones Recurrentes* y *Compras Inmediatas*), con selector de mes.
-* **Drawer Lateral de Movimientos (Sliding Drawer)**:
-  * Panel lateral deslizante que permite buscar, filtrar por categoría y editar o categorizar transacciones sin salir del dashboard analítico, actualizando las métricas en tiempo real.
-* **Experiencia de Usuario Moderna**:
-  * **Tema Claro y Oscuro**: Selector de tema (`ThemeToggle`) persistente en `localStorage`, inicializado en tema claro por defecto.
-  * **Transición Directa**: Acceso inmediato al dashboard financiero sin pantallas intermedias de bloqueo.
-  * **Chips Reactivos**: Indicador de clasificación con IA (`#chip-classifying-expenses`) y chip de atención animado (`animate-pulse`) cuando restan más de 10 transacciones por categorizar.
-  * **Notificaciones Flotantes (Toasts)**: Avisos no intrusivos en la esquina inferior para duplicados, confirmación de lotes y clasificación asistida con auto-cierre tras 7 segundos.
-* **Detección Automática de Suscripciones**:
-  * Detecta cobros periódicos (Netflix, Spotify, etc.), calcula el compromiso mensual en Quetzales y alerta al usuario sobre servicios activos.
-* **Gestión, Filtrado y Personalización Completa**:
-  * Búsqueda en tiempo real, filtros por categoría y por moneda (Todas, Solo GTQ, Convertidas de USD con badges explicativos), edición de montos y fechas, asignación masiva, borrado de movimientos y creación de categorías personalizadas con colores propios.
-* **Sugerencias de Ahorro con IA**:
-  * Envía **únicamente** totales consolidados por categoría y el listado de suscripciones para que Gemini Pro genere oportunidades inmediatas de ahorro, estrategias a largo plazo y diagnóstico por categoría adaptadas a Guatemala.
-* **Continuidad de Sesión y Reinicio Selectivo**:
-  * Mantiene la sesión activa incremental en el `localStorage` del navegador (nuevos archivos agregan compras sin sobreescribir). Dispone de un modal explícito de reinicio que permite limpiar las transacciones conservando las categorías personalizadas del usuario, o realizar un restablecimiento de fábrica total.
+Expense Tracker simplifica la administración de tus finanzas personales transformando documentos bancarios dispersos en información visual, interactiva y accionable.
+
+### Visualización y Analítica en Tiempo Real (Dashboard 4 Paneles)
+* **Tendencia Histórica por Categoría**: Visualiza la evolución mensual de tus gastos con curvas continuas y selector interactivo de categorías para aislar tendencias o comparar períodos.
+* **¿A dónde va mi dinero?**: Identifica con rapidez los comercios donde más gastas o compras con mayor frecuencia, con cálculo automático de ticket promedio.
+* **Patrones de Consumo y Alertas**: Descubre hábitos de gasto en vistas de 7 días (día de la semana) o 31 días (día del mes), con detección estadística automática de gastos inusuales o atípicos.
+* **Antigüedad del Gasto y Financiamiento**: Gráfico interactivo que segmenta tus consumos en compras inmediatas, suscripciones recurrentes y financiamiento o Visacuotas, con selector por mes.
+
+### Carga Inteligente de Estados de Cuenta
+* **Soporte Multi-Banco**: Procesamiento directo de estados de cuenta en PDF de los principales bancos de Guatemala (**Banco G&T Continental**, **Banco Industrial** y **Banrural**) y archivos CSV de cualquier institución.
+* **Carga por Lotes**: Sube uno o varios archivos simultáneamente (.pdf y .csv) con monitor de progreso en segundo plano.
+* **Deduplicación Automática**: Descarta de forma inteligente transacciones idénticas repetidas para evitar duplicar gastos en tu historial.
+* **Conversión de Moneda (USD a GTQ)**: Detecta cargos en dólares estadounidenses y los convierte automáticamente a Quetzales según la tasa de cambio oficial, conservando la divisa original para consulta y filtrado.
+
+### Categorización Asistida y Personalizada
+* **Catálogo Local de Guatemala**: Clasificación inmediata contra comercios populares del país (supermercados, restaurantes, servicios básicos, transporte, farmacias, suscripciones y más).
+* **Asistencia Inteligente**: Identificación asistida por inteligencia artificial para categorizar automáticamente comercios no reconocidos.
+* **Categorías a Medida**: Crea y personaliza tus propias categorías con nombres y colores distintivos.
+
+### Gestión Dinámica de Movimientos (Sliding Drawer)
+* **Panel Lateral Deslizante**: Consulta, busca por texto, filtra por categoría o moneda y edita transacciones sin salir de la vista analítica.
+* **Interacción Directa (Drill-Down)**: Haz clic en cualquier barra o punto de los gráficos para filtrar automáticamente las transacciones relacionadas en el panel lateral.
+
+### Suscripciones y Consejos de Ahorro
+* **Monitoreo de Suscripciones**: Detección automática de cobros periódicos para visualizar compromisos mensuales fijos.
+* **Recomendaciones de Ahorro**: Sugerencias personalizadas basadas en tus patrones de consumo para ayudarte a reducir gastos prescindibles.
+
+### Privacidad y Seguridad por Diseño
+* **Procesamiento Seguro**: Todo el análisis sensible de tus estados de cuenta se ejecuta de forma local en tu navegador y servidor propio. Tus datos personales y bancarios nunca se comparten ni se almacenan en servidores externos.
+
+### Experiencia Visual Moderna
+* **Tema Claro y Oscuro**: Interfaz adaptable con soporte completo para modo claro y modo oscuro, con persistencia automática de preferencias.
 
 ---
 
-## 2. Flujo de Ejecución
+## 2. Vistas de la Aplicación
 
-El siguiente diagrama ilustra el flujo de ejecución del sistema:
+### Dashboard Analítico (Tema Claro)
+Vista consolidada de los 4 paneles financieros con métricas en Quetzales, acceso al cajón de transacciones y selector de estados de cuenta.
 
-```mermaid
-flowchart TD
-    A[Start] --> B[Upload PDF/CSV batch]
-    B --> |Deduplicate| C[Discard exact duplicates]
-    C --> |CSV| D[Identify columns & currency]
-    C --> |PDF from known bank| E[Extract data & convert USD]
-    C --> |PDF from unknown bank| F[Anonymize PII locally]
-    F --> G[Extract using LLM]
-    D --> H[Structure data JSON]
-    E --> H
-    G --> H
-    H --> I[Classify expenses locally - 11 categories]
-    I --> |Pending <= 10| J[Direct to 4-Panel Dashboard]
-    I --> |Pending > 10| K[Classify using LLM & Attention Chip]
-    K --> J
-    J --> L[Sliding Drawer: Inspection & Triage]
-    J --> M[AI Savings Suggestions]
-```
+![Dashboard en Modo Claro](docs/screenshots/dashboard-overview.png)
 
-### Descripción del Flujo
+### Dashboard Analítico (Tema Oscuro)
+Diseño estilizado para entornos con poca luz con paleta cromática de alto contraste.
 
-1. **Carga y Deduplicación**: El usuario sube uno o múltiples estados de cuenta en PDF o archivos CSV. El sistema descarta duplicados exactos frente a compras previas y alerta con un pop-up flotante prioritario.
-2. **Detección de Formato y Conversión Multi-Moneda**:
-   * Si es **CSV**, se identifican las columnas y la divisa localmente.
-   * Si es **PDF de banco conocido** (Banco G&T), se extraen los consumos en GTQ y se convierten a Quetzales los consumos en USD (7.85) de forma local y determinista.
-   * Si es **PDF de banco no soportado**, se ejecuta la anonimización local de PII, el usuario confirma el texto censurado y Gemini Pro extrae las transacciones.
-3. **Estructuración**: Los movimientos se estandarizan en un objeto JSON en memoria; a partir de este punto, el archivo original no se vuelve a utilizar.
-4. **Clasificación Local**: Se categorizan los gastos usando el catálogo de 11 categorías de comercios de Guatemala.
-5. **Evaluación de Pendientes y Navegación Directa**:
-   * El usuario pasa inmediatamente al **Dashboard Financiero de 4 paneles**.
-   * Si restan `> 10` gastos pendientes, se muestra el chip de clasificación con IA y se ejecuta en segundo plano. Si quedan pendientes tras clasificar, el chip se anima sutilmente para llamar la atención.
-6. **Inspección en Drawer Lateral**: El usuario puede desplegar el sliding drawer en cualquier momento para inspeccionar la tabla de movimientos, editar registros o añadir categorías sin abandonar los gráficos.
-7. **Sugerencias de Ahorro**: Opcionalmente, se envían únicamente los totales agregados y suscripciones a Gemini Pro para obtener recomendaciones de ahorro.
+![Dashboard en Modo Oscuro](docs/screenshots/dashboard-dark.png)
+
+### Panel Lateral de Movimientos (Sliding Drawer)
+Explora en detalle cada transacción, realiza filtros cruzados por moneda y categoría, o edita descripciones y montos.
+
+![Panel Lateral de Transacciones](docs/screenshots/dashboard-drawer.png)
 
 ---
 
-## 3. Instalación, Configuración y Ejecución
+## 3. Flujo de Uso
+
+1. **Carga tus documentos**: Arrastra o selecciona uno o varios estados de cuenta en PDF o archivos CSV.
+2. **Visualiza tus finanzas**: Accede de inmediato al dashboard analítico interactivo de 4 paneles.
+3. **Explora y categoriza**: Despliega el panel lateral para inspeccionar transacciones o ajustar categorías.
+4. **Optimiza tu presupuesto**: Revisa tus suscripciones activas y oportunidades sugeridas de ahorro.
+
+---
+
+## 4. Instalación, Configuración y Ejecución
 
 ### Requisitos Previos
 * **Node.js**: v20+ o v22+ LTS recomendado.
 * **npm**: v10+.
-* **Clave de API de Gemini**: Obtenida en [Google AI Studio](https://aistudio.google.com/).
+* **Clave de API de Gemini**: Opcional, para la asistencia inteligente en bancos no reconocidos y sugerencias de ahorro (obtenida en [Google AI Studio](https://aistudio.google.com/)).
 
-### Pasos
+### Pasos de Instalación
 
 ```bash
 # 1. Clonar el repositorio
@@ -105,60 +93,60 @@ cp .env.example .env.local
 # (En Windows PowerShell: Copy-Item .env.example .env.local)
 ```
 
-Edita `.env.local` y añade tu clave:
+Edita `.env.local` con tu configuración:
 
 ```env
 GEMINI_API_KEY=tu_clave_de_gemini_aqui
+USD_GTQ_EXCHANGE_RATE=7.85
+UNCLASSIFIED_EXPENSES_THRESHOLD=10
 ```
 
 ```bash
 # 4. Iniciar el servidor de desarrollo
 npm run dev
 
-# 5. Ejecutar la suite de pruebas unitarias (131 pruebas)
+# 5. Ejecutar suite de pruebas unitarias
 npm test
 
-# 6. Ejecutar la suite de pruebas E2E con Playwright
+# 6. Ejecutar pruebas End-to-End con Playwright
 npm run test:e2e
 ```
 
 Abre tu navegador en [http://localhost:3000](http://localhost:3000).
 
-> Para obtener instrucciones completas sobre compilación para producción (`npm run build`), linters y despliegue en Vercel, consulta la [Guía de Instalación y Ejecución](docs/instalacion-y-ejecucion.md).
-
 ---
 
-## 4. Índice de Documentación del Proyecto
+## 5. Índice de Documentación Técnica
 
-La documentación detallada se encuentra organizada en la carpeta [`docs/`](docs/) y archivos especializados:
+Para conocer los detalles de implementación interna, arquitectura y guías de desarrollo, consulta los siguientes documentos:
 
-1. **[Implementación del Dashboard Financiero](DASHBOARD_IMPLEMENTATION.md)**  
-   *Detalle técnico de la arquitectura de 4 paneles SVG (US-029 a US-040), sliding drawer, motor de series de tiempo, atípicos estadísticos y segmentación de antigüedad.*
+1. **[Guía de Instalación, Configuración y Ejecución](docs/instalacion-y-ejecucion.md)**  
+   Requisitos previos, variables de entorno, compilación para producción y despliegue en Vercel.
 
-2. **[Guía de Instalación, Configuración y Ejecución](docs/instalacion-y-ejecucion.md)**  
-   *Requisitos previos, configuración de variables de entorno, comandos de compilación, ejecución y despliegue en Vercel.*
+2. **[Estructura del Proyecto](docs/estructura-del-proyecto.md)**  
+   Organización de directorios, capas de aplicación (App Router, componentes, utilidades) y responsabilidades de cada módulo.
 
-3. **[Estructura del Proyecto](docs/estructura-del-proyecto.md)**  
-   *Árbol completo de directorios, capas de la aplicación (App Router, componentes, librerías, catálogos) y responsabilidades de cada módulo.*
+3. **[Herramientas y Arquitectura Técnica](docs/herramientas-y-arquitectura.md)**  
+   División de responsabilidades entre cliente, servidor y servicios en la nube, junto al diagrama de arquitectura.
 
-4. **[Arquitectura Split-Brain (Cerebro Dividido)](docs/arquitectura-split-brain.md)**  
-   *Explicación conceptual de la arquitectura, tablas comparativas de procesamiento local vs. LLM externo y las 4 razones de diseño: Privacidad, Costo, Latencia y Completitud.*
+4. **[Arquitectura de Procesamiento y Privacidad](docs/arquitectura-split-brain.md)**  
+   Detalle técnico sobre el modelo de separación de procesamiento local frente a servicios externos y fronteras de seguridad.
 
-5. **[Herramientas y Arquitectura Técnica](docs/herramientas-y-arquitectura.md)**  
-   *Tablas detalladas de responsabilidades (Navegador, Servidor Next.js, Gemini API), pila tecnológica completa y diagrama de arquitectura del sistema.*
+5. **[Privacidad y Anonimización de Datos](docs/privacidad-y-anonimizacion.md)**  
+   Reglas de detección y redacción de datos sensibles (PII), censura interactiva y validaciones de servidor.
 
 6. **[Uso del LLM Externo y Manejo de Fallos](docs/uso-del-llm-y-manejo-de-fallos.md)**  
-   *Para qué se usa exactamente el LLM, estructura de payloads, cascada de modelos de fallback y cómo la aplicación continúa operando al 100% ante fallos de conexión o cuota.*
+   Esquemas de interacción con Gemini, cascada de modelos de fallback y continuidad de operación ante errores de conexión.
 
-7. **[Privacidad y Anonimización de Datos](docs/privacidad-y-anonimizacion.md)**  
-   *Filosofía de privacidad por diseño, fragmentos de código de expresiones regulares, heurística de detección de titular, validación estricta de servidor y censura interactiva.*
+7. **[Pruebas Unitarias y Automatización E2E](docs/pruebas-unitarias.md)**  
+   Guía de ejecución para las 131 pruebas unitarias y pruebas de integración de navegador con Playwright.
 
-8. **[Pruebas Unitarias y E2E](docs/pruebas-unitarias.md)**  
-   *Cómo ejecutar las pruebas con Node.js Test Runner (31 suites, 131 pruebas unitarias) y automatización End-to-End con Playwright.*
+8. **[Resumen de Implementación UI/UX](UI_UX_IMPLEMENTATION.md)**  
+   Historial técnico de las mejoras visuales, controles colapsables, tutoriales interactivos y drill-down en paneles.
 
 ---
 
-## 5. Stack de Tecnologías
+## 6. Stack de Tecnologías
 
 * **Framework Full-Stack**: [Next.js 16](https://nextjs.org/) (App Router, Route Handlers)
 * **Biblioteca de UI**: [React 19](https://react.dev/)
@@ -167,6 +155,6 @@ La documentación detallada se encuentra organizada en la carpeta [`docs/`](docs
 * **Inteligencia Artificial**: [Google Gen AI SDK (`@google/genai`)](https://www.npmjs.com/package/@google/genai)
 * **Procesamiento de Documentos**: [pdf-parse](https://www.npmjs.com/package/pdf-parse) y [PapaParse](https://www.papaparse.com/)
 * **Iconografía**: [Lucide React](https://lucide.dev/)
-* **Testing Unitario**: Node.js Test Runner nativo con [tsx](https://github.com/privatenumber/tsx)
+* **Testing Unitario**: Node.js Test Runner con [tsx](https://github.com/privatenumber/tsx)
 * **Testing E2E**: [Playwright](https://playwright.dev/)
 * **Hosting**: [Vercel](https://vercel.com/)

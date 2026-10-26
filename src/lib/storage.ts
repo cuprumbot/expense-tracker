@@ -152,3 +152,78 @@ export function clearStoredSession(wipeCategories: boolean = true): boolean {
 export function clearStoredSessionOnly(): boolean {
   return clearStoredSession(false);
 }
+
+export const STORAGE_KEY_VENDOR_HIDDEN_AMOUNT = "expense_tracker_hidden_vendors_amount";
+export const STORAGE_KEY_VENDOR_HIDDEN_FREQUENCY = "expense_tracker_hidden_vendors_frequency";
+export const STORAGE_KEY_VENDOR_HIDE_BOTH_PANELS = "expense_tracker_vendor_hide_both_panels";
+
+/**
+ * Loads stored hidden vendors for either amount or frequency metric mode.
+ */
+export function loadStoredHiddenVendors(mode: "amount" | "frequency"): string[] {
+  if (!isStorageAvailable()) return [];
+  try {
+    const key =
+      mode === "amount"
+        ? STORAGE_KEY_VENDOR_HIDDEN_AMOUNT
+        : STORAGE_KEY_VENDOR_HIDDEN_FREQUENCY;
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? (parsed.filter((item) => typeof item === "string") as string[])
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Saves stored hidden vendors for either amount or frequency metric mode.
+ */
+export function saveStoredHiddenVendors(
+  mode: "amount" | "frequency",
+  vendors: string[]
+): boolean {
+  if (!isStorageAvailable()) return false;
+  try {
+    const key =
+      mode === "amount"
+        ? STORAGE_KEY_VENDOR_HIDDEN_AMOUNT
+        : STORAGE_KEY_VENDOR_HIDDEN_FREQUENCY;
+    window.localStorage.setItem(key, JSON.stringify(vendors));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Loads the configuration flag for hiding vendors across both panels.
+ * Defaults to false (inactive).
+ */
+export function loadStoredHideBothPanelsConfig(): boolean {
+  if (!isStorageAvailable()) return false;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY_VENDOR_HIDE_BOTH_PANELS);
+    return raw === "true";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Saves the configuration flag for hiding vendors across both panels.
+ */
+export function saveStoredHideBothPanelsConfig(enabled: boolean): boolean {
+  if (!isStorageAvailable()) return false;
+  try {
+    window.localStorage.setItem(
+      STORAGE_KEY_VENDOR_HIDE_BOTH_PANELS,
+      String(enabled)
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}

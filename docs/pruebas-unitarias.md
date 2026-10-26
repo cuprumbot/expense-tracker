@@ -182,7 +182,6 @@ npm run test:e2e
 ## Enlaces de Referencia
 
 * [Volver al README Principal](../README.md)
-* [Implementación del Dashboard Financiero](../DASHBOARD_IMPLEMENTATION.md)
 * [Instalación, Configuración y Ejecución](instalacion-y-ejecucion.md)
 * [Estructura del Proyecto](estructura-del-proyecto.md)
 * [Arquitectura Split-Brain](arquitectura-split-brain.md)

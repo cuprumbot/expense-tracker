@@ -53,7 +53,11 @@ Clic en una línea para ocultar las demás categorías.
 ---
 
 Make this changes to Panel 2:
-- The hidden vendors should be stored in localStorage and restored when the user visits the dashboard again.
+- Add a `Settings` icon to this panel. When it is clicked the following configuration should appear:
+    - `Ocultar comercio de ambos paneles`, by default it is inactive.
+- When the `Settings` icon is clicked again, the previous menu should close.
+- Have separate lists of hidden vendors for `Mayor monto gastado` and `Mayor cantidad de compra`. The `Ocultar comercio de ambos paneles` tells us if the clicked vendor should be hidden from both panels or just the current one.
+- The hidden vendors and the config should be stored in localStorage and restored when the user visits the dashboard again.
 - Show this text when the info button for the panel is pressed:
 
 ```

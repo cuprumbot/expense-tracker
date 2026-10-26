@@ -10,10 +10,18 @@ import {
 } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/currency";
 import { Icons } from "@/components/icons";
+import {
+  loadStoredHiddenVendors,
+  saveStoredHiddenVendors,
+  loadStoredHideBothPanelsConfig,
+  saveStoredHideBothPanelsConfig,
+} from "@/lib/storage";
 
 interface VendorConcentrationChartProps {
   transactions: Transaction[];
   customCategories?: CustomCategory[];
+  isSettingsOpen?: boolean;
+  onToggleSettings?: () => void;
 }
 
 type MetricMode = "amount" | "frequency";
@@ -21,18 +29,36 @@ type MetricMode = "amount" | "frequency";
 export function VendorConcentrationChart({
   transactions,
   customCategories = [],
+  isSettingsOpen,
+  onToggleSettings,
 }: VendorConcentrationChartProps) {
   const [metricMode, setMetricMode] = useState<MetricMode>("amount");
-  const [dismissedVendors, setDismissedVendors] = useState<Set<string>>(new Set());
+  const [hiddenVendorsByAmount, setHiddenVendorsByAmount] = useState<Set<string>>(new Set());
+  const [hiddenVendorsByFrequency, setHiddenVendorsByFrequency] = useState<Set<string>>(new Set());
+  const [hideFromBothPanels, setHideFromBothPanels] = useState<boolean>(false);
+  const [internalSettingsOpen, setInternalSettingsOpen] = useState(false);
   const [hoveredVendor, setHoveredVendor] = useState<VendorAggregationItem | null>(null);
 
-  // Restore stored metric mode from localStorage on mount (US-047)
+  const isSettingsActive = isSettingsOpen !== undefined ? isSettingsOpen : internalSettingsOpen;
+  const toggleSettings = onToggleSettings || (() => setInternalSettingsOpen((prev) => !prev));
+
+  // Restore stored metric mode, hidden vendor lists and config from localStorage on mount
   React.useEffect(() => {
     try {
-      const stored = window.localStorage.getItem("expense_tracker_vendor_metric_tab");
-      if (stored === "amount" || stored === "frequency") {
-        setMetricMode(stored);
+      const storedTab = window.localStorage.getItem("expense_tracker_vendor_metric_tab");
+      if (storedTab === "amount" || storedTab === "frequency") {
+        setMetricMode(storedTab);
       }
+      const storedAmount = loadStoredHiddenVendors("amount");
+      if (storedAmount.length > 0) {
+        setHiddenVendorsByAmount(new Set(storedAmount));
+      }
+      const storedFreq = loadStoredHiddenVendors("frequency");
+      if (storedFreq.length > 0) {
+        setHiddenVendorsByFrequency(new Set(storedFreq));
+      }
+      const storedHideBoth = loadStoredHideBothPanelsConfig();
+      setHideFromBothPanels(storedHideBoth);
     } catch {
       // Graceful fallback for restricted storage
     }
@@ -47,6 +73,11 @@ export function VendorConcentrationChart({
     }
   };
 
+  const handleToggleHideBoth = (enabled: boolean) => {
+    setHideFromBothPanels(enabled);
+    saveStoredHideBothPanelsConfig(enabled);
+  };
+
   // Compute ranked vendors (limit = 100 to support progressive rolling top-5 on dismissal)
   const vendorsResult: TopVendorsResult = useMemo(() => {
     return calculateTopVendors(transactions, 100);
@@ -55,23 +86,60 @@ export function VendorConcentrationChart({
   const rankedVendors =
     metricMode === "amount" ? vendorsResult.byAmount : vendorsResult.byFrequency;
 
-  // Active vendors: filter out dismissed merchants and slice top 5 (US-046)
+  // Current hidden vendors based on active metric mode
+  const currentHiddenVendors =
+    metricMode === "amount" ? hiddenVendorsByAmount : hiddenVendorsByFrequency;
+
+  // Active vendors: filter out dismissed merchants for the current mode and slice top 5
   const activeVendors = useMemo(() => {
     return rankedVendors
-      .filter((v) => !dismissedVendors.has(v.merchantName))
+      .filter((v) => !currentHiddenVendors.has(v.merchantName))
       .slice(0, 5);
-  }, [rankedVendors, dismissedVendors]);
+  }, [rankedVendors, currentHiddenVendors]);
 
   const handleDismissVendor = (merchantName: string) => {
-    setDismissedVendors((prev) => {
-      const next = new Set(prev);
-      next.add(merchantName);
-      return next;
-    });
+    if (metricMode === "amount") {
+      const nextAmount = new Set(hiddenVendorsByAmount);
+      nextAmount.add(merchantName);
+      setHiddenVendorsByAmount(nextAmount);
+      saveStoredHiddenVendors("amount", Array.from(nextAmount));
+
+      if (hideFromBothPanels) {
+        const nextFreq = new Set(hiddenVendorsByFrequency);
+        nextFreq.add(merchantName);
+        setHiddenVendorsByFrequency(nextFreq);
+        saveStoredHiddenVendors("frequency", Array.from(nextFreq));
+      }
+    } else {
+      const nextFreq = new Set(hiddenVendorsByFrequency);
+      nextFreq.add(merchantName);
+      setHiddenVendorsByFrequency(nextFreq);
+      saveStoredHiddenVendors("frequency", Array.from(nextFreq));
+
+      if (hideFromBothPanels) {
+        const nextAmount = new Set(hiddenVendorsByAmount);
+        nextAmount.add(merchantName);
+        setHiddenVendorsByAmount(nextAmount);
+        saveStoredHiddenVendors("amount", Array.from(nextAmount));
+      }
+    }
   };
 
   const handleClearDismissed = () => {
-    setDismissedVendors(new Set());
+    if (hideFromBothPanels) {
+      setHiddenVendorsByAmount(new Set());
+      saveStoredHiddenVendors("amount", []);
+      setHiddenVendorsByFrequency(new Set());
+      saveStoredHiddenVendors("frequency", []);
+    } else {
+      if (metricMode === "amount") {
+        setHiddenVendorsByAmount(new Set());
+        saveStoredHiddenVendors("amount", []);
+      } else {
+        setHiddenVendorsByFrequency(new Set());
+        saveStoredHiddenVendors("frequency", []);
+      }
+    }
   };
 
   // Max value for scaling bar widths (anchored to top ranked vendor so bar sizes remain stable when vendors are dismissed)
@@ -91,7 +159,7 @@ export function VendorConcentrationChart({
     return DEFAULT_CATEGORY_COLORS[categoryName] || "#f59e0b";
   };
 
-  if (activeVendors.length === 0 && dismissedVendors.size === 0) {
+  if (activeVendors.length === 0 && currentHiddenVendors.size === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-zinc-400">
         <Icons.Building2 className="w-8 h-8 mb-2 opacity-50" />
@@ -104,10 +172,39 @@ export function VendorConcentrationChart({
 
   return (
     <div className="flex flex-col h-full space-y-2">
+      {/* Settings configuration menu */}
+      {isSettingsActive && (
+        <div
+          id="vendor-panel-settings-menu"
+          className="p-3 mb-3.5 rounded-xl border border-zinc-200 bg-zinc-50/95 dark:border-zinc-800 dark:bg-zinc-900/90 shadow-2xs animate-in fade-in duration-150"
+        >
+          <label
+            htmlFor="toggle-hide-both-panels"
+            className="flex items-center justify-between gap-3 cursor-pointer select-none"
+          >
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                Ocultar comercio de ambos paneles
+              </span>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                Al hacer clic en un negocio se ocultará tanto en &quot;Mayor monto gastado&quot; como en &quot;Mayor cantidad de compras&quot;
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              id="toggle-hide-both-panels"
+              checked={hideFromBothPanels}
+              onChange={(e) => handleToggleHideBoth(e.target.checked)}
+              className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 cursor-pointer shrink-0"
+            />
+          </label>
+        </div>
+      )}
+
       {/* Top Controls: Selector + 'Mostrar todo' button */}
       <div className="flex items-center justify-between gap-2 pb-0.5">
         <div>
-          {dismissedVendors.size > 0 && (
+          {currentHiddenVendors.size > 0 && (
             <button
               type="button"
               id="btn-show-all-vendors"

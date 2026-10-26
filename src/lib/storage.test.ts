@@ -7,6 +7,10 @@ import {
   clearStoredSessionOnly,
   saveStoredCategories,
   loadStoredCategories,
+  saveStoredHiddenVendors,
+  loadStoredHiddenVendors,
+  saveStoredHideBothPanelsConfig,
+  loadStoredHideBothPanelsConfig,
   STORAGE_KEY_SESSION,
   STORAGE_KEY_CATEGORIES,
 } from "./storage";
@@ -279,6 +283,45 @@ describe("US-011: LocalStorage Persistence Unit Tests", () => {
       assert.equal(loaded.transactions[0].category, "Mascotas");
       assert.equal(loaded.transactions[0].classificationSource, "manual");
       assert.equal(loaded.transactions[0].isSubscription, true);
+    });
+  });
+
+  describe("Panel 2: Vendor Concentration Hidden Preferences & Config Persistence", () => {
+    it("persists and restores separate hidden vendor lists for amount and frequency", () => {
+      // Initially empty
+      assert.deepStrictEqual(loadStoredHiddenVendors("amount"), []);
+      assert.deepStrictEqual(loadStoredHiddenVendors("frequency"), []);
+
+      // Save hidden vendors for amount
+      saveStoredHiddenVendors("amount", ["Supermercado La Torre", "Paiz"]);
+      assert.deepStrictEqual(loadStoredHiddenVendors("amount"), [
+        "Supermercado La Torre",
+        "Paiz",
+      ]);
+      // Frequency remains empty
+      assert.deepStrictEqual(loadStoredHiddenVendors("frequency"), []);
+
+      // Save hidden vendors for frequency
+      saveStoredHiddenVendors("frequency", ["Uber", "Shell"]);
+      assert.deepStrictEqual(loadStoredHiddenVendors("frequency"), ["Uber", "Shell"]);
+      // Amount remains intact
+      assert.deepStrictEqual(loadStoredHiddenVendors("amount"), [
+        "Supermercado La Torre",
+        "Paiz",
+      ]);
+    });
+
+    it("persists and restores hideFromBothPanels configuration with default false", () => {
+      // Default false when not set
+      assert.strictEqual(loadStoredHideBothPanelsConfig(), false);
+
+      // Save true
+      saveStoredHideBothPanelsConfig(true);
+      assert.strictEqual(loadStoredHideBothPanelsConfig(), true);
+
+      // Save false
+      saveStoredHideBothPanelsConfig(false);
+      assert.strictEqual(loadStoredHideBothPanelsConfig(), false);
     });
   });
 });

@@ -19,8 +19,7 @@ const PANEL_TUTORIALS: Record<string, { title: string; content: string }> = {
   },
   "panel-vendor-concentration": {
     title: "¿A dónde va mi dinero?",
-    content:
-      "Visualiza tus comercios con mayor gasto o compras más frecuentes. Haz clic en un comercio para descartarlo temporalmente y explorar el resto de tus gastos.",
+    content: "Clic en un negocio para ocultarlo de la lista.",
   },
   "panel-consumption-patterns": {
     title: "Patrones de consumo",
@@ -41,6 +40,8 @@ interface DashboardPanelSectionProps {
   onToggleMinimize: () => void;
   isInfoActive: boolean;
   onToggleInfo: () => void;
+  isSettingsActive?: boolean;
+  onToggleSettings?: () => void;
   tutorialContent: string;
   children: React.ReactNode;
 }
@@ -52,6 +53,8 @@ function DashboardPanelSection({
   onToggleMinimize,
   isInfoActive,
   onToggleInfo,
+  isSettingsActive,
+  onToggleSettings,
   tutorialContent,
   children,
 }: DashboardPanelSectionProps) {
@@ -92,6 +95,22 @@ function DashboardPanelSection({
               {title}
             </h2>
             <div className="flex items-center gap-1">
+              {onToggleSettings && (
+                <button
+                  type="button"
+                  id={`btn-settings-${id}`}
+                  onClick={onToggleSettings}
+                  className={`p-1 rounded-md transition-colors cursor-pointer ${
+                    isSettingsActive
+                      ? "text-blue-600 bg-blue-50 dark:bg-blue-950/50 dark:text-blue-400"
+                      : "text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-850"
+                  }`}
+                  title="Configuración"
+                  aria-label={`Configuración de ${title}`}
+                >
+                  <Icons.Settings className="w-3.5 h-3.5" />
+                </button>
+              )}
               <button
                 type="button"
                 id={`btn-info-${id}`}
@@ -209,6 +228,7 @@ export function DashboardView({
     }
   }, [minimizedPanels]);
   const [activeInfoPanel, setActiveInfoPanel] = useState<string | null>(null);
+  const [activeSettingsPanel, setActiveSettingsPanel] = useState<string | null>(null);
 
   const handleSelectTrendPoint = (point: {
     category: string;
@@ -253,6 +273,7 @@ export function DashboardView({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setActiveInfoPanel(null);
+        setActiveSettingsPanel(null);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -441,18 +462,37 @@ export function DashboardView({
             isMinimized={!!minimizedPanels["panel-vendor-concentration"]}
             onToggleMinimize={() => toggleMinimize("panel-vendor-concentration")}
             isInfoActive={activeInfoPanel === "panel-vendor-concentration"}
-            onToggleInfo={() =>
+            onToggleInfo={() => {
               setActiveInfoPanel((prev) =>
                 prev === "panel-vendor-concentration"
                   ? null
                   : "panel-vendor-concentration"
-              )
-            }
+              );
+              setActiveSettingsPanel(null);
+            }}
+            isSettingsActive={activeSettingsPanel === "panel-vendor-concentration"}
+            onToggleSettings={() => {
+              setActiveSettingsPanel((prev) =>
+                prev === "panel-vendor-concentration"
+                  ? null
+                  : "panel-vendor-concentration"
+              );
+              setActiveInfoPanel(null);
+            }}
             tutorialContent={PANEL_TUTORIALS["panel-vendor-concentration"].content}
           >
             <VendorConcentrationChart
               transactions={transactions}
               customCategories={customCategories}
+              isSettingsOpen={activeSettingsPanel === "panel-vendor-concentration"}
+              onToggleSettings={() => {
+                setActiveSettingsPanel((prev) =>
+                  prev === "panel-vendor-concentration"
+                    ? null
+                    : "panel-vendor-concentration"
+                );
+                setActiveInfoPanel(null);
+              }}
             />
           </DashboardPanelSection>
 

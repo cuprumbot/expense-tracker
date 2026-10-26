@@ -12,6 +12,8 @@ expense-tracker/
 ├── demo/                         # Archivos de prueba y demostración (PDF y CSV)
 │   └── *.csv                         # Estados de cuenta de ejemplo
 ├── docs/                         # Documentación completa del proyecto (en español)
+│   ├── dev/                      # Especificaciones, historias de usuario y roadmaps
+│   ├── screenshots/              # Capturas de pantalla de la aplicación
 │   ├── arquitectura-split-brain.md
 │   ├── estructura-del-proyecto.md
 │   ├── herramientas-y-arquitectura.md
@@ -20,7 +22,8 @@ expense-tracker/
 │   ├── pruebas-unitarias.md
 │   └── uso-del-llm-y-manejo-de-fallos.md
 ├── e2e/                          # Pruebas End-to-End automatizadas con Playwright
-│   └── expense-tracker.spec.ts   # Suite completa desatendida del flujo y dashboard
+│   ├── expense-tracker.spec.ts   # Suite completa desatendida del flujo y dashboard
+│   └── screenshots.spec.ts       # Generación automatizada de capturas para documentación
 ├── public/                       # Recursos estáticos servidos por Next.js
 ├── src/
 │   ├── app/                      # Next.js App Router (Páginas y Route Handlers)
@@ -103,7 +106,7 @@ expense-tracker/
 ├── ARCHITECTURE_DIAGRAM.md       # Descripción arquitectónica de componentes y flujos
 ├── architecture-diagram.html     # Diagrama de arquitectura interactivo (HTML/SVG)
 ├── architecture-diagram.png      # Captura visual del diagrama de arquitectura
-├── DASHBOARD_IMPLEMENTATION.md   # Documento técnico de implementación del Dashboard (US-029 a US-040)
+├── UI_UX_IMPLEMENTATION.md        # Resumen de implementación de mejoras UI/UX (US-041 a US-051)
 ├── eslint.config.mjs             # Configuración de ESLint
 ├── next.config.ts                # Configuración de Next.js
 ├── package.json                  # Manifiesto de dependencias y scripts de npm

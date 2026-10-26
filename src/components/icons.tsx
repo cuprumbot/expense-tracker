@@ -49,6 +49,7 @@ import {
   Moon,
   Minus,
   Maximize2,
+  Settings,
 } from "lucide-react";
 
 export const Icons = {
@@ -102,5 +103,6 @@ export const Icons = {
   ChevronUp,
   Globe,
   RotateCcw,
+  Settings,
 };
 
