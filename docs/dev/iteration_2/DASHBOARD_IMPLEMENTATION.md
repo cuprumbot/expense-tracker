@@ -25,7 +25,22 @@ Cada panel del dashboard se implementó en su rama temática correspondiente, co
 
 ---
 
-## 2. Panel 1: Tendencia de Gastos por Categoría (US-031 y US-032)
+## 2. Galería de Vistas del Dashboard
+
+A continuación se ilustran las vistas principales del Dashboard de 4 paneles SVG y del panel lateral de movimientos:
+
+### Cuadrícula 2x2 en Modo Claro
+![Dashboard en Modo Claro](../../screenshots/dashboard-overview.png)
+
+### Cuadrícula 2x2 en Modo Oscuro
+![Dashboard en Modo Oscuro](../../screenshots/dashboard-dark.png)
+
+### Drawer Lateral Deslizante de Transacciones
+![Drawer Lateral](../../screenshots/dashboard-drawer.png)
+
+---
+
+## 3. Panel 1: Tendencia de Gastos por Categoría (US-031 y US-032)
 
 ### Rama: `feature/panel-1-category-trends`
 - **Motor de Agregación (`calculateMonthlyCategoryTrends` en `src/lib/reporting.ts`):**
@@ -44,7 +59,7 @@ Cada panel del dashboard se implementó en su rama temática correspondiente, co
 
 ---
 
-## 3. Panel 2: Concentración de Comercios (US-033 y US-034)
+## 4. Panel 2: Concentración de Comercios (US-033 y US-034)
 
 ### Rama: `feature/panel-2-merchant-concentration`
 - **Motor de Agregación (`calculateTopVendors` en `src/lib/reporting.ts`):**
@@ -61,7 +76,7 @@ Cada panel del dashboard se implementó en su rama temática correspondiente, co
 
 ---
 
-## 4. Panel 3: Patrones de Consumo y Detección de Atípicos (US-035 y US-036)
+## 5. Panel 3: Patrones de Consumo y Detección de Atípicos (US-035 y US-036)
 
 ### Rama: `feature/panel-3-consumption-patterns`
 - **Motor Estadístico (`calculateConsumptionPatterns` en `src/lib/reporting.ts`):**
@@ -81,7 +96,7 @@ Cada panel del dashboard se implementó en su rama temática correspondiente, co
 
 ---
 
-## 5. Panel 4: Antigüedad del Gasto y Financiamiento (US-037, US-038 y US-039)
+## 6. Panel 4: Antigüedad del Gasto y Financiamiento (US-037, US-038 y US-039)
 
 ### Rama: `feature/panel-4-transaction-age`
 - **Extensión del Catálogo y Clasificador (US-037):**
@@ -107,7 +122,7 @@ Cada panel del dashboard se implementó en su rama temática correspondiente, co
 
 ---
 
-## 6. Verificación de Compilación y Calidad de Código
+## 7. Verificación de Compilación y Calidad de Código
 
 - **Compilación de Producción (`npm run build`):**
   - 0 errores de compilación con Turbopack.
@@ -123,7 +138,7 @@ Cada panel del dashboard se implementó en su rama temática correspondiente, co
 
 ---
 
-## 7. Pruebas Automatizadas de Extremo a Extremo con Playwright (`npm run test:e2e`)
+## 8. Pruebas Automatizadas de Extremo a Extremo con Playwright (`npm run test:e2e`)
 
 El archivo de prueba `e2e/expense-tracker.spec.ts` ejecuta de forma 100% desatendida y autónoma el siguiente flujo:
 1. **Verificación y Gestión del Servidor:** Comprueba si `http://localhost:3000` está activo y levanta `npm run dev` automáticamente en caso contrario.
@@ -139,7 +154,7 @@ El archivo de prueba `e2e/expense-tracker.spec.ts` ejecuta de forma 100% desaten
 
 ---
 
-## 8. Mejoras de Usabilidad, Switcher de Tema y Notificaciones Flotantes (Commit `5633fed`)
+## 9. Mejoras de Usabilidad, Switcher de Tema y Notificaciones Flotantes (Commit `5633fed`)
 
 Tras la integración inicial de los cuatro paneles, se implementó una serie de mejoras críticas en la experiencia de usuario (UX) y el diseño visual (`frontend-design`):
 

@@ -154,6 +154,17 @@ Todos los endpoints se ejecutan como **Route Handlers de Next.js** en el servido
 
 ### 2.2. Componentes de Interfaz (`src/components/`)
 
+A continuación se ilustran las interfaces gráficas compuestas por estos elementos:
+
+#### Dashboard Analítico (Tema Claro)
+![Dashboard en Modo Claro](screenshots/dashboard-overview.png)
+
+#### Dashboard Analítico (Tema Oscuro)
+![Dashboard en Modo Oscuro](screenshots/dashboard-dark.png)
+
+#### Panel Lateral Deslizante (Sliding Drawer)
+![Cajón Lateral de Movimientos](screenshots/dashboard-drawer.png)
+
 * **`dashboard-view.tsx`**: Contenedor principal del Dashboard Financiero de 4 paneles SVG estructurado en una cuadrícula 2x2 responsiva (`grid-cols-1 lg:grid-cols-2`). Incluye la barra superior con el título `"Expense Tracker"`, switcher de tema Claro/Oscuro, botón para agregar más estados de cuenta, botón de reinicio de sesión y botón disparador para abrir el drawer de transacciones.
 * **`sliding-drawer.tsx`**: Drawer lateral deslizante off-canvas con transición CSS suave desde la derecha, telón de fondo semitransparente con desenfoque (`bg-black/40 backdrop-blur-sm`), soporte para tecla `Escape` y encapsulación completa de la tabla de movimientos (`TransactionTable`).
 * **`category-trend-chart.tsx`**: **Panel 1 del Dashboard (Tendencias por Categoría)**. Gráfico de líneas SVG nativo con curvas de interpolación Bézier cúbica continua, selector interactivo de categorías para aislar líneas, hit-targets circulares transparentes (`r=14`) para hover estable sin parpadeos, etiquetas de fecha en dos líneas (`Ene\n2026`) y tooltips de variación porcentual.

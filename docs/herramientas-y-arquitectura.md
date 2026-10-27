@@ -44,6 +44,16 @@ El cliente se ejecuta en React 19 y orquesta toda la interacción del usuario si
 | **`savings-advisor.ts` (Payload Builder)** | Construye el objeto JSON estrictamente agregado (totales por categoría y servicios recurrentes) para la solicitud de recomendaciones de ahorro. |
 | **`storage.ts` (Browser localStorage)** | Persiste y restaura la sesión activa (`expense_tracker_session_v1`) y las categorías personalizadas (`expense_tracker_categories_v1`) con continuidad incremental, detección de cuota, resiliencia ante datos corruptos y soporte para reinicio de sesión selectivo (conservando categorías personalizadas) o reinicio de fábrica. |
 
+#### Vistas de la Interfaz de Usuario
+
+| Dashboard Analítico (Tema Claro) | Dashboard Analítico (Tema Oscuro) |
+| :---: | :---: |
+| ![Dashboard en Modo Claro](screenshots/dashboard-overview.png) | ![Dashboard en Modo Oscuro](screenshots/dashboard-dark.png) |
+
+| Panel Lateral de Movimientos (Sliding Drawer) |
+| :---: |
+| ![Panel Lateral de Transacciones](screenshots/dashboard-drawer.png) |
+
 ---
 
 ### 2.2. ¿Qué sucede en el Servidor (Next.js Route Handlers)?

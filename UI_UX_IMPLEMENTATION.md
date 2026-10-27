@@ -24,7 +24,25 @@ Todas las historias se implementaron de forma secuencial y modular, agrupadas en
 
 ---
 
-## 2. Detalle de Implementación por Historia de Usuario
+## 2. Galería Visual de la Interfaz
+
+Las siguientes capturas reflejan el estado del dashboard analítico y de sus componentes interactivos tras la implementación de las mejoras visuales, accesibilidad y diseño responsivo:
+
+### Vista General del Dashboard (Tema Claro)
+Cuadrícula analítica 2x2 con curvas de tendencia, concentración de comercios, patrones de consumo y antigüedad del gasto:
+![Dashboard en Modo Claro](docs/screenshots/dashboard-overview.png)
+
+### Vista General del Dashboard (Tema Oscuro)
+Paleta cromática de alto contraste optimizada para visualización en entornos de poca iluminación:
+![Dashboard en Modo Oscuro](docs/screenshots/dashboard-dark.png)
+
+### Panel Lateral Deslizante (Sliding Drawer) con Filtrado Dinámico
+Inspección interactiva de transacciones al accionar el drill-down desde los paneles del dashboard:
+![Panel Lateral Deslizante](docs/screenshots/dashboard-drawer.png)
+
+---
+
+## 3. Detalle de Implementación por Historia de Usuario
 
 ### US-041: Consolidación y Seguridad del Reinicio de Sesión
 - **Objetivo:** Eliminar reinicios accidentales sin confirmación en la barra de navegación y concentrar el control de reinicio de sesión exclusivamente en el modal de confirmación con doble opción (mantener o borrar categorías personalizadas).
@@ -135,7 +153,7 @@ Todas las historias se implementaron de forma secuencial y modular, agrupadas en
 
 ---
 
-## 3. Resultados de Pruebas Automatizadas
+## 4. Resultados de Pruebas Automatizadas
 
 ### A. Pruebas Unitarias (`npm test`)
 - **Total de Suites:** 31 suites ejecutadas
@@ -173,6 +191,6 @@ Todas las historias se implementaron de forma secuencial y modular, agrupadas en
 
 ---
 
-## 4. Estado Final del Proyecto
+## 5. Estado Final del Proyecto
 - **Historias de Usuario:** US-041 a US-051 marcadas como `[x]` en `docs/dev/USER_STORIES_3.md`.
 - **Ramas Preservadas:** Cada grupo de características reside en su propia rama Git para revisión y control del usuario, sin fusiones automáticas a `master`.
