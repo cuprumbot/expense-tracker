@@ -52,5 +52,6 @@ export interface DrawerFilter {
   monthKey?: string | null;
   dayOfWeek?: number | null;
   dayOfMonth?: number | null;
+  segmentId?: "cuotas" | "suscripciones" | "inmediatas" | null;
   displayLabel?: string | null;
 }

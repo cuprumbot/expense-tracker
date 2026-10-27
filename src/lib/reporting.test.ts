@@ -184,6 +184,57 @@ describe("US-012 & US-013: Reporting & Visualizations Unit Tests", () => {
       ["tx-usd-1", "tx-usd-2"]
     );
   });
+
+  it("filters transactions by segmentId (cuotas, suscripciones, inmediatas)", () => {
+    const ageTransactions: Transaction[] = [
+      {
+        id: "tx-age-1",
+        date: "2026-07-01",
+        description: "Cuota refrigeradora 1/12",
+        amount: 300.0,
+        category: "Visacuotas y Financiamiento",
+        currency: "GTQ",
+      },
+      {
+        id: "tx-age-2",
+        date: "2026-07-02",
+        description: "Spotify",
+        amount: 50.0,
+        category: "Suscripciones",
+        isSubscription: true,
+        currency: "GTQ",
+      },
+      {
+        id: "tx-age-3",
+        date: "2026-07-03",
+        description: "Gimnasio",
+        amount: 250.0,
+        category: "Salud y Farmacia",
+        isSubscription: true,
+        currency: "GTQ",
+      },
+      {
+        id: "tx-age-4",
+        date: "2026-07-04",
+        description: "Supermercado La Torre",
+        amount: 400.0,
+        category: "Supermercado",
+        currency: "GTQ",
+      },
+    ];
+
+    const cuotas = filterTransactions(ageTransactions, { segmentId: "cuotas" });
+    assert.equal(cuotas.length, 1);
+    assert.equal(cuotas[0].id, "tx-age-1");
+
+    const subs = filterTransactions(ageTransactions, { segmentId: "suscripciones" });
+    assert.equal(subs.length, 2);
+    assert.deepEqual(subs.map((t) => t.id), ["tx-age-2", "tx-age-3"]);
+
+    const inmediatas = filterTransactions(ageTransactions, { segmentId: "inmediatas" });
+    assert.equal(inmediatas.length, 1);
+    assert.equal(inmediatas[0].id, "tx-age-4");
+  });
 });
 
 describe("US-031: Multi-Month Category Time-Series Aggregation Engine Unit Tests", () => {

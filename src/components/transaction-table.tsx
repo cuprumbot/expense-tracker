@@ -288,6 +288,7 @@ export function TransactionTable({
       monthKey: externalFilter?.monthKey,
       dayOfWeek: externalFilter?.dayOfWeek,
       dayOfMonth: externalFilter?.dayOfMonth,
+      segmentId: externalFilter?.segmentId,
     });
   }, [
     transactions,
@@ -297,6 +298,7 @@ export function TransactionTable({
     externalFilter?.monthKey,
     externalFilter?.dayOfWeek,
     externalFilter?.dayOfMonth,
+    externalFilter?.segmentId,
   ]);
 
   // Sorted transactions

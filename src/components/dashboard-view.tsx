@@ -10,6 +10,7 @@ import { CategoryTrendChart } from "@/components/category-trend-chart";
 import { VendorConcentrationChart } from "@/components/vendor-concentration-chart";
 import { ConsumptionPatternsChart } from "@/components/consumption-patterns-chart";
 import { TransactionAgeChart } from "@/components/transaction-age-chart";
+import { TransactionAgeSegmentId } from "@/lib/reporting";
 
 const PANEL_TUTORIALS: Record<string, { title: string; content: string }> = {
   "panel-category-trends": {
@@ -23,13 +24,11 @@ const PANEL_TUTORIALS: Record<string, { title: string; content: string }> = {
   },
   "panel-consumption-patterns": {
     title: "Patrones de consumo",
-    content:
-      "Analiza tus hábitos según el día del mes o de la semana para detectar gastos atípicos. Haz clic en una barra para ver los movimientos de ese día.",
+    content: "Clic en un día de la semana o del mes para ver transacciones filtradas.",
   },
   "panel-transaction-age": {
     title: "Antigüedad del gasto",
-    content:
-      "Compara tus compromisos previos (cuotas y suscripciones) frente a compras inmediatas para evaluar cuánto de tu dinero ya estaba comprometido antes de iniciar el mes.",
+    content: "Clic en un tipo de gasto para ver transacciones filtradas.",
   },
 };
 
@@ -259,6 +258,22 @@ export function DashboardView({
         displayLabel: temporal.label,
       });
     }
+    setIsDrawerOpen(true);
+  };
+
+  const handleSelectAgeSegment = (segment: {
+    id: TransactionAgeSegmentId;
+    label: string;
+    monthKey?: string | null;
+    monthLabel?: string | null;
+  }) => {
+    setDrawerFilter({
+      segmentId: segment.id,
+      monthKey: segment.monthKey,
+      displayLabel: segment.monthLabel
+        ? `${segment.label} · ${segment.monthLabel}`
+        : segment.label,
+    });
     setIsDrawerOpen(true);
   };
 
@@ -509,7 +524,10 @@ export function DashboardView({
             }
             tutorialContent={PANEL_TUTORIALS["panel-transaction-age"].content}
           >
-            <TransactionAgeChart transactions={transactions} />
+            <TransactionAgeChart
+              transactions={transactions}
+              onSelectSegment={handleSelectAgeSegment}
+            />
           </DashboardPanelSection>
         </div>
       </main>

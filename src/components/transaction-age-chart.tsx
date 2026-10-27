@@ -6,14 +6,24 @@ import {
   calculateTransactionAgeSegments,
   TransactionAgeResult,
   TransactionAgeSegment,
+  TransactionAgeSegmentId,
 } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/currency";
 
 interface TransactionAgeChartProps {
   transactions: Transaction[];
+  onSelectSegment?: (segment: {
+    id: TransactionAgeSegmentId;
+    label: string;
+    monthKey?: string | null;
+    monthLabel?: string | null;
+  }) => void;
 }
 
-export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) {
+export function TransactionAgeChart({
+  transactions,
+  onSelectSegment,
+}: TransactionAgeChartProps) {
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [hoveredSegment, setHoveredSegment] = useState<TransactionAgeSegment | null>(
     null
@@ -30,6 +40,16 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
     totalFilteredCount,
     availableMonths,
   } = ageResult;
+
+  const handleSegmentClick = (segment: TransactionAgeSegment) => {
+    const monthObj = availableMonths.find((m) => m.monthKey === selectedMonth);
+    onSelectSegment?.({
+      id: segment.id,
+      label: segment.label,
+      monthKey: selectedMonth === "all" ? null : selectedMonth,
+      monthLabel: monthObj ? monthObj.monthLabel : null,
+    });
+  };
 
   // SVG Donut geometry (enlarged for prominent visual hierarchy)
   const size = 180;
@@ -129,6 +149,13 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
                       role="button"
                       aria-label={`${slice.label}: ${formatCurrency(slice.totalAmountGTQ)} (${slice.percentageShare}%)`}
                       className="transition-all duration-200 cursor-pointer origin-center focus:outline-hidden"
+                      onClick={() => handleSegmentClick(slice)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleSegmentClick(slice);
+                        }
+                      }}
                       onMouseEnter={() => setHoveredSegment(slice)}
                       onMouseLeave={() => setHoveredSegment(null)}
                       onFocus={() => setHoveredSegment(slice)}
@@ -173,6 +200,13 @@ export function TransactionAgeChart({ transactions }: TransactionAgeChartProps) 
                 tabIndex={0}
                 role="button"
                 aria-label={`${seg.label}: ${formatCurrency(seg.totalAmountGTQ)}`}
+                onClick={() => handleSegmentClick(seg)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleSegmentClick(seg);
+                  }
+                }}
                 onMouseEnter={() => setHoveredSegment(seg)}
                 onMouseLeave={() => setHoveredSegment(null)}
                 onFocus={() => setHoveredSegment(seg)}

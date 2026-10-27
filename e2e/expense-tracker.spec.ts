@@ -132,8 +132,9 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     await expect(infoBtn1).toBeVisible();
     await infoBtn1.click();
     const tutorialDialog = page.locator('#panel-category-trends [role="dialog"]');
-    await expect(tutorialDialog).toBeVisible();
-    await expect(tutorialDialog.getByText("Muestra la evolución mensual de tus gastos por categoría")).toBeVisible();
+    await expect(
+      tutorialDialog.getByText("Clic en una categoría para ocultarla o mostrarla")
+    ).toBeVisible();
     // Dismiss via X button
     await tutorialDialog.getByTitle("Cerrar tutorial").click();
     await expect(tutorialDialog).not.toBeVisible();
@@ -299,6 +300,17 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
     const panel3 = page.locator("#panel-consumption-patterns");
     await expect(panel3).toBeVisible();
 
+    // Verify Panel 3 Info button and updated tutorial copy
+    const infoBtn3 = page.locator("#btn-info-panel-consumption-patterns");
+    await infoBtn3.click();
+    const tutorialDialog3 = page.locator('#panel-consumption-patterns [role="dialog"]');
+    await expect(tutorialDialog3).toBeVisible();
+    await expect(
+      tutorialDialog3.getByText("Clic en un día de la semana o del mes para ver transacciones filtradas.")
+    ).toBeVisible();
+    await tutorialDialog3.getByTitle("Cerrar tutorial").click();
+    await expect(tutorialDialog3).not.toBeVisible();
+
     const btnPatternDayOfWeek = page.locator("#btn-pattern-day-of-week");
     const btnPatternDayOfMonth = page.locator("#btn-pattern-day-of-month");
     await expect(btnPatternDayOfWeek).toBeVisible();
@@ -393,6 +405,33 @@ test.describe("Dashboard & Sliding Drawer E2E - US-029 & US-030", () => {
         await expect(monthSelect).toHaveValue("all");
       }
     }
+
+    // Verify Panel 4 Info button and updated tutorial copy
+    const infoBtn4 = page.locator("#btn-info-panel-transaction-age");
+    await infoBtn4.click();
+    const tutorialDialog4 = page.locator('#panel-transaction-age [role="dialog"]');
+    await expect(tutorialDialog4).toBeVisible();
+    await expect(
+      tutorialDialog4.getByText("Clic en un tipo de gasto para ver transacciones filtradas.")
+    ).toBeVisible();
+    await tutorialDialog4.getByTitle("Cerrar tutorial").click();
+    await expect(tutorialDialog4).not.toBeVisible();
+
+    // Verify clicking on one of the three categories shows the filtered transaction list
+    console.log("[E2E Test] Verifying Panel 4 category click drill-down into drawer...");
+    await page.locator("#legend-segment-suscripciones").click();
+    const drawerAsideAge = page.locator('aside[aria-label="Detalle de movimientos"]');
+    await expect(drawerAsideAge).toHaveClass(/translate-x-0/);
+    const filterBadgeAge = page.locator("#drawer-active-filter-badge");
+    await expect(filterBadgeAge).toBeVisible();
+    await expect(filterBadgeAge).toContainText("Filtrado por: Suscripciones Recurrentes");
+
+    // Clear filter and close drawer
+    await page.locator("#btn-drawer-show-all-transactions").click();
+    await expect(filterBadgeAge).not.toBeVisible();
+    await page.locator("#btn-close-sliding-drawer").click();
+    await expect(drawerAsideAge).toHaveClass(/translate-x-full/);
+
     console.log("[E2E Test] ✓ Panel 4 Transaction Age Donut Chart verified successfully.");
 
     // 6. Assertions for US-030 (Sliding Transaction Drawer)

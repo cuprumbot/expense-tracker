@@ -102,9 +102,10 @@ export function filterTransactions(
     monthKey?: string | null;
     dayOfWeek?: number | null;
     dayOfMonth?: number | null;
+    segmentId?: "cuotas" | "suscripciones" | "inmediatas" | null;
   }
 ): Transaction[] {
-  const { category, searchTerm, currency, monthKey, dayOfWeek, dayOfMonth } = filters;
+  const { category, searchTerm, currency, monthKey, dayOfWeek, dayOfMonth, segmentId } = filters;
   const normalizedSearch = searchTerm?.trim().toLowerCase();
 
   return transactions.filter((tx) => {
@@ -137,6 +138,18 @@ export function filterTransactions(
     if (typeof dayOfMonth === "number") {
       const parts = parseTransactionDateParts(tx.date);
       if (!parts || parts.day !== dayOfMonth) return false;
+    }
+
+    if (segmentId) {
+      const cat = (tx.category || "").trim().toLowerCase();
+      const isCuota = cat === "visacuotas y financiamiento";
+      const isSub =
+        !isCuota &&
+        (tx.isSubscription === true || cat === "suscripciones");
+
+      if (segmentId === "cuotas" && !isCuota) return false;
+      if (segmentId === "suscripciones" && !isSub) return false;
+      if (segmentId === "inmediatas" && (isCuota || isSub)) return false;
     }
 
     if (normalizedSearch) {

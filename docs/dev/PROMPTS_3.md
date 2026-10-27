@@ -73,3 +73,30 @@ We are moving away from being a tech demo, and becoming a product. Remove inform
 Simplify the information presented in `¿Qué hace la aplicación?` section.
 
 Get some screenshots from the dashboard to add in the documentation. Use Playwright if possible to get the screenshots instead of the native web agent.
+
+---
+
+Make this changes to Panel 3:
+- Show this text when the info button for the panel is pressed:
+
+```
+Clic en un día de la semana o del mes para ver transacciones filtradas.
+```
+
+Make this changes to Panel 4:
+- When one of the three categories are clicked, show the filtered transaction list.
+- Show this text when the info button for the panel is pressed:
+
+```
+Clic en un tipo de gasto para ver transacciones filtradas.
+```
+
+---
+
+Make these changes to the dashboard:
+
+- Then panels are now resizable. They can be resized both vertically and horizontally. They have some small indicator on the corner to click and resize.
+- When a panel is resized horizontally the panel below it must also resize to fill the entire width. The panels in the other column should also be resized the oposite way so the screen is always filled horizontally and it doesn't overflow.
+- When the panels are resized vertically, the panels below are pushed up or down if applicable.
+- The panel sizes should be persistent on localStorage.
+- Provide the best UX for the panels resizing. Don't make it feel clunky or laggy.
