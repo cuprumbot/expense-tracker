@@ -218,36 +218,38 @@ export function VendorConcentrationChart({
           )}
         </div>
 
-        <div className="inline-flex p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+        <div className="inline-flex p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shrink-0">
           <button
             type="button"
             id="btn-vendor-sort-amount"
             onClick={() => handleSwitchMetric("amount")}
-            className={`px-2.5 py-1 text-2xs font-medium rounded-md transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 text-2xs font-medium rounded-md transition-all cursor-pointer ${
               metricMode === "amount"
                 ? "bg-white text-zinc-900 shadow-2xs font-semibold dark:bg-zinc-800 dark:text-zinc-100"
                 : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
             }`}
           >
-            Mayor monto gastado (Q)
+            <span className="hidden sm:inline">Mayor monto gastado (Q)</span>
+            <span className="sm:hidden">Monto (Q)</span>
           </button>
           <button
             type="button"
             id="btn-vendor-sort-frequency"
             onClick={() => handleSwitchMetric("frequency")}
-            className={`px-2.5 py-1 text-2xs font-medium rounded-md transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 text-2xs font-medium rounded-md transition-all cursor-pointer ${
               metricMode === "frequency"
                 ? "bg-white text-zinc-900 shadow-2xs font-semibold dark:bg-zinc-800 dark:text-zinc-100"
                 : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
             }`}
           >
-            Mayor cantidad de compras
+            <span className="hidden sm:inline">Mayor cantidad de compras</span>
+            <span className="sm:hidden">Compras</span>
           </button>
         </div>
       </div>
 
       {/* Bar List */}
-      <div className="flex-1 space-y-1.5">
+      <div className="flex-1 min-h-0 flex flex-col justify-around py-0.5 space-y-1">
         {activeVendors.map((item, index) => {
           const barValue =
             metricMode === "amount" ? item.totalAmountGTQ : item.transactionCount;

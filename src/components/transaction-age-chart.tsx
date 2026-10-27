@@ -108,10 +108,10 @@ export function TransactionAgeChart({
       </div>
 
       {/* Main Content: Donut Chart + Breakdown Legend */}
-      <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+      <div className="flex-1 min-h-0 flex flex-wrap md:flex-nowrap items-center justify-around gap-2.5 sm:gap-4 overflow-hidden">
         {/* Left: SVG Donut Chart (Bigger display & centered hole) */}
-        <div className="sm:col-span-5 flex flex-col items-center justify-center relative py-1">
-          <div className="relative w-[160px] h-[160px] sm:w-[170px] sm:h-[170px] flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center relative py-1 shrink-0">
+          <div className="relative w-[135px] h-[135px] sm:w-[155px] sm:h-[155px] flex items-center justify-center">
             <svg
               viewBox={`0 0 ${size} ${size}`}
               className="w-full h-full -rotate-90 transform"
@@ -167,18 +167,18 @@ export function TransactionAgeChart({
 
             {/* Donut Center Display: Constrained strictly to avoid touching the ring */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-[115px] max-w-[115px] flex flex-col items-center justify-center text-center px-1">
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 truncate max-w-[110px]">
+              <div className="w-[100px] max-w-[100px] flex flex-col items-center justify-center text-center px-1">
+                <span className="text-[9px] uppercase tracking-wider font-semibold text-zinc-400 truncate max-w-[95px]">
                   {hoveredSegment ? hoveredSegment.label : "Total Período"}
                 </span>
-                <span className="text-xs sm:text-sm font-bold font-mono text-zinc-900 dark:text-zinc-100 my-0.5 truncate max-w-[130px]">
+                <span className="text-xs sm:text-sm font-bold font-mono text-zinc-900 dark:text-zinc-100 my-0.5 truncate max-w-[100px]">
                   {formatCurrency(
                     hoveredSegment
                       ? hoveredSegment.totalAmountGTQ
                       : totalFilteredAmountGTQ
                   )}
                 </span>
-                <span className="text-[10px] font-mono text-zinc-500 truncate max-w-[125px]">
+                <span className="text-[9px] font-mono text-zinc-500 truncate max-w-[95px]">
                   {hoveredSegment
                     ? `${hoveredSegment.percentageShare}% (${hoveredSegment.transactionCount} mov.)`
                     : `${totalFilteredCount} compras`}
@@ -189,7 +189,7 @@ export function TransactionAgeChart({
         </div>
 
         {/* Right: Legend Breakdown Cards (Clean cards with only title and amount) */}
-        <div className="sm:col-span-7 flex flex-col space-y-1.5">
+        <div className="flex-1 min-w-[180px] w-full flex flex-col space-y-1 sm:space-y-1.5 justify-center">
           {segments.map((seg) => {
             const isHovered = hoveredSegment?.id === seg.id;
 
@@ -211,13 +211,13 @@ export function TransactionAgeChart({
                 onMouseLeave={() => setHoveredSegment(null)}
                 onFocus={() => setHoveredSegment(seg)}
                 onBlur={() => setHoveredSegment(null)}
-                className={`px-3 py-2 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 focus:outline-hidden focus:ring-1 focus:ring-zinc-400 ${
+                className={`px-2.5 py-1.5 sm:py-2 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-2.5 focus:outline-hidden focus:ring-1 focus:ring-zinc-400 ${
                   isHovered
                     ? "bg-zinc-50 dark:bg-zinc-900/70 border-zinc-300 dark:border-zinc-700 shadow-2xs"
                     : "bg-white dark:bg-zinc-950 border-zinc-150 dark:border-zinc-850 hover:border-zinc-200"
                 }`}
               >
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                   <span
                     className="w-2.5 h-2.5 rounded-full shrink-0"
                     style={{ backgroundColor: seg.color }}

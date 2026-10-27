@@ -11,6 +11,11 @@ import {
   loadStoredHiddenVendors,
   saveStoredHideBothPanelsConfig,
   loadStoredHideBothPanelsConfig,
+  loadStoredPanelDimensions,
+  saveStoredPanelDimensions,
+  resetStoredPanelDimensions,
+  DEFAULT_PANEL_DIMENSIONS,
+  STORAGE_KEY_PANEL_DIMENSIONS,
   STORAGE_KEY_SESSION,
   STORAGE_KEY_CATEGORIES,
 } from "./storage";
@@ -324,4 +329,78 @@ describe("US-011: LocalStorage Persistence Unit Tests", () => {
       assert.strictEqual(loadStoredHideBothPanelsConfig(), false);
     });
   });
+
+  describe("Dashboard: Resizable Panels Dimensions Persistence", () => {
+    it("returns default dimensions when no stored configuration exists", () => {
+      const dimensions = loadStoredPanelDimensions();
+      assert.strictEqual(dimensions.leftWidthPercent, DEFAULT_PANEL_DIMENSIONS.leftWidthPercent);
+      assert.deepStrictEqual(dimensions.heights, DEFAULT_PANEL_DIMENSIONS.heights);
+    });
+
+    it("persists and restores custom width split and panel heights", () => {
+      const customDimensions = {
+        leftWidthPercent: 62,
+        heights: {
+          "panel-category-trends": 520,
+          "panel-consumption-patterns": 380,
+          "panel-vendor-concentration": 490,
+          "panel-transaction-age": 410,
+        },
+      };
+
+      const saved = saveStoredPanelDimensions(customDimensions);
+      assert.strictEqual(saved, true);
+
+      const restored = loadStoredPanelDimensions();
+      assert.strictEqual(restored.leftWidthPercent, 62);
+      assert.strictEqual(restored.heights["panel-category-trends"], 520);
+      assert.strictEqual(restored.heights["panel-consumption-patterns"], 380);
+      assert.strictEqual(restored.heights["panel-vendor-concentration"], 490);
+      assert.strictEqual(restored.heights["panel-transaction-age"], 410);
+    });
+
+    it("gracefully clamps out-of-range width and height values", () => {
+      // Width below minimum (20) or above maximum (80)
+      mockStore.setItem(
+        STORAGE_KEY_PANEL_DIMENSIONS,
+        JSON.stringify({
+          leftWidthPercent: 99,
+          heights: {
+            "panel-category-trends": 50, // below minimum 220
+          },
+        })
+      );
+
+      const restored = loadStoredPanelDimensions();
+      // Out of bounds width falls back to default 50
+      assert.strictEqual(restored.leftWidthPercent, DEFAULT_PANEL_DIMENSIONS.leftWidthPercent);
+      // Out of bounds height falls back to default 440
+      assert.strictEqual(
+        restored.heights["panel-category-trends"],
+        DEFAULT_PANEL_DIMENSIONS.heights["panel-category-trends"]
+      );
+    });
+
+    it("resets stored panel dimensions to default", () => {
+      saveStoredPanelDimensions({
+        leftWidthPercent: 35,
+        heights: {
+          "panel-category-trends": 600,
+          "panel-consumption-patterns": 400,
+          "panel-vendor-concentration": 500,
+          "panel-transaction-age": 400,
+        },
+      });
+
+      assert.ok(mockStore.getItem(STORAGE_KEY_PANEL_DIMENSIONS));
+
+      const reset = resetStoredPanelDimensions();
+      assert.strictEqual(reset, true);
+      assert.strictEqual(mockStore.getItem(STORAGE_KEY_PANEL_DIMENSIONS), null);
+
+      const restored = loadStoredPanelDimensions();
+      assert.strictEqual(restored.leftWidthPercent, DEFAULT_PANEL_DIMENSIONS.leftWidthPercent);
+    });
+  });
 });
+

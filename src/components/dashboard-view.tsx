@@ -11,6 +11,13 @@ import { VendorConcentrationChart } from "@/components/vendor-concentration-char
 import { ConsumptionPatternsChart } from "@/components/consumption-patterns-chart";
 import { TransactionAgeChart } from "@/components/transaction-age-chart";
 import { TransactionAgeSegmentId } from "@/lib/reporting";
+import {
+  loadStoredPanelDimensions,
+  saveStoredPanelDimensions,
+  resetStoredPanelDimensions,
+  PanelDimensions,
+  DEFAULT_PANEL_DIMENSIONS,
+} from "@/lib/storage";
 
 const PANEL_TUTORIALS: Record<string, { title: string; content: string }> = {
   "panel-category-trends": {
@@ -43,6 +50,10 @@ interface DashboardPanelSectionProps {
   onToggleSettings?: () => void;
   tutorialContent: string;
   children: React.ReactNode;
+  height?: number;
+  onResizeStart?: (e: React.MouseEvent | React.TouchEvent, panelId: string) => void;
+  onResetSize?: (panelId: string) => void;
+  isResizing?: boolean;
 }
 
 function DashboardPanelSection({
@@ -56,15 +67,24 @@ function DashboardPanelSection({
   onToggleSettings,
   tutorialContent,
   children,
+  height,
+  onResizeStart,
+  onResetSize,
+  isResizing = false,
 }: DashboardPanelSectionProps) {
   return (
     <section
       id={id}
       aria-label={title}
-      className={`rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xs transition-all duration-200 ${
+      style={{
+        height: isMinimized ? undefined : height ? `${height}px` : undefined,
+      }}
+      className={`relative rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xs ${
+        isResizing ? "transition-none select-none" : "transition-all duration-200"
+      } ${
         isMinimized
           ? "p-2.5 sm:p-3 cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
-          : "p-3.5 sm:p-4 flex flex-col justify-between"
+          : "p-3.5 sm:p-4 flex flex-col justify-between overflow-hidden"
       }`}
       onClick={isMinimized ? onToggleMinimize : undefined}
     >
@@ -89,7 +109,7 @@ function DashboardPanelSection({
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-850">
+          <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-850 shrink-0">
             <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
               {title}
             </h2>
@@ -141,7 +161,7 @@ function DashboardPanelSection({
             <div
               role="dialog"
               aria-label={`Información: ${title}`}
-              className="p-3 my-2 rounded-xl border border-blue-200 bg-blue-50/90 dark:border-blue-900/60 dark:bg-blue-950/80 text-blue-950 dark:text-blue-100 shadow-2xs animate-in fade-in duration-150"
+              className="p-3 my-2 rounded-xl border border-blue-200 bg-blue-50/90 dark:border-blue-900/60 dark:bg-blue-950/80 text-blue-950 dark:text-blue-100 shadow-2xs animate-in fade-in duration-150 shrink-0"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-start gap-2">
@@ -163,7 +183,34 @@ function DashboardPanelSection({
             </div>
           )}
 
-          <div className="flex-1 pt-2.5 sm:pt-3">{children}</div>
+          <div className="flex-1 pt-2 sm:pt-2.5 min-h-0 flex flex-col overflow-hidden pb-1">
+            {children}
+          </div>
+
+          {/* Corner Resize Indicator Handle */}
+          <div
+            id={`resize-handle-${id}`}
+            role="separator"
+            aria-label={`Redimensionar ${title}`}
+            title="Arrastra para redimensionar (horizontal y vertical). Doble clic para restablecer."
+            onMouseDown={(e) => onResizeStart?.(e, id)}
+            onTouchStart={(e) => onResizeStart?.(e, id)}
+            onDoubleClick={() => onResetSize?.(id)}
+            className="absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 p-1 rounded cursor-se-resize select-none touch-none text-zinc-350 hover:text-zinc-600 dark:text-zinc-650 dark:hover:text-zinc-300 transition-colors z-20 group"
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            >
+              <line x1="10" y1="2" x2="2" y2="10" />
+              <line x1="10" y1="6" x2="6" y2="10" />
+              <line x1="10" y1="10" x2="10" y2="10" />
+            </svg>
+          </div>
         </>
       )}
     </section>
@@ -226,6 +273,173 @@ export function DashboardView({
       console.warn("Error saving minimized panels to localStorage:", err);
     }
   }, [minimizedPanels]);
+
+  // Resizable panels dimensions state and persistence
+  const containerRef = React.useRef<HTMLElement | null>(null);
+  const [dimensions, setDimensions] = useState<PanelDimensions>(() => {
+    return loadStoredPanelDimensions();
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const activeDragRef = React.useRef<{
+    panelId: string;
+    column: "left" | "right";
+    startX: number;
+    startY: number;
+    startLeftPercent: number;
+    startHeight: number;
+    containerWidth: number;
+  } | null>(null);
+
+  // Drag start handler triggered from panel corner resize indicator
+  const handleResizeStart = (
+    e: React.MouseEvent | React.TouchEvent,
+    panelId: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const isLeftColumn =
+      panelId === "panel-category-trends" ||
+      panelId === "panel-consumption-patterns";
+
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    const containerWidth = containerRect ? containerRect.width : window.innerWidth;
+
+    const currentHeight =
+      dimensions.heights[panelId] ||
+      DEFAULT_PANEL_DIMENSIONS.heights[panelId] ||
+      440;
+
+    activeDragRef.current = {
+      panelId,
+      column: isLeftColumn ? "left" : "right",
+      startX: clientX,
+      startY: clientY,
+      startLeftPercent: dimensions.leftWidthPercent,
+      startHeight: currentHeight,
+      containerWidth,
+    };
+
+    setIsResizing(true);
+    document.body.style.cursor = "se-resize";
+    document.body.style.userSelect = "none";
+  };
+
+  // Window event listeners for high performance, smooth 60fps dragging
+  useEffect(() => {
+    if (!isResizing) return;
+
+    let rafId: number | null = null;
+
+    const handlePointerMove = (e: MouseEvent | TouchEvent) => {
+      if (!activeDragRef.current) return;
+
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+
+      if (rafId) cancelAnimationFrame(rafId);
+
+      rafId = requestAnimationFrame(() => {
+        if (!activeDragRef.current) return;
+        const {
+          panelId,
+          column,
+          startX,
+          startY,
+          startLeftPercent,
+          startHeight,
+          containerWidth,
+        } = activeDragRef.current;
+
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
+
+        // Vertical height adjustment (min 260px, max 850px)
+        const newHeight = Math.max(
+          260,
+          Math.min(850, Math.round(startHeight + deltaY))
+        );
+
+        // Horizontal width adjustment (applicable when container is >= 640px wide)
+        let newLeftPercent = startLeftPercent;
+        if (containerWidth >= 640) {
+          if (column === "left") {
+            const percentDelta = (deltaX / containerWidth) * 100;
+            newLeftPercent = Math.max(
+              25,
+              Math.min(75, Math.round(startLeftPercent + percentDelta))
+            );
+          } else {
+            const percentDelta = (deltaX / containerWidth) * 100;
+            newLeftPercent = Math.max(
+              25,
+              Math.min(75, Math.round(startLeftPercent - percentDelta))
+            );
+          }
+        }
+
+        setDimensions((prev) => ({
+          leftWidthPercent: newLeftPercent,
+          heights: {
+            ...prev.heights,
+            [panelId]: newHeight,
+          },
+        }));
+      });
+    };
+
+    const handlePointerUp = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      activeDragRef.current = null;
+      setIsResizing(false);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+
+      // Persist final dimensions to localStorage
+      setDimensions((latest) => {
+        saveStoredPanelDimensions(latest);
+        return latest;
+      });
+    };
+
+    window.addEventListener("mousemove", handlePointerMove, { passive: true });
+    window.addEventListener("mouseup", handlePointerUp);
+    window.addEventListener("touchmove", handlePointerMove, { passive: true });
+    window.addEventListener("touchend", handlePointerUp);
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener("mousemove", handlePointerMove);
+      window.removeEventListener("mouseup", handlePointerUp);
+      window.removeEventListener("touchmove", handlePointerMove);
+      window.removeEventListener("touchend", handlePointerUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isResizing]);
+
+  const handleResetSize = (panelId?: string) => {
+    if (panelId) {
+      setDimensions((prev) => {
+        const next: PanelDimensions = {
+          leftWidthPercent: DEFAULT_PANEL_DIMENSIONS.leftWidthPercent,
+          heights: {
+            ...prev.heights,
+            [panelId]: DEFAULT_PANEL_DIMENSIONS.heights[panelId] || 440,
+          },
+        };
+        saveStoredPanelDimensions(next);
+        return next;
+      });
+    } else {
+      setDimensions(DEFAULT_PANEL_DIMENSIONS);
+      resetStoredPanelDimensions();
+    }
+  };
+
   const [activeInfoPanel, setActiveInfoPanel] = useState<string | null>(null);
   const [activeSettingsPanel, setActiveSettingsPanel] = useState<string | null>(null);
 
@@ -391,6 +605,18 @@ export function DashboardView({
             <span className="sm:hidden">Agregar</span>
           </button>
 
+          {/* Reset panels dimensions */}
+          <button
+            type="button"
+            id="btn-reset-panel-sizes"
+            onClick={() => handleResetSize()}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-2xs sm:text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 border border-zinc-200 hover:bg-zinc-100 dark:border-zinc-800 dark:hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer"
+            title="Restablecer tamaños originales de los paneles"
+          >
+            <Icons.Maximize2 className="w-3 h-3" />
+            <span className="hidden xl:inline">Restablecer tamaños</span>
+          </button>
+
           {/* Reset session */}
           <button
             type="button"
@@ -423,13 +649,24 @@ export function DashboardView({
         </div>
       </header>
 
-      {/* Main 4-Panel 2x2 Responsive Grid with Fluid Vertical Reflow */}
-      <main className="flex-1 p-3.5 sm:p-4 lg:p-5 grid grid-cols-1 lg:grid-cols-2 gap-3.5 lg:gap-4 items-start">
+      {/* Main 4-Panel 2x2 Responsive Grid with Fluid Horizontal & Vertical Resizing */}
+      <main
+        ref={containerRef}
+        style={{
+          "--left-col-width": `${dimensions.leftWidthPercent}fr`,
+          "--right-col-width": `${100 - dimensions.leftWidthPercent}fr`,
+        } as React.CSSProperties}
+        className="flex-1 p-3.5 sm:p-4 lg:p-5 grid grid-cols-1 lg:grid-cols-[var(--left-col-width)_var(--right-col-width)] gap-3.5 lg:gap-4 items-start"
+      >
         {/* Left Column: Panel 1 (Top) & Panel 3 (Bottom) */}
-        <div className="flex flex-col gap-3.5 lg:gap-4">
+        <div className="flex flex-col gap-3.5 lg:gap-4 min-w-0">
           <DashboardPanelSection
             id="panel-category-trends"
             title="Histórico por categoría"
+            height={dimensions.heights["panel-category-trends"] || 440}
+            onResizeStart={handleResizeStart}
+            onResetSize={handleResetSize}
+            isResizing={isResizing}
             isMinimized={!!minimizedPanels["panel-category-trends"]}
             onToggleMinimize={() => toggleMinimize("panel-category-trends")}
             isInfoActive={activeInfoPanel === "panel-category-trends"}
@@ -450,6 +687,10 @@ export function DashboardView({
           <DashboardPanelSection
             id="panel-consumption-patterns"
             title="Patrones de consumo"
+            height={dimensions.heights["panel-consumption-patterns"] || 440}
+            onResizeStart={handleResizeStart}
+            onResetSize={handleResetSize}
+            isResizing={isResizing}
             isMinimized={!!minimizedPanels["panel-consumption-patterns"]}
             onToggleMinimize={() => toggleMinimize("panel-consumption-patterns")}
             isInfoActive={activeInfoPanel === "panel-consumption-patterns"}
@@ -470,10 +711,14 @@ export function DashboardView({
         </div>
 
         {/* Right Column: Panel 2 (Top) & Panel 4 (Bottom) */}
-        <div className="flex flex-col gap-3.5 lg:gap-4">
+        <div className="flex flex-col gap-3.5 lg:gap-4 min-w-0">
           <DashboardPanelSection
             id="panel-vendor-concentration"
             title="¿A dónde va mi dinero?"
+            height={dimensions.heights["panel-vendor-concentration"] || 440}
+            onResizeStart={handleResizeStart}
+            onResetSize={handleResetSize}
+            isResizing={isResizing}
             isMinimized={!!minimizedPanels["panel-vendor-concentration"]}
             onToggleMinimize={() => toggleMinimize("panel-vendor-concentration")}
             isInfoActive={activeInfoPanel === "panel-vendor-concentration"}
@@ -514,6 +759,10 @@ export function DashboardView({
           <DashboardPanelSection
             id="panel-transaction-age"
             title="Antigüedad del gasto"
+            height={dimensions.heights["panel-transaction-age"] || 440}
+            onResizeStart={handleResizeStart}
+            onResetSize={handleResetSize}
+            isResizing={isResizing}
             isMinimized={!!minimizedPanels["panel-transaction-age"]}
             onToggleMinimize={() => toggleMinimize("panel-transaction-age")}
             isInfoActive={activeInfoPanel === "panel-transaction-age"}

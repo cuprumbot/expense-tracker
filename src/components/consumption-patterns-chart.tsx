@@ -111,30 +111,32 @@ export function ConsumptionPatternsChart({
         <span className="text-3xs font-semibold uppercase tracking-wider text-zinc-400 select-none">
           Visualizar por:
         </span>
-        <div className="inline-flex p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+        <div className="inline-flex p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shrink-0">
           <button
             type="button"
             id="btn-pattern-day-of-week"
             onClick={() => handleSwitchPatternMode("dayOfWeek")}
-            className={`px-2.5 py-1 text-2xs font-medium rounded-md transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 text-2xs font-medium rounded-md transition-all cursor-pointer ${
               patternMode === "dayOfWeek"
                 ? "bg-white text-zinc-900 shadow-2xs font-semibold dark:bg-zinc-800 dark:text-zinc-100"
                 : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
             }`}
           >
-            Día de la semana (7 días)
+            <span className="hidden sm:inline">Día de la semana (7 días)</span>
+            <span className="sm:hidden">Semana (7d)</span>
           </button>
           <button
             type="button"
             id="btn-pattern-day-of-month"
             onClick={() => handleSwitchPatternMode("dayOfMonth")}
-            className={`px-2.5 py-1 text-2xs font-medium rounded-md transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 text-2xs font-medium rounded-md transition-all cursor-pointer ${
               patternMode === "dayOfMonth"
                 ? "bg-white text-zinc-900 shadow-2xs font-semibold dark:bg-zinc-800 dark:text-zinc-100"
                 : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
             }`}
           >
-            Día del mes (1 a 31)
+            <span className="hidden sm:inline">Día del mes (1 a 31)</span>
+            <span className="sm:hidden">Mes (1-31)</span>
           </button>
         </div>
       </div>
@@ -253,7 +255,7 @@ export function ConsumptionPatternsChart({
                   className={`block font-mono leading-none ${
                     patternMode === "dayOfWeek"
                       ? "text-2xs font-semibold"
-                      : "text-[9px] sm:text-[10px]"
+                      : "text-[7.5px] sm:text-[9px]"
                   } ${
                     item.isOutlier
                       ? "text-rose-600 dark:text-rose-400 font-bold"
@@ -273,7 +275,7 @@ export function ConsumptionPatternsChart({
       {/* Outlier / Contextual Anomaly Insight Banner */}
       <div
         id="consumption-anomaly-banner"
-        className={`p-2.5 rounded-lg border text-xs flex items-start gap-2.5 transition-colors ${
+        className={`p-2 sm:p-2.5 rounded-lg border text-2xs sm:text-xs flex items-start gap-2 transition-colors shrink-0 ${
           activeInsight?.isAnomaly
             ? "bg-rose-50/80 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50 text-rose-900 dark:text-rose-200"
             : "bg-zinc-50 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300"

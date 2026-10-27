@@ -230,7 +230,7 @@ export function CategoryTrendChart({
                   toggleCategory(cat.categoryId);
                 }
               }}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-medium border transition-all cursor-pointer ${
+              className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-3xs sm:text-2xs font-medium border transition-all cursor-pointer ${
                 isDimmed
                   ? "bg-zinc-100/60 text-zinc-400 border-zinc-200/60 dark:bg-zinc-900/30 dark:text-zinc-600 dark:border-zinc-800/40 opacity-40 grayscale"
                   : isCurrentIsolated
@@ -250,10 +250,10 @@ export function CategoryTrendChart({
               }
             >
               <span
-                className="w-2.5 h-2.5 rounded-full shrink-0"
+                className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0"
                 style={{ backgroundColor: cat.color }}
               />
-              <span className="truncate max-w-[120px]">{cat.categoryName}</span>
+              <span className="truncate max-w-[70px] sm:max-w-[120px]">{cat.categoryName}</span>
               <span className="text-3xs font-mono opacity-70">
                 {formatCurrency(totalCategorySpend)}
               </span>

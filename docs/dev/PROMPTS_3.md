@@ -100,3 +100,4 @@ Make these changes to the dashboard:
 - When the panels are resized vertically, the panels below are pushed up or down if applicable.
 - The panel sizes should be persistent on localStorage.
 - Provide the best UX for the panels resizing. Don't make it feel clunky or laggy.
+- All the info inside the panels is resized appropiately with the panel. Reduce font size when resizing down if needed so the texts don't overlap. Don't show scrollbars unless the content overflowing cannot be fit in any other way.

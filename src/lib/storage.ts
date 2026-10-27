@@ -227,3 +227,86 @@ export function saveStoredHideBothPanelsConfig(enabled: boolean): boolean {
     return false;
   }
 }
+
+export interface PanelDimensions {
+  leftWidthPercent: number;
+  heights: Record<string, number>;
+}
+
+export const DEFAULT_PANEL_DIMENSIONS: PanelDimensions = {
+  leftWidthPercent: 50,
+  heights: {
+    "panel-category-trends": 440,
+    "panel-consumption-patterns": 440,
+    "panel-vendor-concentration": 440,
+    "panel-transaction-age": 440,
+  },
+};
+
+export const STORAGE_KEY_PANEL_DIMENSIONS = "expense_tracker_panel_dimensions";
+
+/**
+ * Loads stored panel dimensions (column width split and individual panel heights) from localStorage.
+ */
+export function loadStoredPanelDimensions(): PanelDimensions {
+  if (!isStorageAvailable()) return { ...DEFAULT_PANEL_DIMENSIONS };
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY_PANEL_DIMENSIONS);
+    if (!raw) return { ...DEFAULT_PANEL_DIMENSIONS };
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return { ...DEFAULT_PANEL_DIMENSIONS };
+
+    const leftWidthPercent =
+      typeof parsed.leftWidthPercent === "number" &&
+      parsed.leftWidthPercent >= 20 &&
+      parsed.leftWidthPercent <= 80
+        ? Math.round(parsed.leftWidthPercent)
+        : DEFAULT_PANEL_DIMENSIONS.leftWidthPercent;
+
+    const heights: Record<string, number> = {
+      ...DEFAULT_PANEL_DIMENSIONS.heights,
+    };
+
+    if (parsed.heights && typeof parsed.heights === "object") {
+      for (const [key, val] of Object.entries(parsed.heights)) {
+        if (typeof val === "number" && val >= 220 && val <= 1200) {
+          heights[key] = Math.round(val);
+        }
+      }
+    }
+
+    return { leftWidthPercent, heights };
+  } catch {
+    return { ...DEFAULT_PANEL_DIMENSIONS };
+  }
+}
+
+/**
+ * Saves panel dimensions to localStorage.
+ */
+export function saveStoredPanelDimensions(dimensions: PanelDimensions): boolean {
+  if (!isStorageAvailable()) return false;
+  try {
+    window.localStorage.setItem(
+      STORAGE_KEY_PANEL_DIMENSIONS,
+      JSON.stringify(dimensions)
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resets stored panel dimensions to default.
+ */
+export function resetStoredPanelDimensions(): boolean {
+  if (!isStorageAvailable()) return false;
+  try {
+    window.localStorage.removeItem(STORAGE_KEY_PANEL_DIMENSIONS);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
