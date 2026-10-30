@@ -54,16 +54,18 @@ Remember not to commit anything until I check manually. Remember to beep when fi
 
 ---
 
-Execute User Story #68 from `USER_STORIES_4.md`.
+Stage and commit previous changes.
+
+Execute User Story #70 from `USER_STORIES_4.md`.
 
 Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
 
 Work autonomously end-to-end:
 
-    In this user story we are implementing the parser for Banco XX.
+    In this user story we are implementing the parser for Banco Agromercantil.
 
     Use the following files as reference to create the parser:
-    - `BAC-brolo.pdf`
+    - `BAM-brolo.pdf`
 
     All the other `pdf` are from different banks and should not be used when creating this parser.
 
@@ -71,6 +73,6 @@ Work autonomously end-to-end:
 
     Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
 
-Only stop when User Story #68 is fully verified, then report what was done.
+Only stop when User Story #70 is fully verified, then report what was done.
 
 Remember not to commit anything until I check manually. Remember to beep when finished or if you need some user input.

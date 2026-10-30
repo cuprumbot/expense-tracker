@@ -4,6 +4,7 @@ import { extractGyTTransactionsFromParser } from "./gyt-parser";
 import { extractBiTransactionsFromParser } from "./bi-parser";
 import { extractCuscatlanTransactionsFromParser } from "./cuscatlan-parser";
 import { extractBacTransactionsFromParser } from "./bac-parser";
+import { extractFicohsaTransactionsFromParser } from "./ficohsa-parser";
 
 interface GlobalWithDOMPolyfills {
   DOMMatrix?: new () => unknown;
@@ -94,14 +95,21 @@ export interface BankDetectionResult {
   isBanrural: boolean;
   isCuscatlan?: boolean;
   isBac?: boolean;
+  isFicohsa?: boolean;
 }
 
 /**
  * Detects the originating bank of a statement based on header text, metadata, and keywords.
- * Identifies Banco Industrial, Banco Cuscatlán, BAC Credomatic, Banco G&T Continental, Banrural, and Banco Agromercantil (BAM).
+ * Identifies Banco Industrial, Banco Cuscatlán, BAC Credomatic, Banco FICOHSA, Banco G&T Continental, Banrural, and Banco Agromercantil (BAM).
  */
 export function detectBankFromText(text: string): BankDetectionResult {
   const normalized = text.toLowerCase();
+
+  const isFicohsa =
+    normalized.includes("ficohsa.com.gt") ||
+    normalized.includes("banco ficohsa") ||
+    normalized.includes("ficohsa") ||
+    normalized.includes("seguro ficohsa");
 
   const isBac =
     normalized.includes("baccredomatic.gt") ||
@@ -148,6 +156,20 @@ export function detectBankFromText(text: string): BankDetectionResult {
     /\bgt\d{2}\s*brrl/i.test(text) ||
     /\bbrrl\b/i.test(text);
 
+  if (isFicohsa) {
+    return {
+      bankName: "Banco FICOHSA",
+      isSupported: true,
+      isGyT: false,
+      isBI: false,
+      isBAM: false,
+      isBanrural: false,
+      isCuscatlan: false,
+      isBac: false,
+      isFicohsa: true,
+    };
+  }
+
   if (isBac) {
     return {
       bankName: "BAC Credomatic",
@@ -158,6 +180,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBanrural: false,
       isCuscatlan: false,
       isBac: true,
+      isFicohsa: false,
     };
   }
 
@@ -171,6 +194,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBanrural: false,
       isCuscatlan: true,
       isBac: false,
+      isFicohsa: false,
     };
   }
 
@@ -184,6 +208,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBanrural: false,
       isCuscatlan: false,
       isBac: false,
+      isFicohsa: false,
     };
   }
 
@@ -197,6 +222,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBanrural: true,
       isCuscatlan: false,
       isBac: false,
+      isFicohsa: false,
     };
   }
 
@@ -210,6 +236,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBanrural: false,
       isCuscatlan: false,
       isBac: false,
+      isFicohsa: false,
     };
   }
 
@@ -223,6 +250,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBanrural: false,
       isCuscatlan: false,
       isBac: false,
+      isFicohsa: false,
     };
   }
 
@@ -235,6 +263,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
     isBanrural: false,
     isCuscatlan: false,
     isBac: false,
+    isFicohsa: false,
   };
 }
 
@@ -263,6 +292,19 @@ export async function parsePDFStatement(dataBuffer: Uint8Array): Promise<PDFPars
           totalAmount: 0,
         },
         debugLogs: [],
+      };
+    }
+
+    if (bankDetection.isFicohsa) {
+      const parsed = await extractFicohsaTransactionsFromParser(parser, rawText);
+      return {
+        success: true,
+        isSupportedBank: true,
+        bankName: "Banco FICOHSA",
+        rawText,
+        transactions: parsed.transactions,
+        summary: parsed.summary,
+        debugLogs: parsed.debugLogs,
       };
     }
 
@@ -335,6 +377,13 @@ export async function parsePDFStatement(dataBuffer: Uint8Array): Promise<PDFPars
     };
   }
 }
+
+export {
+  extractFicohsaTransactionsFromParser,
+  parseFicohsaStatementFromBuffer,
+  parseFicohsaStatementText,
+  cleanFicohsaDescription,
+} from "./ficohsa-parser";
 
 export {
   extractBacTransactionsFromParser,

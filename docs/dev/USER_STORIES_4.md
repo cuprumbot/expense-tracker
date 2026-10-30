@@ -349,21 +349,21 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
   - [x] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
   - [x] Includes comprehensive unit tests in `src/lib/bac-parser.test.ts` with representative BAC Credomatic statement fixtures covering single-page, multi-page, dual-currency, and American Express statements.
 
-### [ ] US-069: Banco FICOHSA Credit Card Statement PDF Parser
+### [x] US-069: Banco FICOHSA Credit Card Statement PDF Parser
 - **As a** Banco FICOHSA credit card customer,
 - **I want to** upload my Ficohsa credit card PDF statement and have my expenses extracted locally,
 - **So that** my spending is categorized without sending private banking data across the network.
 - **Split-Brain Boundary:** 100% Local (Dedicated module `src/lib/ficohsa-parser.ts`).
 - **Acceptance Criteria:**
-  - [ ] Creates dedicated parser `src/lib/ficohsa-parser.ts` exporting `extractFicohsaTransactionsFromParser(parser, rawText)`.
-  - [ ] Extracts purchase transactions from Banco Ficohsa credit card statement layouts.
-  - [ ] Parses transaction dates and normalizes them to `YYYY-MM-DD`.
-  - [ ] Sanitizes merchant descriptions: strips authorization codes, POS terminal IDs, branch numbers, and location identifiers.
-  - [ ] Accurately captures amounts in Quetzales and Dollars, converting foreign currency transactions via `convertUsdToGtq` with `originalCurrency: "USD"`.
-  - [ ] Excludes payments to the card (`PAGO DE CONTADO`, `PAGO RECIBIDO GRACIAS`, `PAGO POR SUCURSAL / INTERNET`), rewards redemption credits (Puntos Ficohsa / Cash Back), and credit adjustments.
-  - [ ] Ignores statement summaries and account metrics (`Límite de Crédito`, `Saldo Total`, `Pago Mínimo`, `Fecha de Corte`, `Fecha Máxima de Pago`).
-  - [ ] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
-  - [ ] Includes unit tests in `src/lib/ficohsa-parser.test.ts` covering Ficohsa statement text fixtures, multi-page layouts, and edge cases.
+  - [x] Creates dedicated parser `src/lib/ficohsa-parser.ts` exporting `extractFicohsaTransactionsFromParser(parser, rawText)`.
+  - [x] Extracts purchase transactions from Banco Ficohsa credit card statement layouts.
+  - [x] Parses transaction dates and normalizes them to `YYYY-MM-DD`.
+  - [x] Sanitizes merchant descriptions: strips authorization codes, POS terminal IDs, branch numbers, and location identifiers.
+  - [x] Accurately captures amounts in Quetzales and Dollars, converting foreign currency transactions via `convertUsdToGtq` with `originalCurrency: "USD"`.
+  - [x] Excludes payments to the card (`PAGO DE CONTADO`, `PAGO RECIBIDO GRACIAS`, `PAGO POR SUCURSAL / INTERNET`), rewards redemption credits (Puntos Ficohsa / Cash Back), and credit adjustments.
+  - [x] Ignores statement summaries and account metrics (`Límite de Crédito`, `Saldo Total`, `Pago Mínimo`, `Fecha de Corte`, `Fecha Máxima de Pago`).
+  - [x] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
+  - [x] Includes unit tests in `src/lib/ficohsa-parser.test.ts` covering Ficohsa statement text fixtures, multi-page layouts, and edge cases.
 
 ### [ ] US-070: Banco Agromercantil (BAM) Credit Card Statement PDF Parser
 - **As a** Banco Agromercantil (BAM) credit card customer,
