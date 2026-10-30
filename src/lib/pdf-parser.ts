@@ -3,6 +3,7 @@ import { Transaction, CSVParsingSummary } from "@/types/transaction";
 import { extractGyTTransactionsFromParser } from "./gyt-parser";
 import { extractBiTransactionsFromParser } from "./bi-parser";
 import { extractCuscatlanTransactionsFromParser } from "./cuscatlan-parser";
+import { extractBacTransactionsFromParser } from "./bac-parser";
 
 interface GlobalWithDOMPolyfills {
   DOMMatrix?: new () => unknown;
@@ -92,14 +93,23 @@ export interface BankDetectionResult {
   isBAM: boolean;
   isBanrural: boolean;
   isCuscatlan?: boolean;
+  isBac?: boolean;
 }
 
 /**
  * Detects the originating bank of a statement based on header text, metadata, and keywords.
- * Identifies Banco Industrial, Banco Cuscatlán, Banco G&T Continental, Banrural, and Banco Agromercantil (BAM).
+ * Identifies Banco Industrial, Banco Cuscatlán, BAC Credomatic, Banco G&T Continental, Banrural, and Banco Agromercantil (BAM).
  */
 export function detectBankFromText(text: string): BankDetectionResult {
   const normalized = text.toLowerCase();
+
+  const isBac =
+    normalized.includes("baccredomatic.gt") ||
+    normalized.includes("baccredomatic.com") ||
+    normalized.includes("bac.net") ||
+    normalized.includes("bac credomatic") ||
+    normalized.includes("credomatic") ||
+    /@baccredomatic/i.test(text);
 
   const isGyT =
     normalized.includes("g&t continental") ||
@@ -138,6 +148,19 @@ export function detectBankFromText(text: string): BankDetectionResult {
     /\bgt\d{2}\s*brrl/i.test(text) ||
     /\bbrrl\b/i.test(text);
 
+  if (isBac) {
+    return {
+      bankName: "BAC Credomatic",
+      isSupported: true,
+      isGyT: false,
+      isBI: false,
+      isBAM: false,
+      isBanrural: false,
+      isCuscatlan: false,
+      isBac: true,
+    };
+  }
+
   if (isCuscatlan) {
     return {
       bankName: "Banco Cuscatlán",
@@ -147,6 +170,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBAM: false,
       isBanrural: false,
       isCuscatlan: true,
+      isBac: false,
     };
   }
 
@@ -159,6 +183,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBAM: false,
       isBanrural: false,
       isCuscatlan: false,
+      isBac: false,
     };
   }
 
@@ -171,6 +196,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBAM: false,
       isBanrural: true,
       isCuscatlan: false,
+      isBac: false,
     };
   }
 
@@ -183,6 +209,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBAM: false,
       isBanrural: false,
       isCuscatlan: false,
+      isBac: false,
     };
   }
 
@@ -195,6 +222,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBAM: true,
       isBanrural: false,
       isCuscatlan: false,
+      isBac: false,
     };
   }
 
@@ -206,6 +234,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
     isBAM: false,
     isBanrural: false,
     isCuscatlan: false,
+    isBac: false,
   };
 }
 
@@ -234,6 +263,19 @@ export async function parsePDFStatement(dataBuffer: Uint8Array): Promise<PDFPars
           totalAmount: 0,
         },
         debugLogs: [],
+      };
+    }
+
+    if (bankDetection.isBac) {
+      const parsed = await extractBacTransactionsFromParser(parser, rawText);
+      return {
+        success: true,
+        isSupportedBank: true,
+        bankName: "BAC Credomatic",
+        rawText,
+        transactions: parsed.transactions,
+        summary: parsed.summary,
+        debugLogs: parsed.debugLogs,
       };
     }
 
@@ -293,6 +335,13 @@ export async function parsePDFStatement(dataBuffer: Uint8Array): Promise<PDFPars
     };
   }
 }
+
+export {
+  extractBacTransactionsFromParser,
+  parseBacStatementFromBuffer,
+  parseBacStatementText,
+  cleanBacDescription,
+} from "./bac-parser";
 
 export {
   extractBiTransactionsFromParser,

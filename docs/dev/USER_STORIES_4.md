@@ -332,22 +332,22 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
   - [x] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
   - [x] Includes comprehensive unit tests in `src/lib/cuscatlan-parser.test.ts` covering Cuscatlán statement layouts, multi-page statements, and dual-currency transactions.
 
-### [ ] US-068: BAC Credomatic Credit Card Statement PDF Parser
+### [x] US-068: BAC Credomatic Credit Card Statement PDF Parser
 - **As a** BAC Credomatic credit card customer,
 - **I want to** upload my BAC statement PDF (Visa, Mastercard, or American Express) and have my charges extracted locally,
 - **So that** my card expenses and installment plans are captured privately and accurately.
 - **Split-Brain Boundary:** 100% Local (Dedicated module `src/lib/bac-parser.ts`).
 - **Acceptance Criteria:**
-  - [ ] Creates dedicated parser `src/lib/bac-parser.ts` exporting `extractBacTransactionsFromParser(parser, rawText)`.
-  - [ ] Extracts purchase transactions from BAC Credomatic credit card statement formats across Visa, Mastercard, and American Express layouts.
-  - [ ] Correctly parses transaction date and normalizes to `YYYY-MM-DD`.
-  - [ ] Handles BAC's multi-currency statement format (separate Quetzales and Dollars columns or sections), converting USD amounts to GTQ via `convertUsdToGtq` with `originalCurrency: "USD"`.
-  - [ ] Cleans merchant descriptions, stripping authorization reference numbers, terminal markers, POS codes, and regional suffixes (`GTM`, `CIUDAD DE GUATEMALA`, `AMEX BAC`).
-  - [ ] Filters out card payments (`SU PAGO EN EFECTIVO`, `SU PAGO POR TRANSFERENCIA`, `CREDITO POR PAGO BAC`, `PAGO DE TARJETA`), rewards/puntos disbursements, and adjustment credits.
-  - [ ] Ignores statement summaries (`Saldo Anterior`, `Saldo al Corte`, `Límite de Crédito`, `Pago Mínimo`, `Intereses Bonificables`), payment deadlines, and legal disclaimers.
-  - [ ] Correctly captures installment plan charges (`BAC Cuotas` / `Tasa Cero` / `Cuotas sin Intereses`) as valid expenses.
-  - [ ] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
-  - [ ] Includes comprehensive unit tests in `src/lib/bac-parser.test.ts` with representative BAC Credomatic statement fixtures covering single-page, multi-page, dual-currency, and American Express statements.
+  - [x] Creates dedicated parser `src/lib/bac-parser.ts` exporting `extractBacTransactionsFromParser(parser, rawText)`.
+  - [x] Extracts purchase transactions from BAC Credomatic credit card statement formats across Visa, Mastercard, and American Express layouts.
+  - [x] Correctly parses transaction date and normalizes to `YYYY-MM-DD`.
+  - [x] Handles BAC's multi-currency statement format (separate Quetzales and Dollars columns or sections), converting USD amounts to GTQ via `convertUsdToGtq` with `originalCurrency: "USD"`.
+  - [x] Cleans merchant descriptions, stripping authorization reference numbers, terminal markers, POS codes, and regional suffixes (`GTM`, `CIUDAD DE GUATEMALA`, `AMEX BAC`).
+  - [x] Filters out card payments (`SU PAGO EN EFECTIVO`, `SU PAGO POR TRANSFERENCIA`, `CREDITO POR PAGO BAC`, `PAGO DE TARJETA`), rewards/puntos disbursements, and adjustment credits.
+  - [x] Ignores statement summaries (`Saldo Anterior`, `Saldo al Corte`, `Límite de Crédito`, `Pago Mínimo`, `Intereses Bonificables`), payment deadlines, and legal disclaimers.
+  - [x] Correctly captures installment plan charges (`BAC Cuotas` / `Tasa Cero` / `Cuotas sin Intereses`) as valid expenses.
+  - [x] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
+  - [x] Includes comprehensive unit tests in `src/lib/bac-parser.test.ts` with representative BAC Credomatic statement fixtures covering single-page, multi-page, dual-currency, and American Express statements.
 
 ### [ ] US-069: Banco FICOHSA Credit Card Statement PDF Parser
 - **As a** Banco FICOHSA credit card customer,
