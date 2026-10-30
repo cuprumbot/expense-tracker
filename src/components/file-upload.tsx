@@ -16,9 +16,14 @@ export interface SelectedFileItem {
 interface FileUploadProps {
   onFileRouted?: (file: File, type: SupportedFileType) => void;
   onFilesRouted?: (files: { file: File; type: SupportedFileType }[]) => void;
+  onOpenSimpleList?: () => void;
 }
 
-export function FileUpload({ onFileRouted, onFilesRouted }: FileUploadProps) {
+export function FileUpload({
+  onFileRouted,
+  onFilesRouted,
+  onOpenSimpleList,
+}: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<SelectedFileItem[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -192,44 +197,86 @@ export function FileUpload({ onFileRouted, onFilesRouted }: FileUploadProps) {
       )}
 
       {!hasFiles ? (
-        /* Idle Dropzone */
+        /* Idle State: Side-by-Side Ingestion Cards (Files & Simple List) */
         <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={handleTriggerPicker}
-          className={`border border-dashed rounded-lg p-10 sm:p-14 text-center flex flex-col items-center justify-center gap-4 cursor-pointer transition-colors ${
-            isDragging
-              ? "border-zinc-900 bg-zinc-100/80 dark:border-zinc-200 dark:bg-zinc-900/80"
-              : "border-zinc-300 bg-white hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-950 dark:hover:border-zinc-600"
-          }`}
+          className={
+            onOpenSimpleList
+              ? "grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
+              : ""
+          }
         >
-          <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-            <Icons.Upload className="w-5 h-5" />
-          </div>
-
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-              Arrastra uno o varios estados de cuenta en PDF o CSV
-            </p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              O haz clic aquí para seleccionar múltiples archivos desde tu dispositivo
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleTriggerPicker();
-            }}
-            className="mt-2 inline-flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 transition-colors focus:outline-hidden focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:focus:ring-zinc-100 cursor-pointer"
+          {/* File Upload Dropzone */}
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={handleTriggerPicker}
+            className={`border border-dashed rounded-2xl p-6 sm:p-8 text-center flex flex-col items-center justify-between gap-4 cursor-pointer transition-all ${
+              isDragging
+                ? "border-zinc-900 bg-zinc-100/80 dark:border-zinc-200 dark:bg-zinc-900/80 shadow-sm"
+                : "border-zinc-300 bg-white hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-950 dark:hover:border-zinc-600 hover:shadow-xs"
+            }`}
           >
-            <Icons.FileText className="w-3.5 h-3.5" />
-            <span>Seleccionar archivos</span>
-          </button>
-        </div>
+            <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-200">
+              <Icons.Upload className="w-6 h-6" />
+            </div>
 
+            <div className="space-y-1.5 max-w-xs">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                Subir estados de cuenta
+              </p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                Arrastra tus archivos en PDF o CSV, o haz clic para seleccionarlos desde tu dispositivo.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleTriggerPicker();
+              }}
+              className="mt-1 inline-flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 transition-colors focus:outline-hidden focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:focus:ring-zinc-100 cursor-pointer shadow-xs"
+            >
+              <Icons.FileText className="w-3.5 h-3.5" />
+              <span>Seleccionar archivos</span>
+            </button>
+          </div>
+
+          {/* Quick Expense List Card */}
+          {onOpenSimpleList && (
+            <div
+              onClick={onOpenSimpleList}
+              className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-zinc-400 dark:hover:border-zinc-600 rounded-2xl p-6 sm:p-8 text-center flex flex-col items-center justify-between gap-4 cursor-pointer transition-all hover:shadow-xs group"
+            >
+              <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-200 group-hover:scale-105 transition-transform">
+                <Icons.List className="w-6 h-6" />
+              </div>
+
+              <div className="space-y-1.5 max-w-xs">
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  Pegar o escribir lista
+                </p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Ingresa tus gastos en formato simple como &quot;Walmart 150&quot; o &quot;40 super 24&quot; sin necesidad de subir archivos.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                id="btn-open-simple-list"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenSimpleList();
+                }}
+                className="mt-1 inline-flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shadow-2xs"
+              >
+                <Icons.List className="w-3.5 h-3.5" />
+                <span>Ingresar lista rápida</span>
+              </button>
+            </div>
+          )}
+        </div>
       ) : (
         /* File(s) Selected: Preview & Actions */
         <div className="border border-zinc-200 rounded-lg bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-950 space-y-4 animate-in fade-in">
@@ -323,14 +370,6 @@ export function FileUpload({ onFileRouted, onFilesRouted }: FileUploadProps) {
           </div>
         </div>
       )}
-
-      {/* Privacy Note */}
-      <div className="flex items-start gap-2.5 text-xs text-zinc-500 dark:text-zinc-400 pt-1">
-        <Icons.Lock className="w-3.5 h-3.5 mt-0.5 text-zinc-400 flex-shrink-0 dark:text-zinc-500" />
-        <p className="leading-relaxed">
-          Tus datos personales sensibles (como nombre y número de cuenta) se procesan directamente en tu navegador y no se comparten.
-        </p>
-      </div>
     </div>
   );
 }

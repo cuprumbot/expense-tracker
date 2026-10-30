@@ -30,6 +30,11 @@
 ## When finishing a task
 - After fully finishing a task (including all the required reviewing) execute `[console]::beep(800, 800)` to notify the user.
 
+## UI Cleanliness & Information Architecture
+- **No Pseudo-Metadata Badges:** Never invent or display tags, badges, or chips for internal mechanisms, input methods, or technical states (e.g., "Lista rápida", "Manual", "Consolidado", internal IDs, parser names).
+- **Header Badges:** The dashboard header must only display verified banking institutions (e.g., "Banco Industrial", "Banrural", "G&T Continental"). If no specific bank is identified or if data comes from manual lists/mixed sources, do not display any bank chip.
+- **Clutter-Free Visuals:** Keep headers and summaries focused strictly on user financial data (movement counts, totals in Q, and essential interactive controls). Avoid adding redundant status pills or informational chips unless explicitly requested in the user story.
+
 
 
 <!-- BEGIN:nextjs-agent-rules -->

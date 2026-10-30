@@ -28,6 +28,8 @@ This document outlines the user stories, implementation phases, and testable acc
 ## Phase 10: Multi-Bank Parsing Engine (Core Improvements)
 
 ### [ ] US-017: Multi-Bank Identification & Parser Dispatcher
+> [!NOTE]
+> **Superseded in Iteration 4:** Replaced and updated by **US-065: Multi-Bank Identification & Automatic Bank Selection for Credit Card Statements** in [`USER_STORIES_4.md`](../USER_STORIES_4.md). Scope has transitioned from general bank accounts to dedicated credit card statements for Banco Industrial, Banco Cuscatlán, BAC Credomatic, FICOHSA, and Banco Agromercantil (BAM).
 - **As a** user uploading a bank statement in PDF format,
 - **I want** the system to automatically recognize whether my statement is from Banco Industrial, Banco Agromercantil (BAM), Banrural, or Banco G&T Continental,
 - **So that** the document is parsed using a specialized local parser without routing to the LLM extraction pipeline.
@@ -44,6 +46,8 @@ This document outlines the user stories, implementation phases, and testable acc
   - [x] Bank detection executes 100% locally with zero network requests or LLM invocations.
 
 ### [x] US-018: Banco Industrial (BI) Local PDF Statement Parser
+> [!NOTE]
+> **Superseded in Iteration 4:** The checking account (cuentas monetarias/ahorro) parsing logic has been deprecated and removed (see **US-064** in [`USER_STORIES_4.md`](../USER_STORIES_4.md)). Credit card statement parsing for Banco Industrial is now exclusively handled by **US-066: Banco Industrial (BI) Credit Card Statement PDF Parser** in [`USER_STORIES_4.md`](../USER_STORIES_4.md).
 - **As a** Banco Industrial customer,
 - **I want to** upload my BI bank statement or credit card PDF and have my debit expenses extracted locally,
 - **So that** my transactions are parsed quickly, accurately, and with complete privacy.
@@ -59,6 +63,8 @@ This document outlines the user stories, implementation phases, and testable acc
   - [x] Includes unit tests with simulated Banco Industrial statement text fixtures covering single-page and multi-page statements.
 
 ### [x] US-019: Banrural Local PDF Statement Parser
+> [!NOTE]
+> **Deprecated in Iteration 4:** Banrural checking account parser is deprecated and removed (see **US-064** in [`USER_STORIES_4.md`](../USER_STORIES_4.md)) as the application scope focuses exclusively on credit card statements. Banrural does not have a credit card parser in the current iteration.
 - **As a** Banrural customer,
 - **I want to** upload my Banrural statement PDF and have my expenses extracted locally,
 - **So that** my financial data is processed securely without exposing sensitive banking records.
@@ -73,6 +79,8 @@ This document outlines the user stories, implementation phases, and testable acc
   - [x] Includes unit tests covering representative Banrural statement layouts and edge cases.
 
 ### [ ] US-020: Banco Agromercantil (BAM) Local PDF Statement Parser
+> [!NOTE]
+> **Superseded in Iteration 4:** Replaced and specialized exclusively for credit card statements by **US-070: Banco Agromercantil (BAM) Credit Card Statement PDF Parser** in [`USER_STORIES_4.md`](../USER_STORIES_4.md).
 - **As a** Banco Agromercantil (BAM) customer,
 - **I want to** upload my BAM statement PDF and have my expenses parsed locally,
 - **So that** I can analyze my spending without relying on external LLM extraction services.

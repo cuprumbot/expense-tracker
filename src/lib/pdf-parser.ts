@@ -2,7 +2,7 @@ import { createRequire } from "module";
 import { Transaction, CSVParsingSummary } from "@/types/transaction";
 import { extractGyTTransactionsFromParser } from "./gyt-parser";
 import { extractBiTransactionsFromParser } from "./bi-parser";
-import { extractBanruralTransactionsFromParser } from "./banrural-parser";
+import { extractCuscatlanTransactionsFromParser } from "./cuscatlan-parser";
 
 interface GlobalWithDOMPolyfills {
   DOMMatrix?: new () => unknown;
@@ -91,11 +91,12 @@ export interface BankDetectionResult {
   isBI: boolean;
   isBAM: boolean;
   isBanrural: boolean;
+  isCuscatlan?: boolean;
 }
 
 /**
  * Detects the originating bank of a statement based on header text, metadata, and keywords.
- * Identifies Banco Industrial, Banco G&T Continental, Banrural, and Banco Agromercantil (BAM).
+ * Identifies Banco Industrial, Banco Cuscatlán, Banco G&T Continental, Banrural, and Banco Agromercantil (BAM).
  */
 export function detectBankFromText(text: string): BankDetectionResult {
   const normalized = text.toLowerCase();
@@ -117,6 +118,14 @@ export function detectBankFromText(text: string): BankDetectionResult {
     normalized.includes("serbipago") ||
     /\bgt\d{2}\s*indl\b/i.test(text);
 
+  const isCuscatlan =
+    normalized.includes("tarjetascuscatlan.com.gt") ||
+    normalized.includes("bancocuscatlan.com.gt") ||
+    normalized.includes("banco cuscatlan") ||
+    normalized.includes("banco cuscatlán") ||
+    normalized.includes("cuscatlan") ||
+    normalized.includes("cuscatlán");
+
   const isBAM =
     normalized.includes("banco agromercantil") ||
     normalized.includes("bam.com.gt") ||
@@ -129,6 +138,18 @@ export function detectBankFromText(text: string): BankDetectionResult {
     /\bgt\d{2}\s*brrl/i.test(text) ||
     /\bbrrl\b/i.test(text);
 
+  if (isCuscatlan) {
+    return {
+      bankName: "Banco Cuscatlán",
+      isSupported: true,
+      isGyT: false,
+      isBI: false,
+      isBAM: false,
+      isBanrural: false,
+      isCuscatlan: true,
+    };
+  }
+
   if (isBI) {
     return {
       bankName: "Banco Industrial",
@@ -137,17 +158,19 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBI: true,
       isBAM: false,
       isBanrural: false,
+      isCuscatlan: false,
     };
   }
 
   if (isBanrural) {
     return {
       bankName: "Banrural",
-      isSupported: true,
+      isSupported: false,
       isGyT: false,
       isBI: false,
       isBAM: false,
       isBanrural: true,
+      isCuscatlan: false,
     };
   }
 
@@ -159,6 +182,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBI: false,
       isBAM: false,
       isBanrural: false,
+      isCuscatlan: false,
     };
   }
 
@@ -170,6 +194,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBI: false,
       isBAM: true,
       isBanrural: false,
+      isCuscatlan: false,
     };
   }
 
@@ -180,6 +205,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
     isBI: false,
     isBAM: false,
     isBanrural: false,
+    isCuscatlan: false,
   };
 }
 
@@ -211,12 +237,12 @@ export async function parsePDFStatement(dataBuffer: Uint8Array): Promise<PDFPars
       };
     }
 
-    if (bankDetection.isBI) {
-      const parsed = await extractBiTransactionsFromParser(parser, rawText);
+    if (bankDetection.isCuscatlan) {
+      const parsed = await extractCuscatlanTransactionsFromParser(parser, rawText);
       return {
         success: true,
         isSupportedBank: true,
-        bankName: "Banco Industrial",
+        bankName: "Banco Cuscatlán",
         rawText,
         transactions: parsed.transactions,
         summary: parsed.summary,
@@ -224,12 +250,12 @@ export async function parsePDFStatement(dataBuffer: Uint8Array): Promise<PDFPars
       };
     }
 
-    if (bankDetection.isBanrural) {
-      const parsed = await extractBanruralTransactionsFromParser(parser, rawText);
+    if (bankDetection.isBI) {
+      const parsed = await extractBiTransactionsFromParser(parser, rawText);
       return {
         success: true,
         isSupportedBank: true,
-        bankName: "Banrural",
+        bankName: "Banco Industrial",
         rawText,
         transactions: parsed.transactions,
         summary: parsed.summary,
@@ -276,11 +302,11 @@ export {
 } from "./bi-parser";
 
 export {
-  extractBanruralTransactionsFromParser,
-  parseBanruralStatementFromBuffer,
-  parseBanruralStatementText,
-  cleanBanruralDescription,
-} from "./banrural-parser";
+  extractCuscatlanTransactionsFromParser,
+  parseCuscatlanStatementFromBuffer,
+  parseCuscatlanStatementText,
+  cleanCuscatlanDescription,
+} from "./cuscatlan-parser";
 
 export {
   extractGyTTransactionsFromParser,

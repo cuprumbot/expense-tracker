@@ -159,3 +159,71 @@ Tasks for panel 3:
 
 Tasks for panel 4:
 - Check the colors used on the donut chart. They should be easy to distinguish.
+
+## Fourth Iteration
+
+In this fourth iteration we are focusing in product features to make the app useful and more attractive to users.
+
+We are implementing this features:
+
+- Budgeting tool
+    - The user can create a budget.
+    - This tool can be reached either from the file upload screen or from the dashboard. This tool might require several components.
+    - The budget can be created from zero or based on the uploaded transactions.
+        - If the user wants to create a budget from zero, make the process as easy as possible.
+            - Give them some clickable elements to easily add categories to their budge.
+            - Give them some clickable elements to easily set their target based on their previous expenses.
+            - Use logical values, for example, important categories related to living expenses should give higher amount suggestions than "for fun" categories.
+        - If the user wants to create it based on the uploaded transactions make it realistic.
+            - Targets must not be too far away from their current expenses.
+    - The user can compare each month of uploaded expenses against the budget.
+        - Give the user some fun stats, like how many weeks in a row they have achieved it, or how many categories they have met their goal.
+    - The tool will give the user specific suggestions on what to improve the next month.
+        - If there is a category with expenses way over the budget, the tool should alert the user about this. It will look into the expenses and tell the user a possible cause (such as a particularly expensive purchase, too many transactions, transactions clustered around a specific date, a very high total amount, etc.)
+        - If the user has some months of improvement in some category, encourage them to continue improving.
+        - If the user has a lot of months of improvement in some category, encourage them to start improving another one too.
+    - The user can edit the budget at any time. When the user does ask them if they want to apply this budget to previous months or from now on. The correct budget for each month should be used to calculate the stats and goals.
+    - Store everything in localStorage.
+
+- More upload formats.
+    - In addition to the current PDF and CSV upload, now the user can upload additional formats.
+    - The user can upload simple lists.
+        - For this, some simple textbox interface should open where the user can write or paste their information.
+        - Examples
+            ```
+            Walmart 150
+            Cemaco 200
+            ```
+            ```
+            150 Burger king
+            50 Taco bell
+            ```
+        - These transactions will most likely not include any date, assign the day of uploading for this.
+        - These transactions will most likely include only one number, without any `Q` or `$`, treat the data as `Q`.
+        - Additional examples
+            ```
+            50 dollarcity
+            40 super 24
+            ```
+            ```
+            gasolina 90
+            super 24 20
+            ```
+        - Some very specific vendors have a number in the name, use the context to decide which is part of the name and which is the transaction amount.
+        - In the above examples, `40` and `20` are the amounts and `super 24` is the vendor.
+
+## Ignore below this point
+The information below should be ignored, it will be used at a later time.
+
+- Conexión con Gmail del usuario
+    - Esta funcionalidad es totalmente opcional, debido a que requiere autorización para acceso al correo y pocos usuarios querran usarla. Los usuarios pueden seguir cargando sus PDF manualmente.
+    - Oauth con Gmail, búsqueda automática de estados de cuenta recientes en el correo.
+    - Factible para demo, al ser un producto con más usuarios se requiere verificación de parte de Google.
+
+- Más formatos de subida
+    - Poder tomar foto a una factura para subir la transacción. Requiere revisar la interfaz en móviles.
+
+- Recomendaciones puntuales
+    - Recomendaciones específicas según la información de cada panel.
+    - Generar la mayoría de estas de forma local.
+    - Dar al usuario sugerencias con cifras, no genéricas.

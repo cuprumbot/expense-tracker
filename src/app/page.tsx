@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Icons } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FileUpload } from "@/components/file-upload";
@@ -9,6 +9,8 @@ import { AnonymizationModal } from "@/components/anonymization-modal";
 import { TransactionTable } from "@/components/transaction-table";
 import { DashboardView } from "@/components/dashboard-view";
 import { BatchProgress } from "@/components/batch-progress";
+import { SimpleListModal } from "@/components/simple-list-modal";
+import { SimpleListParsingResult } from "@/lib/text-list-parser";
 import { SupportedFileType, validateUploadedFile } from "@/lib/file-validator";
 import { processBatchFiles, BatchItem } from "@/lib/batch-processor";
 import { parseCSVContent } from "@/lib/csv-parser";
@@ -32,6 +34,7 @@ import {
 } from "@/lib/storage";
 import { SavingsRecommendationResponse } from "@/lib/savings-advisor";
 import { deduplicateTransactions } from "@/lib/deduplication";
+import { formatCurrency } from "@/lib/currency";
 import {
   Transaction,
   CSVParsingSummary,
@@ -46,6 +49,7 @@ export default function Home() {
   } | null>(null);
 
   const [transactions, setTransactions] = useState<Transaction[] | null>(null);
+  const transactionsRef = useRef<Transaction[] | null>(null);
   const [summary, setSummary] = useState<CSVParsingSummary | null>(null);
   const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
   const [savingsRecommendations, setSavingsRecommendations] =
@@ -79,6 +83,7 @@ export default function Home() {
   const [batchSummaryNotification, setBatchSummaryNotification] = useState<string | null>(null);
   const [batchErrors, setBatchErrors] = useState<{ fileName: string; error: string }[]>([]);
   const [isAddMoreModalOpen, setIsAddMoreModalOpen] = useState(false);
+  const [isSimpleListModalOpen, setIsSimpleListModalOpen] = useState(false);
 
   const [mappingModal, setMappingModal] = useState<{
     isOpen: boolean;
@@ -133,6 +138,11 @@ export default function Home() {
     }
     setHasHydratedStorage(true);
   }, []);
+
+  // Keep transactionsRef synchronized with active transactions state
+  useEffect(() => {
+    transactionsRef.current = transactions;
+  }, [transactions]);
 
   // Auto-persist active session to localStorage
   useEffect(() => {
@@ -201,6 +211,7 @@ export default function Home() {
   const handleResumeSession = () => {
     if (!savedSession) return;
     const sanitizedTxs = ensureUniqueTransactionIds(savedSession.transactions);
+    transactionsRef.current = sanitizedTxs;
     setTransactions(sanitizedTxs);
     setSummary(savedSession.summary);
     if (savedSession.customCategories?.length > 0) {
@@ -456,16 +467,72 @@ export default function Home() {
     rawTransactions: Transaction[],
     parsedSummary: CSVParsingSummary,
     detectedBankName: string | null = null,
-    sourceFileName?: string | null
+    sourceFileName?: string | null,
+    options?: { skipDeduplication?: boolean }
   ): Promise<{ hasDuplicates: boolean; addedCount: number }> => {
-    const existing = transactions || [];
-    const dedup = deduplicateTransactions(
-      rawTransactions,
-      existing,
-      sourceFileName || routedFile?.file.name
-    );
+    // Always resolve any previously existing transactions from live ref, state, or stored session
+    // so adding new transactions (via text list, PDF, or CSV) ALWAYS appends to previous ones
+    // and never replaces them or starts a new session.
+    const storedFallback =
+      (!transactionsRef.current || transactionsRef.current.length === 0) &&
+      (!transactions || transactions.length === 0)
+        ? savedSession || loadStoredSession()
+        : null;
+
+    const existingRaw =
+      transactionsRef.current && transactionsRef.current.length > 0
+        ? transactionsRef.current
+        : transactions && transactions.length > 0
+        ? transactions
+        : storedFallback?.transactions || [];
+
+    const existing = ensureUniqueTransactionIds(existingRaw);
+    const prevSummary = summary || storedFallback?.summary || null;
+    const prevBankName = bankName || storedFallback?.bankName || null;
+
+    if (storedFallback) {
+      if (
+        customCategories.length === 0 &&
+        storedFallback.customCategories?.length > 0
+      ) {
+        setCustomCategories(storedFallback.customCategories);
+      }
+      if (!savingsRecommendations && storedFallback.savingsRecommendations) {
+        setSavingsRecommendations(storedFallback.savingsRecommendations);
+      }
+      setSavedSession(null);
+    }
+
+    const dedup = options?.skipDeduplication
+      ? {
+          uniqueTransactions: rawTransactions,
+          discardedCount: 0,
+          discardedTransactions: [] as Transaction[],
+          isAllDuplicates: false,
+          notificationMessage: null,
+        }
+      : deduplicateTransactions(
+          rawTransactions,
+          existing,
+          sourceFileName || routedFile?.file.name
+        );
 
     if (dedup.isAllDuplicates) {
+      if (existing.length > 0 && (!transactions || transactions.length === 0)) {
+        transactionsRef.current = existing;
+        setTransactions(existing);
+        setSummary(
+          prevSummary || {
+            totalRowsProcessed: existing.length,
+            validTransactionsCount: existing.length,
+            skippedRowsCount: 0,
+            totalAmount: Number(
+              existing.reduce((acc, t) => acc + t.amount, 0).toFixed(2)
+            ),
+          }
+        );
+        setBankName(prevBankName);
+      }
       setDuplicateNotification(dedup.notificationMessage);
       setBatchSummaryNotification(null);
       return { hasDuplicates: true, addedCount: 0 };
@@ -501,13 +568,23 @@ export default function Home() {
 
     const updatedSummary: CSVParsingSummary = {
       ...parsedSummary,
+      totalRowsProcessed:
+        (prevSummary?.totalRowsProcessed || existing.length) +
+        parsedSummary.totalRowsProcessed,
       validTransactionsCount: combinedTransactions.length,
+      skippedRowsCount:
+        (prevSummary?.skippedRowsCount || 0) + parsedSummary.skippedRowsCount,
       totalAmount: combinedTotal,
     };
 
+    transactionsRef.current = combinedTransactions;
     setTransactions(combinedTransactions);
     setSummary(updatedSummary);
-    setBankName(detectedBankName || bankName);
+    setBankName(
+      prevBankName && detectedBankName && prevBankName !== detectedBankName
+        ? "Consolidado multicuenta"
+        : detectedBankName || prevBankName
+    );
 
     const pending = combinedTransactions.filter(
       (tx) => !tx.category || tx.category === "Pendiente"
@@ -805,8 +882,32 @@ export default function Home() {
     setIsAnonymizeModalOpen(false);
   };
 
+  const handleSimpleListConfirmed = async (result: SimpleListParsingResult) => {
+    setIsSimpleListModalOpen(false);
+    setIsAddMoreModalOpen(false);
+
+    const loadResult = await processLoadedTransactions(
+      result.transactions,
+      result.summary,
+      null,
+      "Lista rápida de gastos",
+      { skipDeduplication: true }
+    );
+
+    if (loadResult.addedCount > 0) {
+      setBatchSummaryNotification(
+        `Se ${
+          loadResult.addedCount === 1
+            ? "agregó 1 transacción"
+            : `agregaron ${loadResult.addedCount} transacciones`
+        } desde la lista rápida`
+      );
+    }
+  };
+
   const handleReset = () => {
     setRoutedFile(null);
+    transactionsRef.current = null;
     setTransactions(null);
     setSummary(null);
     setRawCSVText(null);
@@ -827,6 +928,7 @@ export default function Home() {
     setBatchSummaryNotification(null);
     setBatchErrors([]);
     setIsAddMoreModalOpen(false);
+    setIsSimpleListModalOpen(false);
     setMappingModal({
       isOpen: false,
       headers: [],
@@ -965,44 +1067,61 @@ export default function Home() {
           </div>
         )}
 
-        {/* Saved Session Detection Banner (US-011) */}
+        {/* Saved Session Detection Banner (US-011) - High Visual Priority */}
         {savedSession && !transactions && !isProcessingPDF && !unsupportedBank && (
-          <section className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-6 rounded-2xl shadow-xs space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 flex items-center justify-center shrink-0 mt-0.5">
-                <Icons.FileText className="w-5 h-5" />
-              </div>
-              <div className="space-y-1 flex-1">
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                      Sesión anterior guardada en el navegador
-                    </h3>
-                    <span className="text-3xs font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
-                      {savedSession.transactions.length} transacciones
+          <section className="rounded-2xl border-2 border-zinc-900/10 dark:border-zinc-100/15 bg-white dark:bg-zinc-900 p-6 sm:p-7 shadow-md space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                  <Icons.Wallet className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                      Sesión activa en tu navegador
+                    </h2>
+                    <span className="text-3xs font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80">
+                      {savedSession.transactions.length}{" "}
+                      {savedSession.transactions.length === 1
+                        ? "transacción"
+                        : "transacciones"}
                     </span>
                   </div>
+                  <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+                    Guardada el{" "}
+                    {new Date(savedSession.savedAt).toLocaleDateString("es-GT", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
                 </div>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                  Guardado el{" "}
-                  {new Date(savedSession.savedAt).toLocaleDateString("es-GT", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })}
-                </p>
               </div>
+
+              {savedSession.summary?.totalAmount !== undefined && (
+                <div className="sm:text-right bg-zinc-50 dark:bg-zinc-950/60 sm:bg-transparent sm:dark:bg-transparent p-3 sm:p-0 rounded-xl border sm:border-0 border-zinc-100 dark:border-zinc-800/80">
+                  <span className="text-3xs uppercase font-medium tracking-wider text-zinc-400 block">
+                    Gasto total registrado
+                  </span>
+                  <span className="text-lg sm:text-xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
+                    {formatCurrency(savedSession.summary.totalAmount)}
+                  </span>
+                </div>
+              )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
               <button
                 type="button"
+                id="btn-resume-session"
                 onClick={handleResumeSession}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-sm cursor-pointer"
               >
-                <Icons.Check className="w-3.5 h-3.5" />
-                <span>Continuar sesión</span>
+                <Icons.LayoutDashboard className="w-4 h-4" />
+                <span>Ir al dashboard</span>
+                <Icons.ArrowRight className="w-4 h-4" />
               </button>
+
               <button
                 type="button"
                 id="btn-banner-reset-session"
@@ -1010,7 +1129,7 @@ export default function Home() {
                   setWipeCustomCategoriesOnReset(false);
                   setIsResetSessionModalOpen(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 rounded-lg dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition-colors cursor-pointer ml-auto"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
                 title="Reiniciar sesión de transacciones"
               >
                 <Icons.RotateCcw className="w-3.5 h-3.5" />
@@ -1219,10 +1338,24 @@ export default function Home() {
         {/* Dynamic Workspace: File Ingestion or Extracted Transactions Table */}
         {!transactions || !summary ? (
           !isProcessingPDF && !pdfError && !unsupportedBank && !isExtractingWithLLM && !llmExtractionError && (
-            <section className="border border-zinc-200 rounded-xl bg-zinc-50/50 p-6 sm:p-8 dark:border-zinc-800 dark:bg-zinc-900/40 space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-200/80 pb-4 dark:border-zinc-800/80">
-                <span className="text-xs font-medium tracking-tight text-zinc-700 dark:text-zinc-300">
-                  Carga de documento
+            <section
+              className={
+                savedSession
+                  ? "border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/40 dark:bg-zinc-900/20 p-5 sm:p-6 rounded-2xl space-y-4 shadow-2xs"
+                  : "border border-zinc-200 rounded-2xl bg-zinc-50/50 p-6 sm:p-8 dark:border-zinc-800 dark:bg-zinc-900/40 space-y-6"
+              }
+            >
+              <div className="flex items-center justify-between border-b border-zinc-200/60 pb-3 dark:border-zinc-800/60">
+                <span
+                  className={
+                    savedSession
+                      ? "text-xs font-medium text-zinc-500 dark:text-zinc-400"
+                      : "text-xs font-medium tracking-tight text-zinc-700 dark:text-zinc-300"
+                  }
+                >
+                  {savedSession
+                    ? "O agrega más movimientos a tu sesión activa"
+                    : "Carga de movimientos"}
                 </span>
               </div>
 
@@ -1262,6 +1395,7 @@ export default function Home() {
                 <FileUpload
                   onFileRouted={handleFileRouted}
                   onFilesRouted={handleBatchFilesRouted}
+                  onOpenSimpleList={() => setIsSimpleListModalOpen(true)}
                 />
               )}
             </section>
@@ -1382,6 +1516,10 @@ export default function Home() {
               <FileUpload
                 onFilesRouted={handleBatchFilesRouted}
                 onFileRouted={(file, type) => handleBatchFilesRouted([{ file, type }])}
+                onOpenSimpleList={() => {
+                  setIsAddMoreModalOpen(false);
+                  setIsSimpleListModalOpen(true);
+                }}
               />
             )}
 
@@ -1397,6 +1535,14 @@ export default function Home() {
           </div>
         </div>
       )}
+      {/* Simple Expense List Modal (US-053) */}
+      <SimpleListModal
+        isOpen={isSimpleListModalOpen}
+        exchangeRate={exchangeRate}
+        onClose={() => setIsSimpleListModalOpen(false)}
+        onConfirm={handleSimpleListConfirmed}
+      />
+
       {/* Reset Session Confirmation Modal (US-027) */}
       {isResetSessionModalOpen && (
         <div
