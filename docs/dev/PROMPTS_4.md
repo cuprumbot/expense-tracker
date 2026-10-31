@@ -76,3 +76,23 @@ Work autonomously end-to-end:
 Only stop when User Story #66 is fully verified, then report what was done.
 
 Remember not to commit anything until I check manually. Remember to beep when finished or if you need some user input.
+
+---
+
+Stories #66 to #70 are already implemented, so let's proceed with #65 which let us choose which parser to use.
+
+Execute User Story #65 from `USER_STORIES_4.md`.
+
+Adhere strictly to the rules in AGENTS.md and the requirements in SPEC.md. Run all necessary terminal commands to scaffold the project, set up the directory structure, install dependencies, and remove boilerplate code.
+
+Work autonomously end-to-end:
+
+    Complete each step required by the story's acceptance criteria without asking for intermediate approvals.
+
+    Run npm run build to verify there are zero build or type errors. If you hit any errors, debug and resolve them independently.
+
+Only stop when User Story #65 is fully verified, then report what was done.
+
+Remember not to commit anything until I check manually. Remember to beep when finished or if you need some user input.
+
+Report if everything is ready to implement #71 so we can finally test the file upload in the web app.

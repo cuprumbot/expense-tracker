@@ -113,7 +113,12 @@ export function detectBankFromText(text: string): BankDetectionResult {
 
   const isFicohsa =
     normalized.includes("ficohsa.com.gt") ||
+    normalized.includes("ficohsa.com") ||
     normalized.includes("banco ficohsa") ||
+    normalized.includes("tarjeta de crédito ficohsa") ||
+    normalized.includes("tarjeta de credito ficohsa") ||
+    normalized.includes("puntos ficohsa") ||
+    normalized.includes("cash back ficohsa") ||
     normalized.includes("ficohsa") ||
     normalized.includes("seguro ficohsa");
 
@@ -123,6 +128,13 @@ export function detectBankFromText(text: string): BankDetectionResult {
     normalized.includes("bac.net") ||
     normalized.includes("bac credomatic") ||
     normalized.includes("credomatic") ||
+    normalized.includes("puntos bac") ||
+    normalized.includes("tarjeta de crédito bac") ||
+    normalized.includes("tarjeta de credito bac") ||
+    normalized.includes("american express bac") ||
+    normalized.includes("mastercard bac") ||
+    normalized.includes("visa bac") ||
+    /\bbac\b/i.test(text) ||
     /@baccredomatic/i.test(text);
 
   const isGyT =
@@ -146,6 +158,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
     normalized.includes("extraf/cuotas") ||
     normalized.includes("extrafinanciamientos/cuotas") ||
     normalized.includes("si dentro de los 30 días siguientes a su fecha de corte no hemos recibido sus observaciones") ||
+    /si dentro de los 30 d[ií]as siguientes a su fecha de corte/i.test(text) ||
     /\bgt\d{2}\s*indl\b/i.test(text);
 
   const isCuscatlan =
@@ -153,12 +166,19 @@ export function detectBankFromText(text: string): BankDetectionResult {
     normalized.includes("bancocuscatlan.com.gt") ||
     normalized.includes("banco cuscatlan") ||
     normalized.includes("banco cuscatlán") ||
+    normalized.includes("tarjeta de crédito cuscatlán") ||
+    normalized.includes("tarjeta de credito cuscatlan") ||
+    normalized.includes("multipremios cuscatlán") ||
+    normalized.includes("multipremios cuscatlan") ||
     normalized.includes("cuscatlan") ||
     normalized.includes("cuscatlán");
 
   const isBAM =
     normalized.includes("banco agromercantil") ||
     normalized.includes("bam.com.gt") ||
+    normalized.includes("tarjeta de crédito bam") ||
+    normalized.includes("tarjeta de credito bam") ||
+    normalized.includes("puntos bam") ||
     /\bbam\b/i.test(text);
 
   const isBanrural =
@@ -428,6 +448,7 @@ export async function parsePDFStatement(dataBuffer: Uint8Array): Promise<PDFPars
 export {
   extractFicohsaTransactionsFromParser,
   parseFicohsaStatementFromBuffer,
+  parseFicohsaStatementFromBuffer as parseFicohsaCreditCardStatement,
   parseFicohsaStatementText,
   cleanFicohsaDescription,
 } from "./ficohsa-parser";
@@ -435,6 +456,7 @@ export {
 export {
   extractBacTransactionsFromParser,
   parseBacStatementFromBuffer,
+  parseBacStatementFromBuffer as parseBacCreditCardStatement,
   parseBacStatementText,
   cleanBacDescription,
 } from "./bac-parser";
@@ -442,6 +464,7 @@ export {
 export {
   extractBiTransactionsFromParser,
   parseBiStatementFromBuffer,
+  parseBiStatementFromBuffer as parseBiCreditCardStatement,
   parseBiStatementText,
   cleanBiDescription,
 } from "./bi-parser";
@@ -449,9 +472,18 @@ export {
 export {
   extractCuscatlanTransactionsFromParser,
   parseCuscatlanStatementFromBuffer,
+  parseCuscatlanStatementFromBuffer as parseCuscatlanCreditCardStatement,
   parseCuscatlanStatementText,
   cleanCuscatlanDescription,
 } from "./cuscatlan-parser";
+
+export {
+  extractBamTransactionsFromParser,
+  parseBamStatementFromBuffer,
+  parseBamStatementFromBuffer as parseBamCreditCardStatement,
+  parseBamStatementText,
+  cleanBamDescription,
+} from "./bam-parser";
 
 export {
   extractGyTTransactionsFromParser,

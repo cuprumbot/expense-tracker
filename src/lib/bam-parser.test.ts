@@ -186,3 +186,4 @@ describe("US-070: Real Statement Verification (demo/BAM-brolo.pdf)", () => {
     assert.strictEqual(paymentLog.amount, "Q.1,459.00");
   });
 });
+

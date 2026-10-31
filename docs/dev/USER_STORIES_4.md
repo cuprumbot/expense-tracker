@@ -276,29 +276,29 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
 
 ## Phase 34: Credit Card Multi-Bank Identification & Specialized Statement Parsers
 
-### [ ] US-065: Multi-Bank Identification & Automatic Bank Selection for Credit Card Statements
+### [x] US-065: Multi-Bank Identification & Automatic Bank Selection for Credit Card Statements
 - **As a** user uploading a credit card statement in PDF format,
 - **I want** the system to automatically inspect the document content and determine whether it originates from Banco Industrial, Banco Cuscatlán, BAC Credomatic, FICOHSA, or Banco Agromercantil (BAM),
 - **So that** the document is parsed using the correct specialized local credit card parser without requiring manual bank selection or external LLM routing.
 - **Split-Brain Boundary:** 100% Local (Client / Server text detection and routing in `src/lib/pdf-parser.ts`).
 - **Acceptance Criteria:**
-  - [ ] References and supersedes general bank detection in **US-017** ([`iteration_2/USER_STORIES_2.md`](./iteration_2/USER_STORIES_2.md)), focusing specifically on credit card statement formats.
-  - [ ] Analyzes extracted PDF text headers, metadata, issuer URLs, card branding, and institution keywords 100% locally to detect the originating credit card issuer:
+  - [x] References and supersedes general bank detection in **US-017** ([`iteration_2/USER_STORIES_2.md`](./iteration_2/USER_STORIES_2.md)), focusing specifically on credit card statement formats.
+  - [x] Analyzes extracted PDF text headers, metadata, issuer URLs, card branding, and institution keywords 100% locally to detect the originating credit card issuer:
     - **Banco Industrial:** `Banco Industrial`, `Bi en Línea`, `bi.com.gt`, `Club Bi`, `Bi Credit`, `Corporación Bi`, `Tarjeta de Crédito Bi`.
     - **Banco Cuscatlán:** `Banco Cuscatlán`, `Cuscatlán`, `bancocuscatlan.com.gt`, `Tarjeta de Crédito Cuscatlán`, `MultiPremios Cuscatlán`.
     - **BAC Credomatic:** `BAC Credomatic`, `BAC`, `Credomatic`, `baccredomatic.com`, `bac.net`, `Puntos BAC`, `Tarjeta de Crédito BAC`, `American Express BAC`, `Mastercard BAC`, `Visa BAC`.
     - **Banco FICOHSA:** `Banco Ficohsa`, `Ficohsa`, `ficohsa.com`, `ficohsa.com.gt`, `Tarjeta de Crédito Ficohsa`, `Puntos Ficohsa`, `Cash Back Ficohsa`.
     - **Banco Agromercantil (BAM):** `Banco Agromercantil`, `BAM`, `bam.com.gt`, `Tarjeta de Crédito BAM`, `Puntos BAM`.
-  - [ ] Dispatches the document automatically to the verified credit card parser:
+  - [x] Dispatches the document automatically to the verified credit card parser:
     - `parseBiCreditCardStatement` (US-066)
     - `parseCuscatlanCreditCardStatement` (US-067)
     - `parseBacCreditCardStatement` (US-068)
     - `parseFicohsaCreditCardStatement` (US-069)
     - `parseBamCreditCardStatement` (US-070)
-  - [ ] Attaches the verified bank name to the parsing result metadata (`bankName: string`), ensuring that only verified banking institutions display in the dashboard header badge per the UI cleanliness rules.
-  - [ ] If no supported credit card layout or issuer matches, flags the document as an "unsupported bank" (`isSupportedBank: false`) and smoothly transitions to the Local PII Anonymization and Preview flow (US-005).
-  - [ ] Bank detection executes 100% locally with zero network requests or LLM invocations.
-  - [ ] Includes unit tests in `src/lib/pdf-parser.test.ts` verifying accurate detection and automatic dispatching for all 5 credit card issuers, as well as fallback behavior for unsupported documents.
+  - [x] Attaches the verified bank name to the parsing result metadata (`bankName: string`), ensuring that only verified banking institutions display in the dashboard header badge per the UI cleanliness rules.
+  - [x] If no supported credit card layout or issuer matches, flags the document as an "unsupported bank" (`isSupportedBank: false`) and smoothly transitions to the Local PII Anonymization and Preview flow (US-005).
+  - [x] Bank detection executes 100% locally with zero network requests or LLM invocations.
+  - [x] Includes unit tests in `src/lib/pdf-parser.test.ts` verifying accurate detection and automatic dispatching for all 5 credit card issuers, as well as fallback behavior for unsupported documents.
 
 ### [x] US-066: Banco Industrial (BI) Credit Card Statement PDF Parser
 - **As a** Banco Industrial credit card cardholder,
