@@ -202,21 +202,21 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
 
 ## Phase 31: Intelligent Local Coaching & Next-Month Improvement Suggestions
 
-### [ ] US-061: Over-Budget Root-Cause Analyzer & Multi-Month Improvement Coaching Engine
+### [x] US-061: Over-Budget Root-Cause Analyzer & Multi-Month Improvement Coaching Engine
 - **As a** user who wants actionable guidance for next month,
 - **I want** the system to analyze my transactions locally to explain why a category went over budget and recognize when I have been improving a category over one or several months,
 - **So that** I receive specific, data-backed recommendations on what to focus on next month.
 - **Split-Brain Boundary:** 100% Local (Deterministic root-cause & trajectory analysis in `src/lib/budget-engine.ts`).
 - **Acceptance Criteria:**
-  - [ ] Implements `generateNextMonthSuggestions(transactions: Transaction[], budgetState: StoredBudgetState, targetMonthKey?: string): BudgetSuggestion[]` in `src/lib/budget-engine.ts`.
-  - [ ] **Rule 1 — Over-Budget Alert & Root-Cause Diagnosis:** When a category's spending is over budget (especially way over budget, e.g., `> 115%` of target or highest Quetzal overrun), generates a priority alert and inspects that month's transactions in that category to determine and explain the primary probable cause(s) in Spanish with concrete numbers:
+  - [x] Implements `generateNextMonthSuggestions(transactions: Transaction[], budgetState: StoredBudgetState, targetMonthKey?: string): BudgetSuggestion[]` in `src/lib/budget-engine.ts`.
+  - [x] **Rule 1 — Over-Budget Alert & Root-Cause Diagnosis:** When a category's spending is over budget (especially way over budget, e.g., `> 115%` of target or highest Quetzal overrun), generates a priority alert and inspects that month's transactions in that category to determine and explain the primary probable cause(s) in Spanish with concrete numbers:
     - *Single Expensive Purchase (`compra_unica_alta`):* One transaction accounts for `>= 45%` of the category's total spend or exceeds the entire category budget boost on its own (names the merchant, date, and amount in `Q`).
     - *Too Many Transactions (`alta_frecuencia`):* High number of transactions (e.g., `>= 8` purchases in the month with a modest average ticket), alerting the user that frequent small/medium purchases ("compras frecuentes") drove the overrun.
     - *Date Clustering (`concentracion_fechas`):* A large share of the category's spending (`>= 50%` across `>= 2` transactions) occurred on a single day or within a 3-day window, pointing out the specific date range and total spent in that cluster.
     - *High Overall Spend (`monto_total_elevado`):* Broadly elevated spending across multiple medium-sized purchases, specifying how much (`Q`) needs to be trimmed next month to return to the target.
-  - [ ] **Rule 2 — Short-Term Improvement Encouragement (Some Months of Improvement):** Tracks category spending across chronological uploaded months. If a category shows improvement over **1 to 2 consecutive months** (e.g., spending decreased compared to the previous month or moved from over-budget to within-budget), generates an encouraging coaching message in Spanish motivating the user to keep up the momentum in that category (quoting the previous vs. current `Q` amounts).
-  - [ ] **Rule 3 — Long-Term Mastery & Next-Target Pivot (Many Months of Improvement):** If a category shows sustained improvement or consistent goal achievement across **3 or more months** (or `>= 2` consecutive transitions of steady reduction across 3+ uploaded months), generates a milestone message congratulating the user on consolidating that habit and explicitly recommending another specific category (the one currently furthest over budget or with the highest discretionary spend) to start improving next.
-  - [ ] Includes comprehensive unit tests in `src/lib/budget-engine.test.ts` testing all four over-budget root causes (expensive purchase, high transaction count, date cluster, high total) as well as short-term (1–2 months) and long-term (3+ months) improvement coaching rules.
+  - [x] **Rule 2 — Short-Term Improvement Encouragement (Some Months of Improvement):** Tracks category spending across chronological uploaded months. If a category shows improvement over **1 to 2 consecutive months** (e.g., spending decreased compared to the previous month or moved from over-budget to within-budget), generates an encouraging coaching message in Spanish motivating the user to keep up the momentum in that category (quoting the previous vs. current `Q` amounts).
+  - [x] **Rule 3 — Long-Term Mastery & Next-Target Pivot (Many Months of Improvement):** If a category shows sustained improvement or consistent goal achievement across **3 or more months** (or `>= 2` consecutive transitions of steady reduction across 3+ uploaded months), generates a milestone message congratulating the user on consolidating that habit and explicitly recommending another specific category (the one currently furthest over budget or with the highest discretionary spend) to start improving next.
+  - [x] Includes comprehensive unit tests in `src/lib/budget-engine.test.ts` testing all four over-budget root causes (expensive purchase, high transaction count, date cluster, high total) as well as short-term (1–2 months) and long-term (3+ months) improvement coaching rules.
 
 ### [ ] US-062: Next-Month Improvement Suggestions UI & Actionable Insights Panel
 - **As a** user reviewing my budget performance,

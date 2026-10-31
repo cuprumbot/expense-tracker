@@ -5,6 +5,8 @@ import {
   MonthBudgetComparison,
   CategoryComparisonResult,
   BudgetFunStats,
+  BudgetSuggestion,
+  RootCauseType,
 } from "@/types/budget";
 import { Transaction } from "@/types/transaction";
 import defaultCatalog from "@/data/merchant-catalog.json";
@@ -569,4 +571,275 @@ export function calculateBudgetFunStats(
       totalMonthsCount,
     },
   };
+}
+
+/**
+ * Analyzes transaction history and budget plans to diagnose over-budget root causes
+ * and detect multi-month category improvement trajectories.
+ */
+export function generateNextMonthSuggestions(
+  transactions: Transaction[],
+  budgetState: StoredBudgetState,
+  targetMonthKey?: string
+): BudgetSuggestion[] {
+  if (!transactions || transactions.length === 0 || !budgetState?.currentBudget) {
+    return [];
+  }
+
+  const validTxs = transactions.filter((t) => t.date && t.date.length >= 10 && t.amount > 0);
+  if (validTxs.length === 0) return [];
+
+  // Determine chronological list of months in uploaded data
+  const monthSet = new Set<string>();
+  for (const t of validTxs) {
+    monthSet.add(t.date.substring(0, 7));
+  }
+  const sortedMonths = Array.from(monthSet).sort();
+  if (sortedMonths.length === 0) return [];
+
+  const evalMonth =
+    targetMonthKey && sortedMonths.includes(targetMonthKey)
+      ? targetMonthKey
+      : sortedMonths[sortedMonths.length - 1];
+
+  const evalBudget = getBudgetForMonth(budgetState, evalMonth) || budgetState.currentBudget;
+  if (!evalBudget || !evalBudget.targets) return [];
+
+  const suggestions: BudgetSuggestion[] = [];
+
+  // Group transactions in evalMonth by category
+  const evalTxs = validTxs.filter((t) => t.date.startsWith(evalMonth));
+  const txsByCategory = new Map<string, Transaction[]>();
+  for (const t of evalTxs) {
+    const key = t.category?.trim().toLowerCase() || "otros";
+    const list = txsByCategory.get(key) || [];
+    list.push(t);
+    txsByCategory.set(key, list);
+  }
+
+  // --- Rule 1: Over-Budget Alert & Root-Cause Diagnosis ---
+  for (const target of evalBudget.targets) {
+    const key = target.categoryName.toLowerCase();
+    const catTxs = txsByCategory.get(key) || [];
+    const totalSpent = Math.round(catTxs.reduce((sum, t) => sum + t.amount, 0) * 100) / 100;
+    const limit = target.monthlyLimitGTQ;
+
+    if (totalSpent > limit) {
+      const excessGTQ = Math.round((totalSpent - limit) * 100) / 100;
+      let rootCause: RootCauseType = "monto_total_elevado";
+      let highlightedTx: { merchant: string; date: string; amountGTQ: number } | undefined;
+      let description = "";
+      let actionable = "";
+
+      // Sort transactions by amount descending to test single purchase
+      const sortedByAmount = [...catTxs].sort((a, b) => b.amount - a.amount);
+      const topTx = sortedByAmount[0];
+
+      // Sort by date ascending to test date clustering
+      const sortedByDate = [...catTxs].sort((a, b) => a.date.localeCompare(b.date));
+
+      // Test Cause A: Single Expensive Purchase (>= 45% of total or exceeds entire category budget limit)
+      if (topTx && (topTx.amount >= totalSpent * 0.45 || topTx.amount >= limit)) {
+        rootCause = "compra_unica_alta";
+        highlightedTx = {
+          merchant: topTx.description,
+          date: topTx.date,
+          amountGTQ: topTx.amount,
+        };
+        const pct = Math.round((topTx.amount / totalSpent) * 100);
+        description = `Causa probable: Una compra individual elevada en ${topTx.description} por Q ${topTx.amount.toLocaleString("es-GT")} representó el ${pct}% del gasto total de esta categoría.`;
+        actionable = `Planifica con anticipación compras extraordinarias en ${target.categoryName} o crea un fondo previo para evitar desviaciones.`;
+      }
+      // Test Cause B: Date Clustering (>= 50% across >= 2 txs in <= 3 days)
+      else {
+        let clusterFound = false;
+        let clusterSum = 0;
+        let clusterStart = "";
+        let clusterEnd = "";
+        let clusterCount = 0;
+
+        for (let i = 0; i < sortedByDate.length; i++) {
+          const t1 = new Date(sortedByDate[i].date).getTime();
+          let currentWindowSum = sortedByDate[i].amount;
+          let currentCount = 1;
+          for (let j = i + 1; j < sortedByDate.length; j++) {
+            const t2 = new Date(sortedByDate[j].date).getTime();
+            const dayDiff = Math.abs(t2 - t1) / 86400000;
+            if (dayDiff <= 2.5) {
+              currentWindowSum += sortedByDate[j].amount;
+              currentCount += 1;
+              if (currentWindowSum >= totalSpent * 0.5 && currentCount >= 2) {
+                clusterFound = true;
+                clusterSum = currentWindowSum;
+                clusterStart = sortedByDate[i].date;
+                clusterEnd = sortedByDate[j].date;
+                clusterCount = currentCount;
+                break;
+              }
+            } else {
+              break;
+            }
+          }
+          if (clusterFound) break;
+        }
+
+        if (clusterFound) {
+          rootCause = "concentracion_fechas";
+          const pct = Math.round((clusterSum / totalSpent) * 100);
+          description = `Causa probable: Gastos concentrados entre ${clusterStart} y ${clusterEnd} (Q ${clusterSum.toLocaleString("es-GT")} en ${clusterCount} compras representaron el ${pct}% del mes).`;
+          actionable = `Distribuye tus consumos en ${target.categoryName} a lo largo de las semanas para evitar picos que consuman tu presupuesto temprano.`;
+        }
+        // Test Cause C: Too Many Transactions (>= 8 txs)
+        else if (catTxs.length >= 8) {
+          rootCause = "alta_frecuencia";
+          const avgTicket = Math.round(totalSpent / catTxs.length);
+          description = `Causa probable: Alta frecuencia de compras (${catTxs.length} transacciones en el mes con un ticket promedio de Q ${avgTicket.toLocaleString("es-GT")}).`;
+          actionable = `Consolida tus salidas y compras frecuentes en ${target.categoryName} para reducir gastos hormiga el próximo mes.`;
+        }
+        // Test Cause D: High Overall Spend
+        else {
+          rootCause = "monto_total_elevado";
+          description = `Causa probable: Gastos generales elevados repartidos en ${catTxs.length} transacciones, superando la meta por Q ${excessGTQ.toLocaleString("es-GT")}.`;
+          actionable = `Ajusta tu ritmo reduciendo aproximadamente Q ${Math.round(excessGTQ).toLocaleString("es-GT")} el próximo mes para regresar a tu meta de Q ${limit.toLocaleString("es-GT")}.`;
+        }
+      }
+
+      suggestions.push({
+        id: `suggestion-over-${target.categoryId}-${Date.now()}-${Math.random()}`,
+        type: "over_budget_cause",
+        categoryName: target.categoryName,
+        excessAmountGTQ: excessGTQ,
+        rootCause,
+        title: `Exceso en ${target.categoryName}: Q ${excessGTQ.toLocaleString("es-GT")} sobre presupuesto`,
+        description,
+        actionableRecommendation: actionable,
+        highlightedTransaction: highlightedTx,
+        metrics: {
+          currentSpentGTQ: totalSpent,
+          targetGTQ: limit,
+        },
+      });
+    }
+  }
+
+  // --- Rule 2 & Rule 3: Multi-Month Improvement Trajectories ---
+  const evalIdx = sortedMonths.indexOf(evalMonth);
+  if (evalIdx >= 1) {
+    const historicalMonthsToEval = sortedMonths.slice(0, evalIdx + 1);
+
+    const categoryMonthlySpend = new Map<string, number[]>();
+    for (const m of historicalMonthsToEval) {
+      const monthTxList = validTxs.filter((t) => t.date.startsWith(m));
+      const mSpendByCat = new Map<string, number>();
+      for (const t of monthTxList) {
+        const catKey = t.category?.trim().toLowerCase() || "otros";
+        mSpendByCat.set(catKey, (mSpendByCat.get(catKey) || 0) + t.amount);
+      }
+
+      for (const target of evalBudget.targets) {
+        const catKey = target.categoryName.toLowerCase();
+        const spent = mSpendByCat.get(catKey) || 0;
+        const history = categoryMonthlySpend.get(catKey) || [];
+        history.push(spent);
+        categoryMonthlySpend.set(catKey, history);
+      }
+    }
+
+    let candidateNextCategory = "";
+    let highestOverGTQ = -1;
+    for (const target of evalBudget.targets) {
+      const catKey = target.categoryName.toLowerCase();
+      const spent = txsByCategory.get(catKey)?.reduce((s, t) => s + t.amount, 0) || 0;
+      const over = spent - target.monthlyLimitGTQ;
+      if (over > highestOverGTQ) {
+        highestOverGTQ = over;
+        candidateNextCategory = target.categoryName;
+      }
+    }
+    if (!candidateNextCategory && evalBudget.targets.length > 0) {
+      const discretionary = evalBudget.targets.filter((t) => !t.isEssential);
+      candidateNextCategory =
+        discretionary.length > 0 ? discretionary[0].categoryName : evalBudget.targets[0].categoryName;
+    }
+
+    for (const target of evalBudget.targets) {
+      const catKey = target.categoryName.toLowerCase();
+      const history = categoryMonthlySpend.get(catKey) || [];
+      if (history.length < 2) continue;
+
+      const currentSpent = history[history.length - 1];
+      const previousSpent = history[history.length - 2];
+      const limit = target.monthlyLimitGTQ;
+
+      let consecutiveImprovements = 0;
+      for (let i = history.length - 1; i >= 1; i--) {
+        const curr = history[i];
+        const prev = history[i - 1];
+        if (curr < prev || (prev > limit && curr <= limit)) {
+          consecutiveImprovements += 1;
+        } else {
+          break;
+        }
+      }
+
+      const sustainedComplianceCount = history.filter((s) => s <= limit).length;
+
+      if (
+        (consecutiveImprovements >= 2 && history.length >= 3) ||
+        (sustainedComplianceCount >= 3 && currentSpent <= limit)
+      ) {
+        const pivotCat =
+          candidateNextCategory &&
+          candidateNextCategory.toLowerCase() !== target.categoryName.toLowerCase()
+            ? candidateNextCategory
+            : "otra categoría con gastos variables";
+
+        suggestions.push({
+          id: `suggestion-mastery-${target.categoryId}-${Date.now()}`,
+          type: "long_term_mastery",
+          categoryName: target.categoryName,
+          title: `¡Hábito consolidado en ${target.categoryName}!`,
+          description: `Has mantenido un control disciplinado en ${target.categoryName} durante ${Math.max(3, consecutiveImprovements + 1)} meses seguidos.`,
+          actionableRecommendation: `¡Felicitaciones! Has dominado esta categoría. Te sugerimos enfocar tu atención el próximo mes en optimizar ${pivotCat}.`,
+          metrics: {
+            currentSpentGTQ: currentSpent,
+            previousSpentGTQ: previousSpent,
+            targetGTQ: limit,
+            consecutiveMonths: Math.max(3, consecutiveImprovements + 1),
+            suggestedNextCategory: pivotCat,
+          },
+        });
+      } else if (consecutiveImprovements >= 1) {
+        const reductionGTQ = Math.round((previousSpent - currentSpent) * 100) / 100;
+        suggestions.push({
+          id: `suggestion-impr-${target.categoryId}-${Date.now()}`,
+          type: "short_term_improvement",
+          categoryName: target.categoryName,
+          title: `¡Buen avance en ${target.categoryName}!`,
+          description: `Redujiste tu gasto de Q ${previousSpent.toLocaleString("es-GT")} a Q ${currentSpent.toLocaleString("es-GT")}${reductionGTQ > 0 ? ` (ahorro de Q ${reductionGTQ.toLocaleString("es-GT")})` : ""}.`,
+          actionableRecommendation: `Mantén este excelente ritmo en ${target.categoryName} el próximo mes para consolidar el hábito.`,
+          metrics: {
+            currentSpentGTQ: currentSpent,
+            previousSpentGTQ: previousSpent,
+            targetGTQ: limit,
+            consecutiveMonths: consecutiveImprovements,
+          },
+        });
+      }
+    }
+  }
+
+  suggestions.sort((a, b) => {
+    const priority = {
+      over_budget_cause: 1,
+      long_term_mastery: 2,
+      short_term_improvement: 3,
+    };
+    if (priority[a.type] !== priority[b.type]) {
+      return priority[a.type] - priority[b.type];
+    }
+    return (b.excessAmountGTQ || 0) - (a.excessAmountGTQ || 0);
+  });
+
+  return suggestions;
 }

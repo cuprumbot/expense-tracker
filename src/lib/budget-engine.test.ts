@@ -13,6 +13,7 @@ import {
   compareMonthAgainstBudget,
   formatMonthSpanish,
   calculateBudgetFunStats,
+  generateNextMonthSuggestions,
 } from "./budget-engine";
 import { Transaction } from "@/types/transaction";
 import { BudgetPlan, StoredBudgetState } from "@/types/budget";
@@ -464,6 +465,139 @@ describe("US-056: Budget Category Tiers & Historical Context Helpers", () => {
       const stats = calculateBudgetFunStats(transactions, budgetState, "2026-09");
       assert.strictEqual(stats.mesesDentroDePresupuesto.metCount, 1);
       assert.strictEqual(stats.mesesDentroDePresupuesto.totalMonthsCount, 2);
+    });
+  });
+
+  describe("US-061: Over-Budget Root-Cause Diagnosis & Multi-Month Coaching Engine", () => {
+    const basePlan: BudgetPlan = {
+      id: "plan-coaching",
+      name: "Presupuesto Coaching",
+      targets: [
+        { categoryId: "supermercado", categoryName: "Supermercado", monthlyLimitGTQ: 1000, isEssential: true },
+        { categoryId: "restaurantes", categoryName: "Restaurantes y Cafés", monthlyLimitGTQ: 800, isEssential: false },
+      ],
+      totalMonthlyBudgetGTQ: 1800,
+      createdMode: "zero",
+      updatedAt: "2026-09-01T00:00:00.000Z",
+    };
+
+    const budgetState: StoredBudgetState = {
+      currentBudget: basePlan,
+      monthlyBudgets: {},
+      effectiveFromMonth: null,
+    };
+
+    it("diagnoses 'compra_unica_alta' when a single purchase drives >= 45% of total category spend", () => {
+      // Limit: 1000. Spent: 1500. One purchase of 900 (60% >= 45%)
+      const transactions: Transaction[] = [
+        { id: "1", date: "2026-09-05", description: "Cemaco", amount: 900, currency: "GTQ", category: "Supermercado" },
+        { id: "2", date: "2026-09-12", description: "La Torre", amount: 300, currency: "GTQ", category: "Supermercado" },
+        { id: "3", date: "2026-09-20", description: "Paiz", amount: 300, currency: "GTQ", category: "Supermercado" },
+      ];
+
+      const suggestions = generateNextMonthSuggestions(transactions, budgetState, "2026-09");
+      const superSugg = suggestions.find((s) => s.categoryName === "Supermercado");
+
+      assert.ok(superSugg);
+      assert.strictEqual(superSugg.type, "over_budget_cause");
+      assert.strictEqual(superSugg.rootCause, "compra_unica_alta");
+      assert.strictEqual(superSugg.highlightedTransaction?.merchant, "Cemaco");
+      assert.strictEqual(superSugg.highlightedTransaction?.amountGTQ, 900);
+    });
+
+    it("diagnoses 'concentracion_fechas' when >= 50% of spend is clustered within a 3-day window", () => {
+      // Limit: 1000. Spent: 1400.
+      // Cluster: Sep 14 (350), Sep 15 (350), Sep 15 (200) -> 900 of 1400 (64% >= 50% in <= 3 days, none >= 45%)
+      const transactions: Transaction[] = [
+        { id: "1", date: "2026-09-02", description: "La Torre", amount: 250, currency: "GTQ", category: "Supermercado" },
+        { id: "2", date: "2026-09-14", description: "Mercado 1", amount: 350, currency: "GTQ", category: "Supermercado" },
+        { id: "3", date: "2026-09-15", description: "Mercado 2", amount: 350, currency: "GTQ", category: "Supermercado" },
+        { id: "4", date: "2026-09-15", description: "Mercado 3", amount: 200, currency: "GTQ", category: "Supermercado" },
+        { id: "5", date: "2026-09-28", description: "La Torre", amount: 250, currency: "GTQ", category: "Supermercado" },
+      ];
+
+      const suggestions = generateNextMonthSuggestions(transactions, budgetState, "2026-09");
+      const superSugg = suggestions.find((s) => s.categoryName === "Supermercado");
+
+      assert.ok(superSugg);
+      assert.strictEqual(superSugg.type, "over_budget_cause");
+      assert.strictEqual(superSugg.rootCause, "concentracion_fechas");
+    });
+
+    it("diagnoses 'alta_frecuencia' when >= 8 purchases drive the overrun without large dominating tickets", () => {
+      // Limit: 800. Spent: 1000 across 10 transactions of 100
+      const transactions: Transaction[] = [];
+      for (let i = 1; i <= 10; i++) {
+        const day = i < 10 ? `0${i}` : `${i}`;
+        transactions.push({
+          id: `tx-f-${i}`,
+          date: `2026-09-${day}`,
+          description: `Cafe ${i}`,
+          amount: 100,
+          currency: "GTQ",
+          category: "Restaurantes y Cafés",
+        });
+      }
+
+      const suggestions = generateNextMonthSuggestions(transactions, budgetState, "2026-09");
+      const restSugg = suggestions.find((s) => s.categoryName === "Restaurantes y Cafés");
+
+      assert.ok(restSugg);
+      assert.strictEqual(restSugg.type, "over_budget_cause");
+      assert.strictEqual(restSugg.rootCause, "alta_frecuencia");
+    });
+
+    it("diagnoses 'monto_total_elevado' when spend is broadly elevated without clustering or high count", () => {
+      // Limit: 1000. Spent: 1300 across 4 transactions of 325 spread out
+      const transactions: Transaction[] = [
+        { id: "1", date: "2026-09-02", description: "T1", amount: 325, currency: "GTQ", category: "Supermercado" },
+        { id: "2", date: "2026-09-10", description: "T2", amount: 325, currency: "GTQ", category: "Supermercado" },
+        { id: "3", date: "2026-09-18", description: "T3", amount: 325, currency: "GTQ", category: "Supermercado" },
+        { id: "4", date: "2026-09-26", description: "T4", amount: 325, currency: "GTQ", category: "Supermercado" },
+      ];
+
+      const suggestions = generateNextMonthSuggestions(transactions, budgetState, "2026-09");
+      const superSugg = suggestions.find((s) => s.categoryName === "Supermercado");
+
+      assert.ok(superSugg);
+      assert.strictEqual(superSugg.type, "over_budget_cause");
+      assert.strictEqual(superSugg.rootCause, "monto_total_elevado");
+    });
+
+    it("generates short-term improvement encouragement (Rule 2) for 1-2 consecutive months of reduction", () => {
+      // Month 1 (2026-08): 1400 -> Month 2 (2026-09): 900 (reduction of 500)
+      const transactions: Transaction[] = [
+        { id: "1", date: "2026-08-10", description: "Aug", amount: 1400, currency: "GTQ", category: "Supermercado" },
+        { id: "2", date: "2026-09-10", description: "Sep", amount: 900, currency: "GTQ", category: "Supermercado" },
+      ];
+
+      const suggestions = generateNextMonthSuggestions(transactions, budgetState, "2026-09");
+      const imprSugg = suggestions.find((s) => s.type === "short_term_improvement");
+
+      assert.ok(imprSugg);
+      assert.strictEqual(imprSugg.categoryName, "Supermercado");
+      assert.strictEqual(imprSugg.metrics?.previousSpentGTQ, 1400);
+      assert.strictEqual(imprSugg.metrics?.currentSpentGTQ, 900);
+    });
+
+    it("generates long-term mastery & next-target pivot (Rule 3) for 3+ months sustained compliance", () => {
+      // 3 months under budget (limit 1000):
+      // 2026-07: 1500 (over) -> 2026-08: 1200 (reduction 1) -> 2026-09: 800 (reduction 2 & under limit)
+      // Meanwhile Restaurantes is over budget in 2026-09: 1000 > 800
+      const transactions: Transaction[] = [
+        { id: "1", date: "2026-07-10", description: "July", amount: 1500, currency: "GTQ", category: "Supermercado" },
+        { id: "2", date: "2026-08-10", description: "Aug", amount: 1200, currency: "GTQ", category: "Supermercado" },
+        { id: "3", date: "2026-09-10", description: "Sep", amount: 800, currency: "GTQ", category: "Supermercado" },
+        // Restaurantes over budget
+        { id: "4", date: "2026-09-15", description: "Sep Rest", amount: 1000, currency: "GTQ", category: "Restaurantes y Cafés" },
+      ];
+
+      const suggestions = generateNextMonthSuggestions(transactions, budgetState, "2026-09");
+      const masterySugg = suggestions.find((s) => s.type === "long_term_mastery");
+
+      assert.ok(masterySugg);
+      assert.strictEqual(masterySugg.categoryName, "Supermercado");
+      assert.strictEqual(masterySugg.metrics?.suggestedNextCategory, "Restaurantes y Cafés");
     });
   });
 });
