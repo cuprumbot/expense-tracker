@@ -4,6 +4,10 @@ import {
   CustomCategory,
 } from "@/types/transaction";
 import { SavingsRecommendationResponse } from "@/lib/savings-advisor";
+import { StoredBudgetState, BudgetPlan } from "@/types/budget";
+import { getBudgetForMonth } from "@/lib/budget-engine";
+
+export { getBudgetForMonth };
 
 export interface StoredSession {
   version: 1;
@@ -131,13 +135,20 @@ export function loadStoredCategories(): CustomCategory[] {
  * @param wipeCategories - If true, wipes custom categories as well (complete factory reset).
  * Defaults to true for backward compatibility with US-011 (Borrar mis datos).
  * When false, preserves custom categories in localStorage while clearing the active session (US-027).
+ * @param wipeBudget - If true, wipes budget configuration as well.
  */
-export function clearStoredSession(wipeCategories: boolean = true): boolean {
+export function clearStoredSession(
+  wipeCategories: boolean = true,
+  wipeBudget: boolean = false
+): boolean {
   if (!isStorageAvailable()) return false;
   try {
     window.localStorage.removeItem(STORAGE_KEY_SESSION);
     if (wipeCategories) {
       window.localStorage.removeItem(STORAGE_KEY_CATEGORIES);
+    }
+    if (wipeBudget) {
+      window.localStorage.removeItem(STORAGE_KEY_BUDGET);
     }
     return true;
   } catch (error) {
@@ -147,10 +158,10 @@ export function clearStoredSession(wipeCategories: boolean = true): boolean {
 }
 
 /**
- * Convenience helper to clear only transaction session data while strictly preserving custom categories.
+ * Convenience helper to clear only transaction session data while strictly preserving custom categories and budget.
  */
 export function clearStoredSessionOnly(): boolean {
-  return clearStoredSession(false);
+  return clearStoredSession(false, false);
 }
 
 export const STORAGE_KEY_VENDOR_HIDDEN_AMOUNT = "expense_tracker_hidden_vendors_amount";
@@ -309,4 +320,80 @@ export function resetStoredPanelDimensions(): boolean {
     return false;
   }
 }
+
+export const STORAGE_KEY_BUDGET = "expense_tracker_budget_v1";
+
+/**
+ * Saves the stored budget state to localStorage.
+ */
+export function saveStoredBudgetState(state: StoredBudgetState): boolean {
+  if (!isStorageAvailable()) return false;
+  try {
+    window.localStorage.setItem(STORAGE_KEY_BUDGET, JSON.stringify(state));
+    return true;
+  } catch (error) {
+    console.warn("Error al guardar presupuesto en localStorage:", error);
+    return false;
+  }
+}
+
+/**
+ * Loads the stored budget state from localStorage with validation and corruption resilience.
+ */
+export function loadStoredBudgetState(): StoredBudgetState | null {
+  if (!isStorageAvailable()) return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY_BUDGET);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") {
+      clearStoredBudgetState();
+      return null;
+    }
+
+    // Validate currentBudget if present
+    if (parsed.currentBudget !== null && parsed.currentBudget !== undefined) {
+      if (
+        typeof parsed.currentBudget !== "object" ||
+        !parsed.currentBudget.id ||
+        !Array.isArray(parsed.currentBudget.targets)
+      ) {
+        clearStoredBudgetState();
+        return null;
+      }
+    }
+
+    // Validate monthlyBudgets
+    if (parsed.monthlyBudgets && typeof parsed.monthlyBudgets !== "object") {
+      clearStoredBudgetState();
+      return null;
+    }
+
+    return {
+      currentBudget: parsed.currentBudget ?? null,
+      monthlyBudgets: parsed.monthlyBudgets ?? {},
+      effectiveFromMonth: parsed.effectiveFromMonth ?? null,
+    };
+  } catch (error) {
+    console.warn("Datos de presupuesto corruptos en localStorage, limpiando:", error);
+    clearStoredBudgetState();
+    return null;
+  }
+}
+
+/**
+ * Clears budget state from localStorage.
+ */
+export function clearStoredBudgetState(): boolean {
+  if (!isStorageAvailable()) return false;
+  try {
+    window.localStorage.removeItem(STORAGE_KEY_BUDGET);
+    return true;
+  } catch (error) {
+    console.warn("Error al limpiar presupuesto en localStorage:", error);
+    return false;
+  }
+}
+
 

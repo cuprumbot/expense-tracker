@@ -72,25 +72,25 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
 
 ## Phase 27: Budgeting Data Model, Local Storage Persistence & Navigation Architecture
 
-### [ ] US-054: Budget Data Structures, Historical Month Versioning & LocalStorage Persistence
+### [x] US-054: Budget Data Structures, Historical Month Versioning & LocalStorage Persistence
 - **As a** user creating and maintaining a personal budget across multiple months,
 - **I want** my budget targets and historical monthly budget assignments to be reliably saved in my browser's `localStorage`,
 - **So that** my budget configuration and month-by-month goals persist across reloads and accurately reflect the budget that was active for each month.
 - **Split-Brain Boundary:** 100% Local (`src/types/budget.ts` and `src/lib/storage.ts` using `window.localStorage`).
 - **Acceptance Criteria:**
-  - [ ] Defines canonical budget TypeScript interfaces in `src/types/budget.ts` (or `src/types/transaction.ts`):
+  - [x] Defines canonical budget TypeScript interfaces in `src/types/budget.ts` (or `src/types/transaction.ts`):
     - `CategoryBudgetTarget`: `{ categoryId: string; categoryName: string; monthlyLimitGTQ: number; isEssential?: boolean }`
     - `BudgetPlan`: `{ id: string; name?: string; targets: CategoryBudgetTarget[]; totalMonthlyBudgetGTQ: number; createdMode: "zero" | "transactions"; updatedAt: string }`
     - `StoredBudgetState`:
       - `currentBudget: BudgetPlan | null`: The default/active budget plan for current and future months.
       - `monthlyBudgets: Record<string, BudgetPlan>`: Month-keyed (`"YYYY-MM"`) budget snapshots allowing previous months to retain their historical budget when the user chooses "from now on" during edits, or to be overwritten when the user chooses "apply to previous months".
       - `effectiveFromMonth?: string | null`: The `"YYYY-MM"` threshold from which `currentBudget` applies when historical months are preserved.
-  - [ ] Implements helper functions in `src/lib/budget-engine.ts` and `src/lib/storage.ts`:
+  - [x] Implements helper functions in `src/lib/budget-engine.ts` and `src/lib/storage.ts`:
     - `saveStoredBudgetState(state: StoredBudgetState): boolean` under key `STORAGE_KEY_BUDGET = "expense_tracker_budget_v1"`.
     - `loadStoredBudgetState(): StoredBudgetState | null` with structural validation and corruption recovery.
     - `clearStoredBudgetState(): boolean` integrated optionally into session reset controls.
     - `getBudgetForMonth(state: StoredBudgetState, monthKey: string): BudgetPlan | null` returning the exact `BudgetPlan` applicable to any given `"YYYY-MM"` month.
-  - [ ] Includes unit tests in `src/lib/storage.test.ts` verifying serialization, corruption resilience, and accurate month-specific budget resolution.
+  - [x] Includes unit tests in `src/lib/storage.test.ts` verifying serialization, corruption resilience, and accurate month-specific budget resolution.
 
 ### [ ] US-055: Dedicated Budgeting Tool View & Cross-Screen Navigation (Upload & Dashboard)
 - **As a** user,

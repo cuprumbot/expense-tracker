@@ -18,8 +18,14 @@ import {
   STORAGE_KEY_PANEL_DIMENSIONS,
   STORAGE_KEY_SESSION,
   STORAGE_KEY_CATEGORIES,
+  STORAGE_KEY_BUDGET,
+  saveStoredBudgetState,
+  loadStoredBudgetState,
+  clearStoredBudgetState,
+  getBudgetForMonth,
 } from "./storage";
 import { Transaction, CSVParsingSummary, CustomCategory } from "@/types/transaction";
+import { StoredBudgetState, BudgetPlan } from "@/types/budget";
 
 // Mock localStorage in global scope for unit testing
 class MockLocalStorage {
@@ -400,6 +406,134 @@ describe("US-011: LocalStorage Persistence Unit Tests", () => {
 
       const restored = loadStoredPanelDimensions();
       assert.strictEqual(restored.leftWidthPercent, DEFAULT_PANEL_DIMENSIONS.leftWidthPercent);
+    });
+  });
+
+  describe("US-054: Budget Data Structures & LocalStorage Persistence Unit Tests", () => {
+    const mockPlan2026_08: BudgetPlan = {
+      id: "plan-august",
+      name: "Presupuesto Agosto",
+      totalMonthlyBudgetGTQ: 4500,
+      createdMode: "zero",
+      updatedAt: "2026-08-01T10:00:00.000Z",
+      targets: [
+        {
+          categoryId: "supermercado",
+          categoryName: "Supermercado",
+          monthlyLimitGTQ: 2000,
+          isEssential: true,
+        },
+        {
+          categoryId: "restaurantes",
+          categoryName: "Restaurantes y Cafés",
+          monthlyLimitGTQ: 500,
+          isEssential: false,
+        },
+      ],
+    };
+
+    const mockPlanCurrent: BudgetPlan = {
+      id: "plan-current",
+      name: "Presupuesto Actual",
+      totalMonthlyBudgetGTQ: 5000,
+      createdMode: "transactions",
+      updatedAt: "2026-09-01T10:00:00.000Z",
+      targets: [
+        {
+          categoryId: "supermercado",
+          categoryName: "Supermercado",
+          monthlyLimitGTQ: 2200,
+          isEssential: true,
+        },
+        {
+          categoryId: "servicios",
+          categoryName: "Servicios Básicos",
+          monthlyLimitGTQ: 800,
+          isEssential: true,
+        },
+      ],
+    };
+
+    it("saves and loads a valid StoredBudgetState correctly", () => {
+      const budgetState: StoredBudgetState = {
+        currentBudget: mockPlanCurrent,
+        monthlyBudgets: {
+          "2026-08": mockPlan2026_08,
+        },
+        effectiveFromMonth: "2026-09",
+      };
+
+      const saved = saveStoredBudgetState(budgetState);
+      assert.strictEqual(saved, true);
+
+      const loaded = loadStoredBudgetState();
+      assert.ok(loaded);
+      assert.strictEqual(loaded.effectiveFromMonth, "2026-09");
+      assert.strictEqual(loaded.currentBudget?.id, "plan-current");
+      assert.strictEqual(loaded.currentBudget?.totalMonthlyBudgetGTQ, 5000);
+      assert.strictEqual(loaded.monthlyBudgets["2026-08"].id, "plan-august");
+      assert.strictEqual(loaded.monthlyBudgets["2026-08"].targets.length, 2);
+    });
+
+    it("handles corruption resilience and self-heals by wiping invalid budget state", () => {
+      mockStore.setItem(STORAGE_KEY_BUDGET, "invalid-json-string{");
+      const loadedMalformed = loadStoredBudgetState();
+      assert.strictEqual(loadedMalformed, null);
+      assert.strictEqual(mockStore.getItem(STORAGE_KEY_BUDGET), null);
+
+      mockStore.setItem(STORAGE_KEY_BUDGET, JSON.stringify({ currentBudget: "not-an-object" }));
+      const loadedInvalidStructure = loadStoredBudgetState();
+      assert.strictEqual(loadedInvalidStructure, null);
+      assert.strictEqual(mockStore.getItem(STORAGE_KEY_BUDGET), null);
+    });
+
+    it("clears stored budget state with clearStoredBudgetState", () => {
+      saveStoredBudgetState({
+        currentBudget: mockPlanCurrent,
+        monthlyBudgets: {},
+        effectiveFromMonth: null,
+      });
+      assert.ok(mockStore.getItem(STORAGE_KEY_BUDGET));
+
+      const cleared = clearStoredBudgetState();
+      assert.strictEqual(cleared, true);
+      assert.strictEqual(mockStore.getItem(STORAGE_KEY_BUDGET), null);
+    });
+
+    it("resolves exact month-specific budget with getBudgetForMonth", () => {
+      const stateWithHistorical: StoredBudgetState = {
+        currentBudget: mockPlanCurrent,
+        monthlyBudgets: {
+          "2026-07": mockPlan2026_08,
+          "2026-08": mockPlan2026_08,
+        },
+        effectiveFromMonth: "2026-09",
+      };
+
+      // 1. Month present in monthlyBudgets returns historical snapshot
+      const augBudget = getBudgetForMonth(stateWithHistorical, "2026-08");
+      assert.strictEqual(augBudget?.id, "plan-august");
+      assert.strictEqual(augBudget?.totalMonthlyBudgetGTQ, 4500);
+
+      // 2. Month equal to or after effectiveFromMonth returns currentBudget
+      const sepBudget = getBudgetForMonth(stateWithHistorical, "2026-09");
+      assert.strictEqual(sepBudget?.id, "plan-current");
+
+      const octBudget = getBudgetForMonth(stateWithHistorical, "2026-10");
+      assert.strictEqual(octBudget?.id, "plan-current");
+
+      // 3. Past month without snapshot before effectiveFromMonth returns null
+      const juneBudget = getBudgetForMonth(stateWithHistorical, "2026-06");
+      assert.strictEqual(juneBudget, null);
+
+      // 4. If no effectiveFromMonth is set, currentBudget applies generally
+      const stateNoEffective: StoredBudgetState = {
+        currentBudget: mockPlanCurrent,
+        monthlyBudgets: {},
+        effectiveFromMonth: null,
+      };
+      const anyMonthBudget = getBudgetForMonth(stateNoEffective, "2026-05");
+      assert.strictEqual(anyMonthBudget?.id, "plan-current");
     });
   });
 });
