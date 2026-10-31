@@ -218,19 +218,19 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
   - [x] **Rule 3 — Long-Term Mastery & Next-Target Pivot (Many Months of Improvement):** If a category shows sustained improvement or consistent goal achievement across **3 or more months** (or `>= 2` consecutive transitions of steady reduction across 3+ uploaded months), generates a milestone message congratulating the user on consolidating that habit and explicitly recommending another specific category (the one currently furthest over budget or with the highest discretionary spend) to start improving next.
   - [x] Includes comprehensive unit tests in `src/lib/budget-engine.test.ts` testing all four over-budget root causes (expensive purchase, high transaction count, date cluster, high total) as well as short-term (1–2 months) and long-term (3+ months) improvement coaching rules.
 
-### [ ] US-062: Next-Month Improvement Suggestions UI & Actionable Insights Panel
+### [x] US-062: Next-Month Improvement Suggestions UI & Actionable Insights Panel
 - **As a** user reviewing my budget performance,
 - **I want** a clear, visual panel presenting next-month suggestions, root-cause alerts, and improvement encouragements in Spanish,
 - **So that** I immediately know which category to prioritize next month and why.
 - **Split-Brain Boundary:** 100% Local (Client React component rendering structured insights).
 - **Acceptance Criteria:**
-  - [ ] Renders a dedicated `"Sugerencias para el Próximo Mes"` section within the Budgeting Tool view (`src/components/budget-tool-view.tsx`).
-  - [ ] Organizes suggestions with distinct visual styling and standard SVG icons:
+  - [x] Renders a dedicated `"Sugerencias para el Próximo Mes"` section within the Budgeting Tool view (`src/components/budget-tool-view.tsx`).
+  - [x] Organizes suggestions with distinct visual styling and standard SVG icons:
     - **Alertas de Exceso y Causa Probable (Rose/Amber badge):** Displays the over-budget category, the excess amount in `Q`, the specific detected cause (e.g., `"Causa probable: Una compra individual elevada en Cemaco por Q 850.00 representó el 65% del gasto"`, `"Causa probable: Alta frecuencia de compras (14 transacciones en el mes)"`, or `"Causa probable: Gastos concentrados alrededor del 15 de julio (Q 620.00 en 2 días)"`), and a concrete target action for next month.
     - **Continúa Mejorando (Blue/Emerald badge):** Highlights categories with 1–2 months of improvement, showing the reduction achieved in `Q` and encouraging the user to maintain the trend next month.
     - **Hábito Consolidado — Nuevo Reto (Violet/Emerald badge):** Highlights categories with 3+ months of sustained improvement/compliance and suggests the next specific category to focus on improving.
-  - [ ] When no transactions are uploaded yet, displays a helpful Spanish empty state explaining that once bank statements or expense lists are loaded, personalized monthly comparisons and root-cause suggestions will appear automatically.
-  - [ ] All copy is 100% in Spanish, uses `Q` / `GTQ` currency formatting, and uses zero emojis.
+  - [x] When no transactions are uploaded yet, displays a helpful Spanish empty state explaining that once bank statements or expense lists are loaded, personalized monthly comparisons and root-cause suggestions will appear automatically.
+  - [x] All copy is 100% in Spanish, uses `Q` / `GTQ` currency formatting, and uses zero emojis.
 
 ---
 

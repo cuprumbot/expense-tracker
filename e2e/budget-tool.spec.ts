@@ -804,4 +804,126 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await expect(monthsCard).toContainText("Meses en meta");
     await expect(monthsCard).toContainText("1 de 1");
   });
+
+  test("US-061 & US-062: displays next-month improvement suggestions, root-cause diagnostics, and coaching panels", async ({ page }) => {
+    await page.goto("/");
+
+    // Seed session with transactions diagnosing single expensive purchase and short-term improvement
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "expense_tracker_session_v1",
+        JSON.stringify({
+          version: 1,
+          savedAt: new Date().toISOString(),
+          transactions: [
+            // August transactions: Restaurantes was 1200
+            {
+              id: "tx-sug-aug-1",
+              date: "2026-08-15",
+              description: "Restaurante San Martin",
+              amount: 1200,
+              currency: "GTQ",
+              category: "Restaurantes y Cafés",
+              classificationSource: "local",
+            },
+            // September transactions:
+            // Supermercado: Cemaco 900 + La Torre 400 = 1300 (> 1000 limit, Cemaco >= 45%)
+            {
+              id: "tx-sug-sep-1",
+              date: "2026-09-05",
+              description: "Cemaco",
+              amount: 900,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+            {
+              id: "tx-sug-sep-2",
+              date: "2026-09-12",
+              description: "Supermercados La Torre",
+              amount: 400,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+            // Restaurantes: 700 (reduced from 1200 -> short term improvement!)
+            {
+              id: "tx-sug-sep-3",
+              date: "2026-09-15",
+              description: "Restaurante San Martin",
+              amount: 700,
+              currency: "GTQ",
+              category: "Restaurantes y Cafés",
+              classificationSource: "local",
+            },
+          ],
+          summary: {
+            totalRowsProcessed: 4,
+            validTransactionsCount: 4,
+            skippedRowsCount: 0,
+            totalAmount: 3200,
+          },
+          bankName: "Banco Industrial",
+          customCategories: [],
+        })
+      );
+
+      localStorage.setItem(
+        "expense_tracker_budget_v1",
+        JSON.stringify({
+          currentBudget: {
+            id: "budget-suggestions-test",
+            name: "Presupuesto Mensual",
+            targets: [
+              {
+                categoryId: "supermercado",
+                categoryName: "Supermercado",
+                monthlyLimitGTQ: 1000,
+                isEssential: true,
+              },
+              {
+                categoryId: "restaurantes",
+                categoryName: "Restaurantes y Cafés",
+                monthlyLimitGTQ: 800,
+                isEssential: false,
+              },
+            ],
+            totalMonthlyBudgetGTQ: 1800,
+            createdMode: "zero",
+            updatedAt: "2026-08-01T00:00:00.000Z",
+          },
+          monthlyBudgets: {},
+          effectiveFromMonth: null,
+        })
+      );
+    });
+
+    await page.reload();
+    await page.locator("#btn-resume-session").click();
+
+    // Open budget tool
+    await page.locator("#btn-dashboard-open-budget").click();
+
+    // Switch to Sugerencias tab
+    await page.locator("#tab-sugerencias-presupuesto").click();
+    await expect(page.locator("#section-sugerencias-presupuesto")).toBeVisible();
+
+    // Verify suggestions list is rendered
+    const suggestionsList = page.locator("#next-month-suggestions-list");
+    await expect(suggestionsList).toBeVisible();
+
+    // Check Over-Budget Diagnosis Card for Supermercado (Single Expensive Purchase: Cemaco)
+    const overCard = page.locator("#suggestion-card-over-supermercado");
+    await expect(overCard).toBeVisible();
+    await expect(overCard).toContainText("Alerta de Exceso");
+    await expect(overCard).toContainText("Causa probable: Una compra individual elevada en Cemaco");
+    await expect(overCard).toContainText("Acción recomendada para el próximo mes");
+
+    // Check Improvement Card for Restaurantes y Cafés
+    const imprCard = page.locator("#suggestion-card-improvement-restaurantes-y-cafés");
+    await expect(imprCard).toBeVisible();
+    await expect(imprCard).toContainText("Continúa Mejorando");
+    await expect(imprCard).toContainText("Redujiste tu gasto");
+    await expect(imprCard).toContainText("Recomendación para mantener el ritmo");
+  });
 });

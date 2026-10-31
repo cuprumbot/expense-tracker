@@ -19,6 +19,7 @@ import {
   compareMonthAgainstBudget,
   formatMonthSpanish,
   calculateBudgetFunStats,
+  generateNextMonthSuggestions,
 } from "@/lib/budget-engine";
 
 export type BudgetToolTab = "configurar" | "comparativa" | "sugerencias";
@@ -113,6 +114,14 @@ export function BudgetToolView({
       return null;
     }
     return calculateBudgetFunStats(transactions, budgetState, selectedMonthKey);
+  }, [transactions, budgetState, selectedMonthKey]);
+
+  // Compute next month improvement suggestions & coaching insights (US-061 / US-062)
+  const nextMonthSuggestions = useMemo(() => {
+    if (!transactions || transactions.length === 0 || !budgetState?.currentBudget) {
+      return [];
+    }
+    return generateNextMonthSuggestions(transactions, budgetState, selectedMonthKey);
   }, [transactions, budgetState, selectedMonthKey]);
 
   // Active category targets for the builder
@@ -1664,14 +1673,222 @@ export function BudgetToolView({
 
         {activeTab === "sugerencias" && (
           <section id="section-sugerencias-presupuesto" className="space-y-6">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs">
-              <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                Sugerencias del Próximo Mes
-              </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                Recomendaciones personalizadas basadas en el análisis de tus hábitos de gasto.
-              </p>
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                  Sugerencias para el Próximo Mes
+                </h2>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  Recomendaciones personalizadas basadas en el análisis de tus hábitos de gasto en{" "}
+                  <strong className="text-zinc-800 dark:text-zinc-200">{formatMonthSpanish(selectedMonthKey)}</strong>.
+                </p>
+              </div>
+
+              {availableMonths.length > 1 && (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                  <span className="text-3xs font-medium text-zinc-500 dark:text-zinc-400 mr-1">
+                    Mes:
+                  </span>
+                  {availableMonths.map((m) => (
+                    <button
+                      key={`sug-month-${m}`}
+                      type="button"
+                      onClick={() => setSelectedMonthKey(m)}
+                      className={`px-2.5 py-1 rounded-lg text-2xs font-medium transition-colors cursor-pointer shrink-0 ${
+                        m === selectedMonthKey
+                          ? "bg-indigo-600 text-white font-semibold shadow-2xs"
+                          : "bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700"
+                      }`}
+                    >
+                      {formatMonthSpanish(m)}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+
+            {/* Empty state when no transactions exist */}
+            {!hasTransactions ? (
+              <div
+                id="suggestions-empty-state"
+                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3 shadow-xs"
+              >
+                <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 mx-auto flex items-center justify-center">
+                  <Icons.Lightbulb className="w-5 h-5" />
+                </div>
+                <div className="max-w-md mx-auto space-y-1">
+                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                    Carga movimientos para ver recomendaciones
+                  </h4>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Una vez que cargues tus estados de cuenta o una lista de gastos, el motor analizará tus patrones localmente para identificar causas de exceso y reconocer tus avances mensuales.
+                  </p>
+                </div>
+              </div>
+            ) : nextMonthSuggestions.length === 0 ? (
+              <div
+                id="suggestions-all-good-state"
+                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3 shadow-xs"
+              >
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
+                  <Icons.CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div className="max-w-md mx-auto space-y-1">
+                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                    ¡Todo en orden este mes!
+                  </h4>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Tus gastos se mantuvieron dentro de las metas planificadas y no se detectaron desviaciones significativas.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div id="next-month-suggestions-list" className="space-y-4">
+                {nextMonthSuggestions.map((sug) => {
+                  if (sug.type === "over_budget_cause") {
+                    return (
+                      <div
+                        key={sug.id}
+                        id={`suggestion-card-over-${sug.categoryName.toLowerCase().replace(/\s+/g, "-")}`}
+                        className="bg-white dark:bg-zinc-900 border border-rose-200 dark:border-rose-900/60 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-rose-100 dark:border-rose-950/60 pb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2.5 py-1 text-3xs font-semibold rounded-full bg-rose-50 text-rose-800 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
+                              Alerta de Exceso
+                            </span>
+                            <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                              {sug.categoryName}
+                            </span>
+                          </div>
+                          {sug.excessAmountGTQ && (
+                            <span className="text-2xs font-semibold font-mono text-rose-700 dark:text-rose-400">
+                              +{formatCurrency(sug.excessAmountGTQ)} sobre meta
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                            {sug.title}
+                          </h4>
+                          <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            {sug.description}
+                          </p>
+                        </div>
+
+                        {/* Actionable recommendation box */}
+                        <div className="p-3.5 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-800/60 flex items-start gap-2.5">
+                          <Icons.Target className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                          <div className="space-y-0.5">
+                            <span className="text-3xs font-bold uppercase tracking-wider text-rose-800 dark:text-rose-300">
+                              Acción recomendada para el próximo mes
+                            </span>
+                            <p className="text-xs text-rose-950 dark:text-rose-100">
+                              {sug.actionableRecommendation}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (sug.type === "long_term_mastery") {
+                    return (
+                      <div
+                        key={sug.id}
+                        id={`suggestion-card-mastery-${sug.categoryName.toLowerCase().replace(/\s+/g, "-")}`}
+                        className="bg-white dark:bg-zinc-900 border border-indigo-200 dark:border-indigo-900/60 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-100 dark:border-indigo-950/60 pb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2.5 py-1 text-3xs font-semibold rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800">
+                              Hábito Consolidado — Nuevo Reto
+                            </span>
+                            <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                              {sug.categoryName}
+                            </span>
+                          </div>
+                          {sug.metrics?.consecutiveMonths && (
+                            <span className="text-2xs font-semibold font-mono text-indigo-700 dark:text-indigo-400">
+                              {sug.metrics.consecutiveMonths} meses en control
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                            {sug.title}
+                          </h4>
+                          <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            {sug.description}
+                          </p>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/60 flex items-start gap-2.5">
+                          <Icons.Award className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                          <div className="space-y-0.5">
+                            <span className="text-3xs font-bold uppercase tracking-wider text-indigo-800 dark:text-indigo-300">
+                              Siguiente objetivo sugerido
+                            </span>
+                            <p className="text-xs text-indigo-950 dark:text-indigo-100">
+                              {sug.actionableRecommendation}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Default: short_term_improvement
+                  return (
+                    <div
+                      key={sug.id}
+                      id={`suggestion-card-improvement-${sug.categoryName.toLowerCase().replace(/\s+/g, "-")}`}
+                      className="bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-900/60 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-100 dark:border-emerald-950/60 pb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-1 text-3xs font-semibold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                            Continúa Mejorando
+                          </span>
+                          <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                            {sug.categoryName}
+                          </span>
+                        </div>
+                        {sug.metrics?.previousSpentGTQ !== undefined &&
+                          sug.metrics?.currentSpentGTQ !== undefined && (
+                            <span className="text-2xs font-semibold font-mono text-emerald-700 dark:text-emerald-400">
+                              Ahorro de {formatCurrency(Math.max(0, sug.metrics.previousSpentGTQ - sug.metrics.currentSpentGTQ))}
+                            </span>
+                          )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                          {sug.title}
+                        </h4>
+                        <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                          {sug.description}
+                        </p>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 flex items-start gap-2.5">
+                        <Icons.TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <div className="space-y-0.5">
+                          <span className="text-3xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                            Recomendación para mantener el ritmo
+                          </span>
+                          <p className="text-xs text-emerald-950 dark:text-emerald-100">
+                            {sug.actionableRecommendation}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         )}
       </main>
