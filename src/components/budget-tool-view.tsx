@@ -14,6 +14,8 @@ import {
   generateRealisticBudgetFromTransactions,
   computeHistoricalMonthlyCategoryAverages,
   roundToCleanQuetzales,
+  applyBudgetUpdate,
+  getBudgetForMonth,
 } from "@/lib/budget-engine";
 
 export type BudgetToolTab = "configurar" | "comparativa" | "sugerencias";
@@ -52,6 +54,28 @@ export function BudgetToolView({
   const [creationMode, setCreationMode] = useState<"zero" | "transactions">(
     currentBudget?.createdMode || "zero"
   );
+
+  // Scope confirmation modal state
+  const [showUpdateScopeModal, setShowUpdateScopeModal] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState<BudgetPlan | null>(null);
+
+  // Available chronological months from transactions and existing budget snapshots
+  const availableMonths = useMemo(() => {
+    const set = new Set<string>();
+    if (transactions) {
+      for (const t of transactions) {
+        if (t.date && t.date.length >= 7) {
+          set.add(t.date.substring(0, 7));
+        }
+      }
+    }
+    if (budgetState?.monthlyBudgets) {
+      for (const k of Object.keys(budgetState.monthlyBudgets)) {
+        set.add(k);
+      }
+    }
+    return Array.from(set).sort();
+  }, [transactions, budgetState]);
 
   // Active category targets for the builder
   const [targetsMap, setTargetsMap] = useState<Map<string, CategoryBudgetTarget>>(() => {
@@ -217,26 +241,62 @@ export function BudgetToolView({
     });
   };
 
-  // Save budget plan
-  const handleSaveBudget = () => {
+  // Edit budget from overview
+  const handleEditBudget = () => {
+    if (currentBudget?.targets) {
+      const map = new Map<string, CategoryBudgetTarget>();
+      for (const t of currentBudget.targets) {
+        map.set(t.categoryName.toLowerCase(), { ...t });
+      }
+      setTargetsMap(map);
+      if (currentBudget.createdMode) {
+        setCreationMode(currentBudget.createdMode);
+      }
+    }
+    setActiveTab("configurar");
+  };
+
+  // Initiate saving budget plan: if previous budget exists or multiple historical months exist, prompt for scope
+  const handleInitiateSave = () => {
     if (targetsList.length === 0) return;
 
     const newPlan: BudgetPlan = {
       id: currentBudget?.id || `budget-${Date.now()}`,
-      name: "Mi Presupuesto Mensual",
+      name: currentBudget?.name || "Mi Presupuesto Mensual",
       targets: targetsList,
       totalMonthlyBudgetGTQ: totalBudgetGTQ,
       createdMode: creationMode,
       updatedAt: new Date().toISOString(),
     };
 
-    const newState: StoredBudgetState = {
-      currentBudget: newPlan,
-      monthlyBudgets: budgetState?.monthlyBudgets || {},
-      effectiveFromMonth: budgetState?.effectiveFromMonth || null,
-    };
+    setPendingPlan(newPlan);
 
+    // If an existing budget was already configured and user is editing it, prompt for scope
+    if (isBudgetActive) {
+      setShowUpdateScopeModal(true);
+    } else {
+      const newState = applyBudgetUpdate(
+        budgetState || { currentBudget: null, monthlyBudgets: {} },
+        newPlan,
+        "all_months",
+        availableMonths
+      );
+      onSaveBudgetState(newState);
+      setActiveTab("comparativa");
+    }
+  };
+
+  const handleConfirmScope = (scope: "all_months" | "from_now_on") => {
+    if (!pendingPlan) return;
+    const newState = applyBudgetUpdate(
+      budgetState || { currentBudget: null, monthlyBudgets: {} },
+      pendingPlan,
+      scope,
+      availableMonths
+    );
     onSaveBudgetState(newState);
+    setShowUpdateScopeModal(false);
+    setPendingPlan(null);
     setActiveTab("comparativa");
   };
 
@@ -766,7 +826,7 @@ export function BudgetToolView({
                     type="button"
                     id="btn-save-budget"
                     disabled={targetsList.length === 0}
-                    onClick={handleSaveBudget}
+                    onClick={handleInitiateSave}
                     className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-xs shrink-0 cursor-pointer ${
                       targetsList.length === 0
                         ? "opacity-50 cursor-not-allowed bg-zinc-300 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500"
@@ -774,7 +834,7 @@ export function BudgetToolView({
                     }`}
                   >
                     <Icons.Check className="w-4 h-4" />
-                    <span>Guardar presupuesto</span>
+                    <span>{isBudgetActive ? "Guardar cambios" : "Guardar presupuesto"}</span>
                   </button>
                 </div>
               </section>
@@ -1010,11 +1070,11 @@ export function BudgetToolView({
                     type="button"
                     id="btn-confirm-save-budget-from-txs"
                     disabled={targetsList.length === 0}
-                    onClick={handleSaveBudget}
+                    onClick={handleInitiateSave}
                     className="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500 transition-all shadow-xs shrink-0 cursor-pointer"
                   >
                     <Icons.Check className="w-4 h-4" />
-                    <span>Confirmar y guardar presupuesto</span>
+                    <span>{isBudgetActive ? "Guardar cambios" : "Confirmar y guardar presupuesto"}</span>
                   </button>
                 </div>
               </section>
@@ -1040,7 +1100,7 @@ export function BudgetToolView({
                 <button
                   type="button"
                   id="btn-edit-budget-overview"
-                  onClick={() => setActiveTab("configurar")}
+                  onClick={handleEditBudget}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 dark:text-zinc-300 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:bg-zinc-800 transition-colors shadow-2xs cursor-pointer"
                 >
                   <Icons.Pencil className="w-3.5 h-3.5" />
@@ -1064,6 +1124,94 @@ export function BudgetToolView({
           </section>
         )}
       </main>
+
+      {/* Confirmation Modal: How to apply budget update (US-058) */}
+      {showUpdateScopeModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-scope-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+        >
+          <div
+            id="modal-budget-scope-confirmation"
+            className="w-full max-w-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl p-5 sm:p-6 space-y-5"
+          >
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800">
+                <Icons.Target className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3
+                  id="modal-scope-title"
+                  className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100"
+                >
+                  ¿Cómo deseas aplicar los cambios a tu presupuesto?
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Tienes datos de meses anteriores. Elige si deseas evaluar todos tus meses cargados con estas nuevas metas o mantener el presupuesto histórico para los meses anteriores.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              {/* Option 1: all_months */}
+              <button
+                type="button"
+                id="btn-scope-all-months"
+                onClick={() => handleConfirmScope("all_months")}
+                className="w-full text-left p-3.5 sm:p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                    Aplicar a meses anteriores y de ahora en adelante
+                  </span>
+                  <span className="text-3xs font-medium px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                    Retroactivo
+                  </span>
+                </div>
+                <p className="text-2xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  Actualiza el presupuesto en todos los meses cargados para evaluar todo tu historial con las nuevas metas.
+                </p>
+              </button>
+
+              {/* Option 2: from_now_on */}
+              <button
+                type="button"
+                id="btn-scope-from-now-on"
+                onClick={() => handleConfirmScope("from_now_on")}
+                className="w-full text-left p-3.5 sm:p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                    Aplicar solo de ahora en adelante
+                  </span>
+                  <span className="text-3xs font-medium px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                    Conservar historial
+                  </span>
+                </div>
+                <p className="text-2xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  Conserva las metas previas en tus meses anteriores y aplica este nuevo presupuesto a partir de ahora.
+                </p>
+              </button>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-zinc-100 dark:border-zinc-800">
+              <button
+                type="button"
+                id="btn-cancel-scope-modal"
+                onClick={() => {
+                  setShowUpdateScopeModal(false);
+                  setPendingPlan(null);
+                }}
+                className="px-3.5 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

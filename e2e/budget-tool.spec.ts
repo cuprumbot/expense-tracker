@@ -408,4 +408,136 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     expect(savedBudget.currentBudget.createdMode).toBe("transactions");
     expect(savedBudget.currentBudget.targets.length).toBeGreaterThanOrEqual(4);
   });
+
+  test("US-058: allows editing active budget and prompts with historical scope confirmation modal", async ({ page }) => {
+    await page.goto("/");
+
+    // Seed session with multi-month transactions and an existing budget
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "expense_tracker_session_v1",
+        JSON.stringify({
+          version: 1,
+          savedAt: new Date().toISOString(),
+          transactions: [
+            {
+              id: "tx-multi-1",
+              date: "2026-07-15",
+              description: "Supermercados La Torre",
+              amount: 1500,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+            {
+              id: "tx-multi-2",
+              date: "2026-08-15",
+              description: "Supermercados La Torre",
+              amount: 1600,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+            {
+              id: "tx-multi-3",
+              date: "2026-09-15",
+              description: "Supermercados La Torre",
+              amount: 1700,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+          ],
+          summary: {
+            totalRowsProcessed: 3,
+            validTransactionsCount: 3,
+            skippedRowsCount: 0,
+            totalAmount: 4800,
+          },
+          bankName: "Banco Industrial",
+          customCategories: [],
+        })
+      );
+
+      localStorage.setItem(
+        "expense_tracker_budget_v1",
+        JSON.stringify({
+          currentBudget: {
+            id: "budget-initial",
+            name: "Presupuesto Inicial",
+            targets: [
+              {
+                categoryId: "supermercado",
+                categoryName: "Supermercado",
+                monthlyLimitGTQ: 2000,
+                isEssential: true,
+              },
+            ],
+            totalMonthlyBudgetGTQ: 2000,
+            createdMode: "zero",
+            updatedAt: "2026-07-01T00:00:00.000Z",
+          },
+          monthlyBudgets: {},
+          effectiveFromMonth: null,
+        })
+      );
+    });
+
+    await page.reload();
+    await page.locator("#btn-resume-session").click();
+
+    // Open budget tool
+    await page.locator("#btn-dashboard-open-budget").click();
+
+    // Overview should be visible with "Editar presupuesto" button
+    const editBtn = page.locator("#btn-edit-budget-overview");
+    await expect(editBtn).toBeVisible();
+    await editBtn.click();
+
+    // Verify redirected to builder with populated targets
+    await expect(page.locator("#builder-from-zero")).toBeVisible();
+    const superCard = page.locator("#target-card-supermercado");
+    await expect(superCard).toBeVisible();
+
+    // Fine-tune by adding +Q 100
+    const plusBtn = superCard.getByRole("button", { name: "+Q 100" });
+    await plusBtn.click();
+
+    // Verify button says "Guardar cambios"
+    const saveBtn = page.locator("#btn-save-budget");
+    await expect(saveBtn).toContainText("Guardar cambios");
+    await saveBtn.click();
+
+    // Confirmation modal should be visible
+    const modal = page.locator("#modal-budget-scope-confirmation");
+    await expect(modal).toBeVisible();
+    await expect(modal).toContainText("¿Cómo deseas aplicar los cambios a tu presupuesto?");
+
+    const allMonthsBtn = page.locator("#btn-scope-all-months");
+    const fromNowOnBtn = page.locator("#btn-scope-from-now-on");
+    await expect(allMonthsBtn).toBeVisible();
+    await expect(fromNowOnBtn).toBeVisible();
+
+    // Choose "Aplicar solo de ahora en adelante"
+    await fromNowOnBtn.click();
+
+    // Modal should close and return to overview
+    await expect(modal).not.toBeVisible();
+    await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
+
+    // Verify state in localStorage
+    const savedState = await page.evaluate(() => {
+      const raw = localStorage.getItem("expense_tracker_budget_v1");
+      return raw ? JSON.parse(raw) : null;
+    });
+
+    expect(savedState).not.toBeNull();
+    expect(savedState.effectiveFromMonth).toBe("2026-09");
+    expect(savedState.currentBudget.targets[0].monthlyLimitGTQ).toBe(2100);
+
+    // 2026-07 should preserve prior limit (2000)
+    expect(savedState.monthlyBudgets["2026-07"].targets[0].monthlyLimitGTQ).toBe(2000);
+    // 2026-09 should have updated limit (2100)
+    expect(savedState.monthlyBudgets["2026-09"].targets[0].monthlyLimitGTQ).toBe(2100);
+  });
 });

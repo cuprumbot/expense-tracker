@@ -148,20 +148,20 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
 
 ## Phase 29: Budget Editing & Retroactive vs. Forward-Only Versioning
 
-### [ ] US-058: Budget Editing Workflow & Historical Application Confirmation Modal
+### [x] US-058: Budget Editing Workflow & Historical Application Confirmation Modal
 - **As a** user whose financial goals or expenses have changed,
 - **I want to** edit my budget at any time and choose whether my changes apply retroactively to previous months or only from now on,
 - **So that** historical month comparisons and stats remain fair and accurate according to the budget that was meant for each month.
 - **Split-Brain Boundary:** 100% Local (Time-versioned state management in `src/lib/budget-engine.ts` and `localStorage`).
 - **Acceptance Criteria:**
-  - [ ] Provides an `"Editar presupuesto"` button in the Budgeting Tool overview that opens the interactive budget editor pre-populated with the current budget's categories and targets (allowing adding/removing categories and modifying target amounts).
-  - [ ] When the user clicks `"Guardar cambios"` on an edited budget and historical months exist (or a previous budget was already saved), displays a clear confirmation modal in Spanish asking how to apply the updated budget:
+  - [x] Provides an `"Editar presupuesto"` button in the Budgeting Tool overview that opens the interactive budget editor pre-populated with the current budget's categories and targets (allowing adding/removing categories and modifying target amounts).
+  - [x] When the user clicks `"Guardar cambios"` on an edited budget and historical months exist (or a previous budget was already saved), displays a clear confirmation modal in Spanish asking how to apply the updated budget:
     - Prompt: `"¿Cómo deseas aplicar los cambios a tu presupuesto?"`
     - **Option 1 ("Aplicar a meses anteriores y de ahora en adelante"):** Overwrites all monthly budget snapshots in `monthlyBudgets` so every uploaded month is evaluated against the newly updated budget.
     - **Option 2 ("Aplicar solo de ahora en adelante"):** Preserves the previous budget snapshots in `monthlyBudgets` for all earlier uploaded months (months prior to the latest/current month), and applies the new budget starting from the current/latest month onward.
-  - [ ] Implements `applyBudgetUpdate(prevState: StoredBudgetState, updatedPlan: BudgetPlan, scope: "all_months" | "from_now_on", availableMonths: string[]): StoredBudgetState` in `src/lib/budget-engine.ts`.
-  - [ ] All monthly comparison charts, category goal counters, and weekly streaks dynamically resolve each month's corresponding budget via `getBudgetForMonth(budgetState, monthKey)`.
-  - [ ] Includes unit tests in `src/lib/budget-engine.test.ts` verifying that `"from_now_on"` preserves prior month targets while `"all_months"` updates all historical months, and that stats recalculate accurately under both scopes.
+  - [x] Implements `applyBudgetUpdate(prevState: StoredBudgetState, updatedPlan: BudgetPlan, scope: "all_months" | "from_now_on", availableMonths: string[]): StoredBudgetState` in `src/lib/budget-engine.ts`.
+  - [x] All monthly comparison charts, category goal counters, and weekly streaks dynamically resolve each month's corresponding budget via `getBudgetForMonth(budgetState, monthKey)`.
+  - [x] Includes unit tests in `src/lib/budget-engine.test.ts` verifying that `"from_now_on"` preserves prior month targets while `"all_months"` updates all historical months, and that stats recalculate accurately under both scopes.
 
 ---
 

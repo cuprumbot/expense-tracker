@@ -185,6 +185,56 @@ export function generateRealisticBudgetFromTransactions(
 }
 
 /**
+ * Applies a budget update with explicit historical versioning scope.
+ * - "all_months": Retroactively updates all months to evaluate against the new budget.
+ * - "from_now_on": Preserves past months' budget snapshots and applies the new budget from current/latest month forward.
+ */
+export function applyBudgetUpdate(
+  prevState: StoredBudgetState,
+  updatedPlan: BudgetPlan,
+  scope: "all_months" | "from_now_on",
+  availableMonths: string[] = []
+): StoredBudgetState {
+  if (scope === "all_months") {
+    const newMonthlyBudgets: Record<string, BudgetPlan> = {};
+    for (const m of availableMonths) {
+      newMonthlyBudgets[m] = { ...updatedPlan };
+    }
+    return {
+      currentBudget: updatedPlan,
+      monthlyBudgets: newMonthlyBudgets,
+      effectiveFromMonth: null,
+    };
+  }
+
+  // scope === "from_now_on"
+  const sortedMonths = [...availableMonths].sort();
+  const currentOrLatestMonth =
+    sortedMonths.length > 0
+      ? sortedMonths[sortedMonths.length - 1]
+      : new Date().toISOString().substring(0, 7);
+
+  const newMonthlyBudgets: Record<string, BudgetPlan> = { ...(prevState.monthlyBudgets || {}) };
+
+  // For any historical month prior to currentOrLatestMonth, ensure it preserves the prior budget
+  if (prevState.currentBudget) {
+    for (const m of sortedMonths) {
+      if (m < currentOrLatestMonth && !newMonthlyBudgets[m]) {
+        newMonthlyBudgets[m] = prevState.currentBudget;
+      }
+    }
+  }
+
+  newMonthlyBudgets[currentOrLatestMonth] = updatedPlan;
+
+  return {
+    currentBudget: updatedPlan,
+    monthlyBudgets: newMonthlyBudgets,
+    effectiveFromMonth: currentOrLatestMonth,
+  };
+}
+
+/**
  * Computes historical spending metrics for a category given a set of transactions.
  */
 export function getCategoryHistoricalStats(

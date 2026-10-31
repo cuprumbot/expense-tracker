@@ -9,8 +9,10 @@ import {
   computeHistoricalMonthlyCategoryAverages,
   isFixedCommitmentCategory,
   roundToCleanQuetzales,
+  applyBudgetUpdate,
 } from "./budget-engine";
 import { Transaction } from "@/types/transaction";
+import { BudgetPlan, StoredBudgetState } from "@/types/budget";
 
 describe("US-056: Budget Category Tiers & Historical Context Helpers", () => {
   it("correctly identifies essential living categories vs discretionary categories", () => {
@@ -193,6 +195,100 @@ describe("US-056: Budget Category Tiers & Historical Context Helpers", () => {
       assert.strictEqual(restTarget.monthlyLimitGTQ, 550);
       assert.ok(restTarget.monthlyLimitGTQ < 600);
       assert.ok(restTarget.monthlyLimitGTQ >= 600 * 0.9);
+    });
+  });
+
+  describe("US-058: Budget Editing Workflow & Historical Application Scopes", () => {
+    const initialPlan: BudgetPlan = {
+      id: "plan-v1",
+      name: "Presupuesto Inicial",
+      targets: [
+        { categoryId: "supermercado", categoryName: "Supermercado", monthlyLimitGTQ: 2000, isEssential: true },
+        { categoryId: "restaurantes", categoryName: "Restaurantes y Cafés", monthlyLimitGTQ: 500, isEssential: false },
+      ],
+      totalMonthlyBudgetGTQ: 2500,
+      createdMode: "zero",
+      updatedAt: "2026-07-01T00:00:00.000Z",
+    };
+
+    const updatedPlan: BudgetPlan = {
+      id: "plan-v2",
+      name: "Presupuesto Actualizado",
+      targets: [
+        { categoryId: "supermercado", categoryName: "Supermercado", monthlyLimitGTQ: 2500, isEssential: true },
+        { categoryId: "restaurantes", categoryName: "Restaurantes y Cafés", monthlyLimitGTQ: 300, isEssential: false },
+      ],
+      totalMonthlyBudgetGTQ: 2800,
+      createdMode: "zero",
+      updatedAt: "2026-09-01T00:00:00.000Z",
+    };
+
+    it("scope 'all_months' updates all historical months and effectiveFromMonth is null", () => {
+      const prevState: StoredBudgetState = {
+        currentBudget: initialPlan,
+        monthlyBudgets: {},
+        effectiveFromMonth: null,
+      };
+
+      const months = ["2026-07", "2026-08", "2026-09"];
+      const newState = applyBudgetUpdate(prevState, updatedPlan, "all_months", months);
+
+      assert.strictEqual(newState.currentBudget?.totalMonthlyBudgetGTQ, 2800);
+      assert.strictEqual(newState.effectiveFromMonth, null);
+
+      // All months should resolve to updatedPlan (2800)
+      for (const m of months) {
+        const resolved = getBudgetForMonth(newState, m);
+        assert.ok(resolved);
+        assert.strictEqual(resolved?.totalMonthlyBudgetGTQ, 2800);
+        assert.strictEqual(resolved?.targets[0].monthlyLimitGTQ, 2500);
+      }
+
+      // Future month also resolves to currentBudget (2800)
+      const futureResolved = getBudgetForMonth(newState, "2026-10");
+      assert.strictEqual(futureResolved?.totalMonthlyBudgetGTQ, 2800);
+    });
+
+    it("scope 'from_now_on' preserves prior month snapshots and updates from current month onward", () => {
+      const prevState: StoredBudgetState = {
+        currentBudget: initialPlan,
+        monthlyBudgets: {},
+        effectiveFromMonth: null,
+      };
+
+      const months = ["2026-07", "2026-08", "2026-09"];
+      const newState = applyBudgetUpdate(prevState, updatedPlan, "from_now_on", months);
+
+      assert.strictEqual(newState.currentBudget?.totalMonthlyBudgetGTQ, 2800);
+      assert.strictEqual(newState.effectiveFromMonth, "2026-09");
+
+      // Prior months (2026-07 and 2026-08) preserve the initialPlan (2500)
+      const julyBudget = getBudgetForMonth(newState, "2026-07");
+      assert.strictEqual(julyBudget?.totalMonthlyBudgetGTQ, 2500);
+      assert.strictEqual(julyBudget?.targets[0].monthlyLimitGTQ, 2000);
+
+      const augBudget = getBudgetForMonth(newState, "2026-08");
+      assert.strictEqual(augBudget?.totalMonthlyBudgetGTQ, 2500);
+
+      // Current month (2026-09) and onward resolve to updatedPlan (2800)
+      const sepBudget = getBudgetForMonth(newState, "2026-09");
+      assert.strictEqual(sepBudget?.totalMonthlyBudgetGTQ, 2800);
+      assert.strictEqual(sepBudget?.targets[0].monthlyLimitGTQ, 2500);
+
+      const octBudget = getBudgetForMonth(newState, "2026-10");
+      assert.strictEqual(octBudget?.totalMonthlyBudgetGTQ, 2800);
+    });
+
+    it("handles empty availableMonths gracefully in applyBudgetUpdate", () => {
+      const prevState: StoredBudgetState = {
+        currentBudget: initialPlan,
+        monthlyBudgets: {},
+        effectiveFromMonth: null,
+      };
+
+      const newState = applyBudgetUpdate(prevState, updatedPlan, "from_now_on", []);
+      assert.strictEqual(newState.currentBudget?.totalMonthlyBudgetGTQ, 2800);
+      assert.ok(newState.effectiveFromMonth);
     });
   });
 });
