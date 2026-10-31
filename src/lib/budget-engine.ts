@@ -4,6 +4,7 @@ import {
   CategoryBudgetTarget,
 } from "@/types/budget";
 import { Transaction } from "@/types/transaction";
+import defaultCatalog from "@/data/merchant-catalog.json";
 
 export const ESSENTIAL_CATEGORY_IDS = new Set([
   "supermercado",
@@ -42,6 +43,145 @@ export interface CategoryHistoricalStats {
   averageMonthlyGTQ: number;
   lastMonthGTQ: number;
   goalMinus10GTQ: number;
+}
+
+export const FIXED_COMMITMENT_CATEGORIES = new Set([
+  "servicios",
+  "suscripciones",
+  "visacuotas_financiamiento",
+  "salud",
+  "educacion",
+]);
+
+/**
+ * Checks whether a category is a fixed commitment where target should stay ~100% of historical average.
+ */
+export function isFixedCommitmentCategory(categoryId: string, categoryName: string): boolean {
+  if (FIXED_COMMITMENT_CATEGORIES.has(categoryId.toLowerCase())) return true;
+  const lowerName = categoryName.toLowerCase();
+  return (
+    lowerName.includes("servicios") ||
+    lowerName.includes("suscripci") ||
+    lowerName.includes("visacuota") ||
+    lowerName.includes("salud") ||
+    lowerName.includes("farmacia") ||
+    lowerName.includes("educaci")
+  );
+}
+
+/**
+ * Rounds a Quetzal amount to clean increments (nearest Q 25 or Q 50, minimum Q 25).
+ */
+export function roundToCleanQuetzales(amount: number): number {
+  if (amount <= 0) return 0;
+  if (amount < 150) return Math.max(10, Math.round(amount / 5) * 5);
+  return Math.max(25, Math.round(amount / 25) * 25);
+}
+
+/**
+ * Computes monthly average expenditures per category across all distinct calendar months in the dataset.
+ */
+export function computeHistoricalMonthlyCategoryAverages(
+  transactions: Transaction[]
+): Record<string, { averageGTQ: number; totalGTQ: number; count: number }> {
+  if (!transactions || transactions.length === 0) return {};
+
+  const validTxs = transactions.filter(
+    (t) => (Number(t.amount) || 0) > 0 && t.category && t.category !== "Pendiente"
+  );
+  if (validTxs.length === 0) return {};
+
+  const distinctMonths = new Set(
+    validTxs.map((t) => (t.date ? t.date.substring(0, 7) : "sin_fecha"))
+  );
+  const totalMonthsCount = Math.max(1, distinctMonths.size);
+
+  const categoryTotals: Record<string, { totalGTQ: number; count: number }> = {};
+  for (const t of validTxs) {
+    const cat = t.category!;
+    if (!categoryTotals[cat]) {
+      categoryTotals[cat] = { totalGTQ: 0, count: 0 };
+    }
+    categoryTotals[cat].totalGTQ += Number(t.amount) || 0;
+    categoryTotals[cat].count += 1;
+  }
+
+  const result: Record<string, { averageGTQ: number; totalGTQ: number; count: number }> = {};
+  for (const [cat, data] of Object.entries(categoryTotals)) {
+    result[cat] = {
+      averageGTQ: Math.round(data.totalGTQ / totalMonthsCount),
+      totalGTQ: Math.round(data.totalGTQ),
+      count: data.count,
+    };
+  }
+
+  return result;
+}
+
+/**
+ * Generates a realistic baseline budget from historical transactions.
+ * - Fixed/essential categories (~100% of average)
+ * - Variable/discretionary categories (90% - 95% of average, gentle optimization)
+ * All targets stay comfortably between 85% and 105% of historical averages.
+ */
+export function generateRealisticBudgetFromTransactions(
+  transactions: Transaction[],
+  customCategories?: { id: string; name: string }[]
+): BudgetPlan {
+  const averages = computeHistoricalMonthlyCategoryAverages(transactions);
+  const targets: CategoryBudgetTarget[] = [];
+
+  for (const [categoryName, data] of Object.entries(averages)) {
+    const avg = data.averageGTQ;
+    if (avg <= 0) continue;
+
+    // Resolve categoryId
+    let catId = categoryName.toLowerCase().replace(/[^a-z0-9]/g, "_");
+    const stdMatch = defaultCatalog.categories.find(
+      (c) => c.name.toLowerCase() === categoryName.toLowerCase()
+    );
+    if (stdMatch) {
+      catId = stdMatch.id;
+    } else if (customCategories) {
+      const matchCustom = customCategories.find(
+        (c) => c.name.toLowerCase() === categoryName.toLowerCase()
+      );
+      if (matchCustom) catId = matchCustom.id;
+    }
+
+    const isFixed = isFixedCommitmentCategory(catId, categoryName);
+    const isEssential = isCategoryEssential(catId, categoryName);
+
+    // Fixed categories: 100% of average (rounded to clean Q 25/Q 50)
+    // Variable categories: 92% of average (gentle 8% optimization)
+    const factor = isFixed ? 1.0 : 0.92;
+    const targetLimit = roundToCleanQuetzales(avg * factor);
+
+    targets.push({
+      categoryId: catId,
+      categoryName,
+      monthlyLimitGTQ: targetLimit,
+      isEssential,
+    });
+  }
+
+  // Sort targets: essential first, then highest limit
+  targets.sort((a, b) => {
+    if (a.isEssential && !b.isEssential) return -1;
+    if (!a.isEssential && b.isEssential) return 1;
+    return b.monthlyLimitGTQ - a.monthlyLimitGTQ;
+  });
+
+  const totalMonthlyBudgetGTQ = targets.reduce((sum, t) => sum + t.monthlyLimitGTQ, 0);
+
+  return {
+    id: `budget-realistic-${Date.now()}`,
+    name: "Presupuesto Realista",
+    targets,
+    totalMonthlyBudgetGTQ,
+    createdMode: "transactions",
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 /**

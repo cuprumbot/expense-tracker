@@ -129,20 +129,20 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
   - [x] Displays a live summary bar showing the total monthly budget in Quetzales (`Total presupuestado: Q XX,XXX.XX`) and breakdown between essential and discretionary targets.
   - [x] Clicking `"Guardar presupuesto"` persists the budget to `localStorage` and transitions to the Budget Comparison & Overview screen.
 
-### [ ] US-057: Realistic "Create Budget From Transactions" Generator
+### [x] US-057: Realistic "Create Budget From Transactions" Generator
 - **As a** user who has already uploaded bank statements or expense lists,
 - **I want** the tool to automatically generate a realistic budget based on my historical expenses where targets are close to what I actually spend,
 - **So that** I start with an achievable baseline rather than an unrealistic goal that is impossible to meet.
 - **Split-Brain Boundary:** 100% Local (Statistical historical average and realistic target heuristic in `src/lib/budget-engine.ts`).
 - **Acceptance Criteria:**
-  - [ ] Implements `generateRealisticBudgetFromTransactions(transactions: Transaction[], customCategories?: CustomCategory[]): BudgetPlan` in `src/lib/budget-engine.ts`.
-  - [ ] Groups uploaded expenses by calendar month (`YYYY-MM`) and category to compute the user's average monthly expenditure per active category.
-  - [ ] Sets realistic category targets that are not far from current expenses:
+  - [x] Implements `generateRealisticBudgetFromTransactions(transactions: Transaction[], customCategories?: CustomCategory[]): BudgetPlan` in `src/lib/budget-engine.ts`.
+  - [x] Groups uploaded expenses by calendar month (`YYYY-MM`) and category to compute the user's average monthly expenditure per active category.
+  - [x] Sets realistic category targets that are not far from current expenses:
     - For essential/fixed categories (`Servicios Básicos`, `Suscripciones`, `Visacuotas y Financiamiento`, `Salud y Farmacia`, `Educación`), sets the recommended target to ~`100%` of the historical monthly average (rounded to the nearest `Q 25` or `Q 50`) so fixed commitments are realistically covered.
     - For variable/discretionary categories (`Supermercado`, `Restaurantes y Cafés`, `Entretenimiento y Compras`, `Transporte y Combustible`, `Transferencias y Cajeros`), sets a realistic, achievable target at `90%`–`95%` of the historical monthly average (a gentle 5%–10% optimization, never an extreme cut like 50%), rounded to clean Quetzal increments.
-  - [ ] Presents the generated targets in an interactive review screen showing each category's `"Gasto promedio actual (Q)"` alongside the `"Meta realista sugerida (Q)"` and the difference in `Q` and `%`.
-  - [ ] Allows the user to adjust any individual category target via clickable preset chips (e.g., `"Igualar a mi promedio"`, `"-5%"`, `"-10%"`) or manual input before clicking `"Confirmar y guardar presupuesto"`.
-  - [ ] Includes unit tests in `src/lib/budget-engine.test.ts` verifying that generated targets stay within realistic bounds (`85%`–`105%` of historical monthly averages) across single-month and multi-month datasets.
+  - [x] Presents the generated targets in an interactive review screen showing each category's `"Gasto promedio actual (Q)"` alongside the `"Meta realista sugerida (Q)"` and the difference in `Q` and `%`.
+  - [x] Allows the user to adjust any individual category target via clickable preset chips (e.g., `"Igualar a mi promedio"`, `"-5%"`, `"-10%"`) or manual input before clicking `"Confirmar y guardar presupuesto"`.
+  - [x] Includes unit tests in `src/lib/budget-engine.test.ts` verifying that generated targets stay within realistic bounds (`85%`–`105%` of historical monthly averages) across single-month and multi-month datasets.
 
 ---
 

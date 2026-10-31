@@ -289,4 +289,123 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await page.locator("#btn-save-budget").click();
     await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
   });
+
+  test("US-057: generates realistic budget from uploaded transactions with achievable targets", async ({ page }) => {
+    await page.goto("/");
+
+    // Seed session with realistic multi-category transactions
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "expense_tracker_session_v1",
+        JSON.stringify({
+          version: 1,
+          savedAt: new Date().toISOString(),
+          transactions: [
+            {
+              id: "tx-r-1",
+              date: "2026-09-02",
+              description: "Supermercados La Torre",
+              amount: 2000,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+            {
+              id: "tx-r-2",
+              date: "2026-09-05",
+              description: "Restaurante San Martin",
+              amount: 600,
+              currency: "GTQ",
+              category: "Restaurantes y Cafés",
+              classificationSource: "local",
+            },
+            {
+              id: "tx-r-3",
+              date: "2026-09-10",
+              description: "Pago EEGSA",
+              amount: 400,
+              currency: "GTQ",
+              category: "Servicios Básicos",
+              classificationSource: "local",
+            },
+            {
+              id: "tx-r-4",
+              date: "2026-09-15",
+              description: "Gasolinera Shell",
+              amount: 800,
+              currency: "GTQ",
+              category: "Transporte y Combustible",
+              classificationSource: "local",
+            },
+          ],
+          summary: {
+            totalRowsProcessed: 4,
+            validTransactionsCount: 4,
+            skippedRowsCount: 0,
+            totalAmount: 3800,
+          },
+          bankName: "Banco Industrial",
+          customCategories: [],
+        })
+      );
+    });
+
+    await page.reload();
+    await page.locator("#btn-resume-session").click();
+
+    // Open budget tool
+    await page.locator("#btn-dashboard-open-budget").click();
+    await page.locator("#tab-configurar-presupuesto").click();
+
+    // Select mode: Generar basado en mis gastos subidos
+    const fromTxsBtn = page.locator("#btn-mode-from-transactions");
+    await expect(fromTxsBtn).toBeEnabled();
+    await fromTxsBtn.click();
+
+    // Verify realistic review screen is rendered
+    const realisticSection = page.locator("#builder-from-transactions");
+    await expect(realisticSection).toBeVisible();
+
+    // Verify generated category cards exist
+    const superCard = page.locator("#realistic-target-card-supermercado");
+    await expect(superCard).toBeVisible();
+    await expect(superCard).toContainText("Gasto promedio actual");
+
+    const serviciosCard = page.locator("#realistic-target-card-servicios");
+    await expect(serviciosCard).toBeVisible();
+    await expect(serviciosCard.getByText("Fijo / Esencial")).toBeVisible();
+
+    // Test adjustment chip (-10%) on Supermercado
+    const cut10Chip = superCard.locator("#chip-cut-10-supermercado");
+    await expect(cut10Chip).toBeVisible();
+    await cut10Chip.click();
+
+    // Test adjustment chip (Igualar a mi promedio) on Servicios
+    const matchAvgChip = serviciosCard.locator("#chip-match-avg-servicios");
+    await expect(matchAvgChip).toBeVisible();
+    await matchAvgChip.click();
+
+    // Verify live summary bar
+    const summaryBar = page.locator("#budget-realistic-summary-bar");
+    await expect(summaryBar).toBeVisible();
+
+    // Click confirm and save
+    const confirmBtn = page.locator("#btn-confirm-save-budget-from-txs");
+    await expect(confirmBtn).toBeVisible();
+    await confirmBtn.click();
+
+    // Verify transition to comparativa and active status badge
+    await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
+    await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
+
+    // Verify localStorage has createdMode: "transactions"
+    const savedBudget = await page.evaluate(() => {
+      const raw = localStorage.getItem("expense_tracker_budget_v1");
+      return raw ? JSON.parse(raw) : null;
+    });
+
+    expect(savedBudget).not.toBeNull();
+    expect(savedBudget.currentBudget.createdMode).toBe("transactions");
+    expect(savedBudget.currentBudget.targets.length).toBeGreaterThanOrEqual(4);
+  });
 });

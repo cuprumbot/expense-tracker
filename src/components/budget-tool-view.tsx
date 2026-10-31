@@ -11,6 +11,9 @@ import {
   isCategoryEssential,
   TIERED_AMOUNT_PRESETS,
   getCategoryHistoricalStats,
+  generateRealisticBudgetFromTransactions,
+  computeHistoricalMonthlyCategoryAverages,
+  roundToCleanQuetzales,
 } from "@/lib/budget-engine";
 
 export type BudgetToolTab = "configurar" | "comparativa" | "sugerencias";
@@ -71,6 +74,25 @@ export function BudgetToolView({
       setTargetsMap(map);
     }
   }, [currentBudget]);
+
+  // Historical category averages from transactions
+  const historicalAverages = useMemo(() => {
+    if (!transactions || transactions.length === 0) return {};
+    return computeHistoricalMonthlyCategoryAverages(transactions);
+  }, [transactions]);
+
+  // When switching modes, auto-generate realistic targets if switching to transactions mode
+  const handleSelectMode = (mode: "zero" | "transactions") => {
+    setCreationMode(mode);
+    if (mode === "transactions" && hasTransactions) {
+      const generated = generateRealisticBudgetFromTransactions(transactions!, customCategories);
+      const map = new Map<string, CategoryBudgetTarget>();
+      for (const t of generated.targets) {
+        map.set(t.categoryName.toLowerCase(), { ...t });
+      }
+      setTargetsMap(map);
+    }
+  };
 
   // Merge standard and custom categories
   const allAvailableCategories: AvailableCategoryItem[] = useMemo(() => {
@@ -344,7 +366,7 @@ export function BudgetToolView({
                 <button
                   type="button"
                   id="btn-mode-from-zero"
-                  onClick={() => setCreationMode("zero")}
+                  onClick={() => handleSelectMode("zero")}
                   className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3.5 ${
                     creationMode === "zero"
                       ? "border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/40 dark:bg-indigo-950/30"
@@ -376,7 +398,7 @@ export function BudgetToolView({
                   id="btn-mode-from-transactions"
                   disabled={!hasTransactions}
                   onClick={() => {
-                    if (hasTransactions) setCreationMode("transactions");
+                    if (hasTransactions) handleSelectMode("transactions");
                   }}
                   className={`p-4 rounded-xl border text-left transition-all flex items-start gap-3.5 ${
                     !hasTransactions
@@ -753,6 +775,246 @@ export function BudgetToolView({
                   >
                     <Icons.Check className="w-4 h-4" />
                     <span>Guardar presupuesto</span>
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {/* Generator from Transactions: Realistic Review Screen */}
+            {creationMode === "transactions" && (
+              <section
+                id="builder-from-transactions"
+                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-6"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-4">
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
+                      Metas realistas sugeridas según tu historial
+                    </h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                      Fijamos gastos esenciales en el 100% de tu promedio mensual y gastos discrecionales con una optimización alcanzable del 5% al 10%.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    id="btn-recalculate-realistic-budget"
+                    onClick={() => {
+                      if (hasTransactions) {
+                        const generated = generateRealisticBudgetFromTransactions(
+                          transactions!,
+                          customCategories
+                        );
+                        const map = new Map<string, CategoryBudgetTarget>();
+                        for (const t of generated.targets) {
+                          map.set(t.categoryName.toLowerCase(), { ...t });
+                        }
+                        setTargetsMap(map);
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:text-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer shrink-0"
+                    title="Regenerar sugerencias iniciales"
+                  >
+                    <Icons.RotateCcw className="w-3.5 h-3.5" />
+                    <span>Restablecer sugerencias</span>
+                  </button>
+                </div>
+
+                {/* Target Rows Cards */}
+                <div className="space-y-3">
+                  {targetsList.map((target) => {
+                    const avgData = historicalAverages[target.categoryName];
+                    const avg = avgData ? avgData.averageGTQ : target.monthlyLimitGTQ;
+                    const diffGTQ = target.monthlyLimitGTQ - avg;
+                    const diffPct = avg > 0 ? Math.round((diffGTQ / avg) * 100) : 0;
+                    const isEssential = target.isEssential;
+
+                    return (
+                      <div
+                        key={`realistic-target-${target.categoryName}`}
+                        id={`realistic-target-card-${target.categoryId}`}
+                        className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xs space-y-3"
+                      >
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                          {/* Category Name & Essential Badge */}
+                          <div className="space-y-1 min-w-[200px]">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                                {target.categoryName}
+                              </span>
+                              <span
+                                className={`text-3xs font-medium px-2 py-0.5 rounded-full border ${
+                                  isEssential
+                                    ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                                    : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                                }`}
+                              >
+                                {isEssential ? "Fijo / Esencial" : "Variable / Ocio"}
+                              </span>
+                            </div>
+                            <p className="text-2xs text-zinc-500 dark:text-zinc-400">
+                              Gasto promedio actual:{" "}
+                              <strong className="text-zinc-700 dark:text-zinc-300 font-mono">
+                                {formatCurrency(avg)}
+                              </strong>
+                            </p>
+                          </div>
+
+                          {/* Suggested Realistic Target & Diff */}
+                          <div className="flex flex-wrap items-center gap-3">
+                            {/* Diff Badge */}
+                            <div className="text-right">
+                              <span
+                                className={`text-3xs font-semibold px-2 py-1 rounded-md border font-mono ${
+                                  diffGTQ < 0
+                                    ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                                    : diffGTQ > 0
+                                    ? "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                                    : "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
+                                }`}
+                              >
+                                {diffGTQ === 0
+                                  ? "Igual al promedio (100%)"
+                                  : diffGTQ < 0
+                                  ? `Ahorro ${formatCurrency(Math.abs(diffGTQ))} (${diffPct}%)`
+                                  : `+${formatCurrency(diffGTQ)} (+${diffPct}%)`}
+                              </span>
+                            </div>
+
+                            {/* Fine-tune Controls */}
+                            <div className="flex items-center border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden bg-zinc-50 dark:bg-zinc-900">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleUpdateLimit(target.categoryName, target.monthlyLimitGTQ - 100)
+                                }
+                                className="px-2 py-1 text-2xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-r border-zinc-200 dark:border-zinc-700"
+                                title="Restar Q 100"
+                              >
+                                -Q 100
+                              </button>
+                              <div className="flex items-center px-2 py-0.5">
+                                <span className="text-2xs font-mono font-medium text-zinc-400 mr-1">
+                                  Q
+                                </span>
+                                <input
+                                  type="number"
+                                  step="50"
+                                  min="0"
+                                  value={target.monthlyLimitGTQ}
+                                  onChange={(e) =>
+                                    handleUpdateLimit(
+                                      target.categoryName,
+                                      Number(e.target.value) || 0
+                                    )
+                                  }
+                                  className="w-20 text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100 bg-transparent focus:outline-hidden text-right"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleUpdateLimit(target.categoryName, target.monthlyLimitGTQ + 100)
+                                }
+                                className="px-2 py-1 text-2xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-l border-zinc-200 dark:border-zinc-700"
+                                title="Sumar Q 100"
+                              >
+                                +Q 100
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Interactive Adjustment Chips: Igualar a mi promedio, -5%, -10% */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-zinc-100 dark:border-zinc-800/60">
+                          <span className="text-3xs font-medium text-zinc-400 uppercase tracking-wider mr-1">
+                            Ajustes rápidos:
+                          </span>
+                          <button
+                            type="button"
+                            id={`chip-match-avg-${target.categoryId}`}
+                            onClick={() => handleUpdateLimit(target.categoryName, avg)}
+                            className="px-2 py-0.5 text-3xs font-medium rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                          >
+                            Igualar a mi promedio (Q {avg.toLocaleString("es-GT")})
+                          </button>
+                          <button
+                            type="button"
+                            id={`chip-cut-5-${target.categoryId}`}
+                            onClick={() =>
+                              handleUpdateLimit(
+                                target.categoryName,
+                                roundToCleanQuetzales(avg * 0.95)
+                              )
+                            }
+                            className="px-2 py-0.5 text-3xs font-medium rounded-md bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
+                          >
+                            -5% (Q {roundToCleanQuetzales(avg * 0.95).toLocaleString("es-GT")})
+                          </button>
+                          <button
+                            type="button"
+                            id={`chip-cut-10-${target.categoryId}`}
+                            onClick={() =>
+                              handleUpdateLimit(
+                                target.categoryName,
+                                roundToCleanQuetzales(avg * 0.9)
+                              )
+                            }
+                            className="px-2 py-0.5 text-3xs font-medium rounded-md bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
+                          >
+                            -10% (Q {roundToCleanQuetzales(avg * 0.9).toLocaleString("es-GT")})
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Live Summary Bar & Confirm Action */}
+                <div
+                  id="budget-realistic-summary-bar"
+                  className="p-4 sm:p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xs uppercase tracking-wider font-semibold text-zinc-500 dark:text-zinc-400">
+                        Meta mensual realista sugerida
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span
+                        id="total-budgeted-realistic-display"
+                        className="text-xl sm:text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-100"
+                      >
+                        {formatCurrency(totalBudgetGTQ)}
+                      </span>
+                      <span className="text-2xs text-zinc-500 dark:text-zinc-400">mensual</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-2xs text-zinc-500 dark:text-zinc-400">
+                      <span>
+                        Fijos / Esenciales:{" "}
+                        <strong className="text-emerald-800 dark:text-emerald-400">
+                          {formatCurrency(essentialTotalGTQ)}
+                        </strong>
+                      </span>
+                      <span>·</span>
+                      <span>
+                        Variables / Ocio:{" "}
+                        <strong className="text-amber-800 dark:text-amber-400">
+                          {formatCurrency(discretionaryTotalGTQ)}
+                        </strong>
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    id="btn-confirm-save-budget-from-txs"
+                    disabled={targetsList.length === 0}
+                    onClick={handleSaveBudget}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500 transition-all shadow-xs shrink-0 cursor-pointer"
+                  >
+                    <Icons.Check className="w-4 h-4" />
+                    <span>Confirmar y guardar presupuesto</span>
                   </button>
                 </div>
               </section>
