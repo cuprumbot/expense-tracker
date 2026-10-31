@@ -92,19 +92,19 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
     - `getBudgetForMonth(state: StoredBudgetState, monthKey: string): BudgetPlan | null` returning the exact `BudgetPlan` applicable to any given `"YYYY-MM"` month.
   - [x] Includes unit tests in `src/lib/storage.test.ts` verifying serialization, corruption resilience, and accurate month-specific budget resolution.
 
-### [ ] US-055: Dedicated Budgeting Tool View & Cross-Screen Navigation (Upload & Dashboard)
+### [x] US-055: Dedicated Budgeting Tool View & Cross-Screen Navigation (Upload & Dashboard)
 - **As a** user,
 - **I want to** access the Budgeting Tool from either the initial file upload screen or the financial dashboard and return seamlessly,
 - **So that** I can plan or review my budget at any point in my workflow—even before uploading a bank statement.
 - **Split-Brain Boundary:** 100% Local (Client view routing and header controls).
 - **Acceptance Criteria:**
-  - [ ] Adds a prominent entry button/card on the File Upload / Landing screen (`src/app/page.tsx`) labeled `"Herramienta de Presupuesto"` / `"Crear o ver mi presupuesto"` with an SVG icon, allowing users to open the Budgeting Tool with or without uploaded transactions.
-  - [ ] Adds a dedicated `"Presupuesto"` action button in the Dashboard header (`src/components/dashboard-view.tsx`) and Transaction Review header so users can switch to the Budgeting Tool at any time.
-  - [ ] Renders a dedicated full-screen Budgeting Tool container (`src/components/budget-tool-view.tsx`) with a clean header featuring:
+  - [x] Adds a prominent entry button/card on the File Upload / Landing screen (`src/app/page.tsx`) labeled `"Herramienta de Presupuesto"` / `"Crear o ver mi presupuesto"` with an SVG icon, allowing users to open the Budgeting Tool with or without uploaded transactions.
+  - [x] Adds a dedicated `"Presupuesto"` action button in the Dashboard header (`src/components/dashboard-view.tsx`) and Transaction Review header so users can switch to the Budgeting Tool at any time.
+  - [x] Renders a dedicated full-screen Budgeting Tool container (`src/components/budget-tool-view.tsx`) with a clean header featuring:
     - Title (`"Mi Presupuesto Mensual"`) and active status badge.
     - Navigation tabs or sections within the tool (e.g., `"Configurar Presupuesto"`, `"Comparativa Mensual y Metas"`, `"Sugerencias del Próximo Mes"`).
     - A clear return button (`"Volver al Panel"` when transactions exist, or `"Volver al Inicio"` when no transactions are loaded).
-  - [ ] Preserves all active session transactions, filters, and dashboard panel states when toggling between the Upload screen, Dashboard, and Budgeting Tool.
+  - [x] Preserves all active session transactions, filters, and dashboard panel states when toggling between the Upload screen, Dashboard, and Budgeting Tool.
 
 ---
 

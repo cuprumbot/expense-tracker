@@ -60,6 +60,7 @@ interface TransactionTableProps {
   externalCategoryFilter?: string | null;
   externalFilter?: DrawerFilter | null;
   onClearExternalFilter?: () => void;
+  onOpenBudgetTool?: () => void;
 }
 
 type SortField = "date" | "description" | "amount";
@@ -203,6 +204,7 @@ export function TransactionTable({
   externalCategoryFilter = null,
   externalFilter = null,
   onClearExternalFilter,
+  onOpenBudgetTool,
 }: TransactionTableProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>(
     externalFilter?.category || externalCategoryFilter || "all"
@@ -1015,6 +1017,18 @@ export function TransactionTable({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {onOpenBudgetTool && (
+              <button
+                type="button"
+                id="btn-table-open-budget"
+                onClick={onOpenBudgetTool}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 dark:text-indigo-300 dark:bg-indigo-950/60 dark:border-indigo-800 dark:hover:bg-indigo-900/60 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                title="Abrir herramienta de presupuesto"
+              >
+                <Icons.Target className="w-3.5 h-3.5" />
+                <span>Presupuesto</span>
+              </button>
+            )}
             {onAddMoreStatements && (
               <button
                 type="button"

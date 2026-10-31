@@ -238,6 +238,7 @@ interface DashboardViewProps {
     onClearFilter: () => void
   ) => React.ReactNode;
   isClassifyingWithLLM?: boolean;
+  onOpenBudgetTool?: () => void;
 }
 
 export function DashboardView({
@@ -249,6 +250,7 @@ export function DashboardView({
   onResetSession,
   renderDrawerContent,
   isClassifyingWithLLM = false,
+  onOpenBudgetTool,
 }: DashboardViewProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerFilter, setDrawerFilter] = useState<DrawerFilter | null>(null);
@@ -600,6 +602,20 @@ export function DashboardView({
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           {/* Dark / Light Theme Toggle */}
           <ThemeToggle />
+
+          {/* Budget Tool */}
+          {onOpenBudgetTool && (
+            <button
+              type="button"
+              id="btn-dashboard-open-budget"
+              onClick={onOpenBudgetTool}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-2xs sm:text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 dark:text-indigo-300 dark:bg-indigo-950/60 dark:border-indigo-800 dark:hover:bg-indigo-900/60 rounded-lg transition-colors cursor-pointer shadow-2xs"
+              title="Abrir herramienta de presupuesto"
+            >
+              <Icons.Target className="w-3 h-3" />
+              <span>Presupuesto</span>
+            </button>
+          )}
 
           {/* Add more bank statements */}
           <button

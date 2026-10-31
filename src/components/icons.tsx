@@ -50,6 +50,10 @@ import {
   Minus,
   Maximize2,
   Settings,
+  Award,
+  TrendingUp,
+  Flame,
+  ArrowLeft,
 } from "lucide-react";
 
 export const Icons = {
@@ -104,5 +108,9 @@ export const Icons = {
   Globe,
   RotateCcw,
   Settings,
+  Award,
+  TrendingUp,
+  Flame,
+  ArrowLeft,
 };
 

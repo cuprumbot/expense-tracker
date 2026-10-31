@@ -10,6 +10,7 @@ import { TransactionTable } from "@/components/transaction-table";
 import { DashboardView } from "@/components/dashboard-view";
 import { BatchProgress } from "@/components/batch-progress";
 import { SimpleListModal } from "@/components/simple-list-modal";
+import { BudgetToolView } from "@/components/budget-tool-view";
 import { SimpleListParsingResult } from "@/lib/text-list-parser";
 import { SupportedFileType, validateUploadedFile } from "@/lib/file-validator";
 import { processBatchFiles, BatchItem } from "@/lib/batch-processor";
@@ -30,11 +31,14 @@ import {
   clearStoredSession,
   saveStoredCategories,
   loadStoredCategories,
+  saveStoredBudgetState,
+  loadStoredBudgetState,
   StoredSession,
 } from "@/lib/storage";
 import { SavingsRecommendationResponse } from "@/lib/savings-advisor";
 import { deduplicateTransactions } from "@/lib/deduplication";
 import { formatCurrency } from "@/lib/currency";
+import { StoredBudgetState } from "@/types/budget";
 import {
   Transaction,
   CSVParsingSummary,
@@ -84,6 +88,8 @@ export default function Home() {
   const [batchErrors, setBatchErrors] = useState<{ fileName: string; error: string }[]>([]);
   const [isAddMoreModalOpen, setIsAddMoreModalOpen] = useState(false);
   const [isSimpleListModalOpen, setIsSimpleListModalOpen] = useState(false);
+  const [isBudgetToolOpen, setIsBudgetToolOpen] = useState(false);
+  const [budgetState, setBudgetState] = useState<StoredBudgetState | null>(null);
 
   const [mappingModal, setMappingModal] = useState<{
     isOpen: boolean;
@@ -135,6 +141,10 @@ export default function Home() {
     const session = loadStoredSession();
     if (session && session.transactions?.length > 0) {
       setSavedSession(session);
+    }
+    const storedBudget = loadStoredBudgetState();
+    if (storedBudget) {
+      setBudgetState(storedBudget);
     }
     setHasHydratedStorage(true);
   }, []);
@@ -936,17 +946,32 @@ export default function Home() {
     });
   };
 
+  const handleSaveBudgetState = (newState: StoredBudgetState) => {
+    setBudgetState(newState);
+    saveStoredBudgetState(newState);
+  };
+
   const isDashboardActive = Boolean(transactions && summary);
 
   return (
     <>
-      {isDashboardActive ? (
+      {isBudgetToolOpen ? (
+        <BudgetToolView
+          transactions={transactions}
+          summary={summary}
+          customCategories={customCategories}
+          budgetState={budgetState}
+          onSaveBudgetState={handleSaveBudgetState}
+          onBack={() => setIsBudgetToolOpen(false)}
+        />
+      ) : isDashboardActive ? (
         <DashboardView
           transactions={transactions!}
           summary={summary}
           bankName={bankName}
           customCategories={customCategories}
           isClassifyingWithLLM={isClassifyingWithLLM}
+          onOpenBudgetTool={() => setIsBudgetToolOpen(true)}
           onAddMoreStatements={() => setIsAddMoreModalOpen(true)}
           onResetSession={() => {
             setWipeCustomCategoriesOnReset(false);
@@ -958,6 +983,7 @@ export default function Home() {
               summary={summary!}
               externalFilter={filter}
               onClearExternalFilter={onClearFilter}
+              onOpenBudgetTool={() => setIsBudgetToolOpen(true)}
               sourceLabel={
                 bankName
                   ? `${bankName} · ${routedFile?.file.name || "Múltiples archivos"}`
@@ -1048,6 +1074,35 @@ export default function Home() {
           <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
             Carga tu estado de cuenta bancario o archivo de movimientos para clasificar tus consumos, supervisar suscripciones y obtener un resumen claro de tus finanzas.
           </p>
+        </section>
+
+        {/* Prominent Budget Tool Entry Card (US-055) */}
+        <section
+          id="card-budget-tool-entry"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl border border-indigo-200/80 bg-indigo-50/50 dark:border-indigo-900/60 dark:bg-indigo-950/20 shadow-xs"
+        >
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5 sm:mt-0">
+              <Icons.Target className="w-5 h-5" />
+            </div>
+            <div className="space-y-0.5">
+              <h2 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                Herramienta de Presupuesto
+              </h2>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                Planifica y controla tus metas financieras mensuales desde cero o basadas en tus gastos reales.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            id="btn-open-budget-landing"
+            onClick={() => setIsBudgetToolOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 rounded-xl transition-colors cursor-pointer shadow-xs shrink-0 self-stretch sm:self-auto justify-center"
+          >
+            <Icons.Target className="w-4 h-4" />
+            <span>Crear o ver mi presupuesto</span>
+          </button>
         </section>
 
         {/* Storage Notification Toast */}
@@ -1404,6 +1459,7 @@ export default function Home() {
           <TransactionTable
             transactions={transactions}
             summary={summary}
+            onOpenBudgetTool={() => setIsBudgetToolOpen(true)}
             sourceLabel={
               bankName
                 ? `${bankName} · ${routedFile?.file.name || "Múltiples archivos"}`
