@@ -25,7 +25,7 @@ describe("US-065: Multi-Bank Identification & Automatic Bank Selection (Unit Tes
       { text: "Corporacion Bi internacional", expected: "Banco Industrial" },
       { text: "Tarjeta de Crédito Bi Oro", expected: "Banco Industrial" },
       { text: "Tarjeta de credito bi clásica", expected: "Banco Industrial" },
-      { text: "Cuotas Extraf/Cuotas cargadas a la cuenta", expected: "Banco Industrial" },
+      { text: "Si dentro de los 30 días siguientes a su fecha de corte no hemos recibido sus observaciones", expected: "Banco Industrial" },
     ];
 
     for (const { text, expected } of testCases) {
@@ -252,6 +252,26 @@ describe("US-065: Multi-Bank Identification & Automatic Bank Selection (Unit Tes
       assert.equal(result.isSupportedBank, true);
       assert.equal(result.bankName, "Banco Agromercantil (BAM)");
       assert.ok(result.transactions.length > 0, "Should extract BAM transactions via vector fallback");
+      for (const tx of result.transactions) {
+        assert.equal(tx.classificationSource, "local");
+        assert.ok(typeof tx.amount === "number" && tx.amount > 0);
+        assert.ok(tx.date && /^\d{4}-\d{2}-\d{2}$/.test(tx.date));
+      }
+    });
+
+    it("automatically identifies and parses Banco G&T Continental from demo/2026-01.pdf without BI collision", async () => {
+      const filePath = path.join(demoDir, "2026-01.pdf");
+      if (!fs.existsSync(filePath)) return;
+
+      const buffer = fs.readFileSync(filePath);
+      const result = await parsePDFStatement(new Uint8Array(buffer));
+
+      assert.equal(result.success, true);
+      assert.equal(result.isSupportedBank, true);
+      assert.equal(result.bankName, "Banco G&T Continental");
+      assert.equal(result.transactions.length, 50);
+      assert.equal(result.summary.validTransactionsCount, 50);
+      assert.equal(result.summary.totalAmount, 11961.98);
       for (const tx of result.transactions) {
         assert.equal(tx.classificationSource, "local");
         assert.ok(typeof tx.amount === "number" && tx.amount > 0);

@@ -155,9 +155,6 @@ export function detectBankFromText(text: string): BankDetectionResult {
     normalized.includes("tarjeta de credito bi") ||
     normalized.includes("bi-app") ||
     normalized.includes("serbipago") ||
-    normalized.includes("extraf/cuotas") ||
-    normalized.includes("extrafinanciamientos/cuotas") ||
-    normalized.includes("si dentro de los 30 días siguientes a su fecha de corte no hemos recibido sus observaciones") ||
     /si dentro de los 30 d[ií]as siguientes a su fecha de corte/i.test(text) ||
     /\bgt\d{2}\s*indl\b/i.test(text);
 
@@ -230,6 +227,20 @@ export function detectBankFromText(text: string): BankDetectionResult {
     };
   }
 
+  if (isGyT) {
+    return {
+      bankName: "Banco G&T Continental",
+      isSupported: true,
+      isGyT: true,
+      isBI: false,
+      isBAM: false,
+      isBanrural: false,
+      isCuscatlan: false,
+      isBac: false,
+      isFicohsa: false,
+    };
+  }
+
   if (isBI) {
     return {
       bankName: "Banco Industrial",
@@ -252,20 +263,6 @@ export function detectBankFromText(text: string): BankDetectionResult {
       isBI: false,
       isBAM: false,
       isBanrural: true,
-      isCuscatlan: false,
-      isBac: false,
-      isFicohsa: false,
-    };
-  }
-
-  if (isGyT) {
-    return {
-      bankName: "Banco G&T Continental",
-      isSupported: true,
-      isGyT: true,
-      isBI: false,
-      isBAM: false,
-      isBanrural: false,
       isCuscatlan: false,
       isBac: false,
       isFicohsa: false,
