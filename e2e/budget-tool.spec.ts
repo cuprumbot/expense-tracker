@@ -540,4 +540,148 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     // 2026-09 should have updated limit (2100)
     expect(savedState.monthlyBudgets["2026-09"].targets[0].monthlyLimitGTQ).toBe(2100);
   });
+
+  test("US-059: renders month selector, monthly summary card, and category comparison with unbudgeted warning", async ({ page }) => {
+    await page.goto("/");
+
+    // Seed session with multi-month transactions and active budget
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "expense_tracker_session_v1",
+        JSON.stringify({
+          version: 1,
+          savedAt: new Date().toISOString(),
+          transactions: [
+            // September transactions
+            {
+              id: "tx-sep-1",
+              date: "2026-09-05",
+              description: "Supermercados La Torre",
+              amount: 1800,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+            {
+              id: "tx-sep-2",
+              date: "2026-09-12",
+              description: "Restaurante San Martin",
+              amount: 650,
+              currency: "GTQ",
+              category: "Restaurantes y Cafés",
+              classificationSource: "local",
+            },
+            {
+              id: "tx-sep-3",
+              date: "2026-09-20",
+              description: "Netflix Mensual",
+              amount: 150,
+              currency: "GTQ",
+              category: "Suscripciones",
+              classificationSource: "local",
+            },
+            // August transactions
+            {
+              id: "tx-aug-1",
+              date: "2026-08-10",
+              description: "Supermercados La Torre",
+              amount: 2200,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+          ],
+          summary: {
+            totalRowsProcessed: 4,
+            validTransactionsCount: 4,
+            skippedRowsCount: 0,
+            totalAmount: 4800,
+          },
+          bankName: "Banco Industrial",
+          customCategories: [],
+        })
+      );
+
+      localStorage.setItem(
+        "expense_tracker_budget_v1",
+        JSON.stringify({
+          currentBudget: {
+            id: "budget-comp-test",
+            name: "Presupuesto Test",
+            targets: [
+              {
+                categoryId: "supermercado",
+                categoryName: "Supermercado",
+                monthlyLimitGTQ: 2000,
+                isEssential: true,
+              },
+              {
+                categoryId: "restaurantes",
+                categoryName: "Restaurantes y Cafés",
+                monthlyLimitGTQ: 500,
+                isEssential: false,
+              },
+            ],
+            totalMonthlyBudgetGTQ: 2500,
+            createdMode: "zero",
+            updatedAt: "2026-08-01T00:00:00.000Z",
+          },
+          monthlyBudgets: {},
+          effectiveFromMonth: null,
+        })
+      );
+    });
+
+    await page.reload();
+    await page.locator("#btn-resume-session").click();
+
+    // Open budget tool
+    await page.locator("#btn-dashboard-open-budget").click();
+
+    // Verify section comparativa is visible
+    await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
+
+    // Verify Month Selector bar is present
+    const monthSelector = page.locator("#month-selector-bar");
+    await expect(monthSelector).toBeVisible();
+
+    // Verify both month pills exist
+    const augPill = page.locator("#month-selector-pill-2026-08");
+    const sepPill = page.locator("#month-selector-pill-2026-09");
+    await expect(augPill).toBeVisible();
+    await expect(sepPill).toBeVisible();
+
+    // Verify Monthly Summary Card for September
+    const summaryCard = page.locator("#card-monthly-budget-summary");
+    await expect(summaryCard).toBeVisible();
+    await expect(page.locator("#summary-total-budgeted")).toContainText("2,500");
+    await expect(page.locator("#summary-total-spent")).toContainText("2,600");
+    await expect(page.locator("#summary-net-difference")).toContainText("100");
+    await expect(page.locator("#monthly-budget-progress-bar")).toBeVisible();
+
+    // Verify category cards in September
+    const superCard = page.locator("#category-comparison-card-supermercado");
+    await expect(superCard).toBeVisible();
+    await expect(superCard).toContainText("Dentro de meta");
+    await expect(superCard).toContainText("1,800");
+
+    const restCard = page.locator("#category-comparison-card-restaurantes");
+    await expect(restCard).toBeVisible();
+    await expect(restCard).toContainText("Exceso");
+    await expect(restCard).toContainText("650");
+
+    // Verify Unbudgeted warning card for Suscripciones
+    const unbudgetedCard = page.locator("#card-unbudgeted-warning");
+    await expect(unbudgetedCard).toBeVisible();
+    await expect(unbudgetedCard).toContainText("Suscripciones");
+    await expect(unbudgetedCard).toContainText("150");
+
+    // Switch to August
+    await augPill.click();
+
+    // Verify summary card updates to August
+    await expect(page.locator("#summary-total-spent")).toContainText("2,200");
+    await expect(page.locator("#category-comparison-card-supermercado")).toContainText("2,200");
+    await expect(page.locator("#category-comparison-card-supermercado")).toContainText("Exceso");
+  });
 });

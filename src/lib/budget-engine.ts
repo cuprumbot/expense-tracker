@@ -2,6 +2,8 @@ import {
   BudgetPlan,
   StoredBudgetState,
   CategoryBudgetTarget,
+  MonthBudgetComparison,
+  CategoryComparisonResult,
 } from "@/types/budget";
 import { Transaction } from "@/types/transaction";
 import defaultCatalog from "@/data/merchant-catalog.json";
@@ -297,4 +299,137 @@ export function getBudgetForMonth(
   }
 
   return null;
+}
+
+const SPANISH_MONTH_NAMES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+
+/**
+ * Formats a "YYYY-MM" month key into clean Spanish text (e.g. "2026-09" -> "Septiembre 2026").
+ */
+export function formatMonthSpanish(monthKey: string): string {
+  if (!monthKey || !monthKey.includes("-")) return monthKey;
+  const parts = monthKey.split("-");
+  const year = parts[0];
+  const monthNum = parseInt(parts[1], 10);
+  if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) return monthKey;
+  return `${SPANISH_MONTH_NAMES[monthNum - 1]} ${year}`;
+}
+
+/**
+ * Compares an uploaded month's actual expenses against its applicable budget plan.
+ */
+export function compareMonthAgainstBudget(
+  transactions: Transaction[],
+  monthKey: string,
+  budgetPlan: BudgetPlan
+): MonthBudgetComparison {
+  const monthTxs = (transactions || []).filter(
+    (t) => t.date && t.date.startsWith(monthKey) && t.amount > 0
+  );
+
+  // Accumulate spending by category (exact match, case-insensitive)
+  const actualByCategory = new Map<string, number>();
+  for (const t of monthTxs) {
+    const rawCategory = t.category?.trim() || "Otros";
+    const current = actualByCategory.get(rawCategory) || 0;
+    actualByCategory.set(rawCategory, current + t.amount);
+  }
+
+  // Calculate comparisons for each budgeted target
+  const categoryComparisons: CategoryComparisonResult[] = [];
+  const processedCategoryNames = new Set<string>();
+
+  for (const target of budgetPlan.targets) {
+    const key = target.categoryName;
+    let actualGTQ = 0;
+    for (const [catName, amount] of actualByCategory.entries()) {
+      if (catName.toLowerCase() === key.toLowerCase()) {
+        actualGTQ += amount;
+        processedCategoryNames.add(catName.toLowerCase());
+      }
+    }
+
+    const budgetedGTQ = target.monthlyLimitGTQ;
+    const differenceGTQ = actualGTQ - budgetedGTQ;
+    const remainingGTQ = budgetedGTQ - actualGTQ;
+    const utilizationPercent =
+      budgetedGTQ > 0 ? (actualGTQ / budgetedGTQ) * 100 : actualGTQ > 0 ? 100 : 0;
+
+    let status: "under" | "near" | "over" | "way_over" = "under";
+    if (utilizationPercent >= 125) {
+      status = "way_over";
+    } else if (utilizationPercent > 100) {
+      status = "over";
+    } else if (utilizationPercent > 90) {
+      status = "near";
+    } else {
+      status = "under";
+    }
+
+    categoryComparisons.push({
+      categoryId: target.categoryId,
+      categoryName: target.categoryName,
+      budgetedGTQ,
+      actualGTQ: Math.round(actualGTQ * 100) / 100,
+      differenceGTQ: Math.round(differenceGTQ * 100) / 100,
+      remainingGTQ: Math.round(remainingGTQ * 100) / 100,
+      utilizationPercent: Math.round(utilizationPercent * 10) / 10,
+      status,
+      isEssential: target.isEssential,
+    });
+  }
+
+  // Sort comparisons: over/way_over first, then highest actualGTQ
+  categoryComparisons.sort((a, b) => {
+    const isOverA = a.status === "over" || a.status === "way_over" ? 1 : 0;
+    const isOverB = b.status === "over" || b.status === "way_over" ? 1 : 0;
+    if (isOverA !== isOverB) return isOverB - isOverA;
+    return b.actualGTQ - a.actualGTQ;
+  });
+
+  // Identify unbudgeted categories
+  const unbudgetedCategories: { categoryName: string; actualGTQ: number }[] = [];
+  for (const [catName, spent] of actualByCategory.entries()) {
+    if (!processedCategoryNames.has(catName.toLowerCase()) && spent > 0) {
+      unbudgetedCategories.push({
+        categoryName: catName,
+        actualGTQ: Math.round(spent * 100) / 100,
+      });
+    }
+  }
+  unbudgetedCategories.sort((a, b) => b.actualGTQ - a.actualGTQ);
+
+  const totalBudgetedGTQ = budgetPlan.totalMonthlyBudgetGTQ;
+  const totalSpentGTQ = Math.round(monthTxs.reduce((sum, t) => sum + t.amount, 0) * 100) / 100;
+  const remainingGTQ = Math.round((totalBudgetedGTQ - totalSpentGTQ) * 100) / 100;
+  const utilizationPercent =
+    totalBudgetedGTQ > 0
+      ? Math.round((totalSpentGTQ / totalBudgetedGTQ) * 1000) / 10
+      : totalSpentGTQ > 0
+      ? 100
+      : 0;
+
+  return {
+    monthKey,
+    budgetPlan,
+    totalBudgetedGTQ,
+    totalSpentGTQ,
+    remainingGTQ,
+    utilizationPercent,
+    categoryComparisons,
+    unbudgetedCategories,
+  };
 }

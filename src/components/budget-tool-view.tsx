@@ -16,6 +16,8 @@ import {
   roundToCleanQuetzales,
   applyBudgetUpdate,
   getBudgetForMonth,
+  compareMonthAgainstBudget,
+  formatMonthSpanish,
 } from "@/lib/budget-engine";
 
 export type BudgetToolTab = "configurar" | "comparativa" | "sugerencias";
@@ -76,6 +78,33 @@ export function BudgetToolView({
     }
     return Array.from(set).sort();
   }, [transactions, budgetState]);
+
+  // Selected month for comparison view
+  const [selectedMonthKey, setSelectedMonthKey] = useState<string>(() => {
+    if (availableMonths.length > 0) return availableMonths[availableMonths.length - 1];
+    return new Date().toISOString().substring(0, 7);
+  });
+
+  // Keep selectedMonthKey synchronized when availableMonths updates
+  useEffect(() => {
+    if (availableMonths.length > 0 && (!selectedMonthKey || !availableMonths.includes(selectedMonthKey))) {
+      setSelectedMonthKey(availableMonths[availableMonths.length - 1]);
+    }
+  }, [availableMonths, selectedMonthKey]);
+
+  // Dynamically resolve month budget via getBudgetForMonth
+  const monthBudgetPlan = useMemo(() => {
+    if (!selectedMonthKey) return currentBudget;
+    return getBudgetForMonth(budgetState, selectedMonthKey) || currentBudget;
+  }, [budgetState, selectedMonthKey, currentBudget]);
+
+  // Compute month budget vs actual comparison
+  const monthComparison = useMemo(() => {
+    if (!transactions || transactions.length === 0 || !selectedMonthKey || !monthBudgetPlan) {
+      return null;
+    }
+    return compareMonthAgainstBudget(transactions, selectedMonthKey, monthBudgetPlan);
+  }, [transactions, selectedMonthKey, monthBudgetPlan]);
 
   // Active category targets for the builder
   const [targetsMap, setTargetsMap] = useState<Map<string, CategoryBudgetTarget>>(() => {
@@ -1084,30 +1113,392 @@ export function BudgetToolView({
 
         {activeTab === "comparativa" && (
           <section id="section-comparativa-presupuesto" className="space-y-6">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                  Comparativa Mensual y Metas
-                </h2>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                  {currentBudget
-                    ? `Presupuesto activo de ${formatCurrency(currentBudget.totalMonthlyBudgetGTQ)} con ${currentBudget.targets.length} categorías.`
-                    : "Configura primero tu presupuesto para ver la comparativa mes a mes."}
-                </p>
-              </div>
-
-              {currentBudget && (
+            {!currentBudget ? (
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-4 shadow-xs">
+                <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 mx-auto flex items-center justify-center">
+                  <Icons.Sliders className="w-6 h-6" />
+                </div>
+                <div className="max-w-md mx-auto space-y-1">
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                    Aún no has configurado tu presupuesto
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Define tus metas mensuales por categoría para ver la comparativa en tiempo real de tus gastos y ahorros.
+                  </p>
+                </div>
                 <button
                   type="button"
-                  id="btn-edit-budget-overview"
-                  onClick={handleEditBudget}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 dark:text-zinc-300 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:bg-zinc-800 transition-colors shadow-2xs cursor-pointer"
+                  id="btn-create-budget-empty"
+                  onClick={() => setActiveTab("configurar")}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer"
                 >
-                  <Icons.Pencil className="w-3.5 h-3.5" />
-                  <span>Editar presupuesto</span>
+                  <Icons.Sliders className="w-4 h-4" />
+                  <span>Configurar mi presupuesto</span>
                 </button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <>
+                {/* Header Card with Budget Info and Edit Button */}
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                      Comparativa Mensual y Metas
+                    </h2>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                      Presupuesto activo de{" "}
+                      <strong className="text-zinc-800 dark:text-zinc-200">
+                        {formatCurrency(monthBudgetPlan?.totalMonthlyBudgetGTQ || currentBudget.totalMonthlyBudgetGTQ)}
+                      </strong>{" "}
+                      con {(monthBudgetPlan?.targets || currentBudget.targets).length} categorías asignadas.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    id="btn-edit-budget-overview"
+                    onClick={handleEditBudget}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 dark:text-zinc-300 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:bg-zinc-800 transition-colors shadow-2xs cursor-pointer shrink-0"
+                  >
+                    <Icons.Pencil className="w-3.5 h-3.5" />
+                    <span>Editar presupuesto</span>
+                  </button>
+                </div>
+
+                {/* Month Selector Bar (US-059) */}
+                {availableMonths.length > 0 && (
+                  <div
+                    id="month-selector-bar"
+                    className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 mr-1 shrink-0">
+                        <Icons.Calendar className="w-3.5 h-3.5" />
+                        <span>Mes evaluado:</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {availableMonths.map((m) => {
+                          const isSelected = m === selectedMonthKey;
+                          return (
+                            <button
+                              key={`month-pill-${m}`}
+                              id={`month-selector-pill-${m}`}
+                              type="button"
+                              onClick={() => setSelectedMonthKey(m)}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer shrink-0 ${
+                                isSelected
+                                  ? "bg-indigo-600 text-white font-semibold shadow-2xs"
+                                  : "bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700"
+                              }`}
+                            >
+                              {formatMonthSpanish(m)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span
+                        id="badge-month-budget-version"
+                        className="text-3xs font-medium px-2.5 py-1 rounded-full border bg-zinc-50 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                        <span>
+                          {monthBudgetPlan?.name || "Presupuesto Mensual"}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Empty State when no transactions uploaded yet */}
+                {!hasTransactions ? (
+                  <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3 shadow-xs">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 mx-auto flex items-center justify-center">
+                      <Icons.Upload className="w-5 h-5" />
+                    </div>
+                    <div className="max-w-md mx-auto space-y-1">
+                      <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                        Carga movimientos para ver tu comparativa
+                      </h4>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                        Sube un estado de cuenta en PDF o una lista de gastos para comparar automáticamente lo que gastaste contra las metas de este mes.
+                      </p>
+                    </div>
+                  </div>
+                ) : monthComparison ? (
+                  <>
+                    {/* High-level Monthly Summary Card (US-059) */}
+                    <div
+                      id="card-monthly-budget-summary"
+                      className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                          Resumen General — {formatMonthSpanish(selectedMonthKey)}
+                        </span>
+                        <span
+                          className={`text-2xs font-semibold px-2 py-0.5 rounded-full border ${
+                            monthComparison.utilizationPercent <= 90
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                              : monthComparison.utilizationPercent <= 100
+                              ? "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                              : "bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800"
+                          }`}
+                        >
+                          {Math.round(monthComparison.utilizationPercent)}% del presupuesto utilizado
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {/* Presupuesto del Mes */}
+                        <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/80 dark:border-zinc-800/80 space-y-1">
+                          <span className="text-2xs font-medium text-zinc-500 dark:text-zinc-400">
+                            Presupuesto del Mes (Q)
+                          </span>
+                          <p
+                            id="summary-total-budgeted"
+                            className="text-lg sm:text-xl font-bold font-mono text-zinc-900 dark:text-zinc-100"
+                          >
+                            {formatCurrency(monthComparison.totalBudgetedGTQ)}
+                          </p>
+                        </div>
+
+                        {/* Gasto Real */}
+                        <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/80 dark:border-zinc-800/80 space-y-1">
+                          <span className="text-2xs font-medium text-zinc-500 dark:text-zinc-400">
+                            Gasto Real (Q)
+                          </span>
+                          <p
+                            id="summary-total-spent"
+                            className="text-lg sm:text-xl font-bold font-mono text-zinc-900 dark:text-zinc-100"
+                          >
+                            {formatCurrency(monthComparison.totalSpentGTQ)}
+                          </p>
+                        </div>
+
+                        {/* Net Difference */}
+                        <div
+                          className={`p-4 rounded-xl border space-y-1 ${
+                            monthComparison.remainingGTQ >= 0
+                              ? "bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-100"
+                              : "bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/60 text-rose-900 dark:text-rose-100"
+                          }`}
+                        >
+                          <span className="text-2xs font-medium text-zinc-600 dark:text-zinc-400">
+                            {monthComparison.remainingGTQ >= 0
+                              ? "Ahorro bajo presupuesto"
+                              : "Exceso sobre presupuesto"}
+                          </span>
+                          <p
+                            id="summary-net-difference"
+                            className={`text-lg sm:text-xl font-bold font-mono ${
+                              monthComparison.remainingGTQ >= 0
+                                ? "text-emerald-700 dark:text-emerald-400"
+                                : "text-rose-700 dark:text-rose-400"
+                            }`}
+                          >
+                            {formatCurrency(Math.abs(monthComparison.remainingGTQ))}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar (US-059) */}
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex justify-between items-center text-2xs text-zinc-500 dark:text-zinc-400">
+                          <span>Progreso de utilización mensual</span>
+                          <span className="font-mono font-semibold">
+                            {formatCurrency(monthComparison.totalSpentGTQ)} / {formatCurrency(monthComparison.totalBudgetedGTQ)}
+                          </span>
+                        </div>
+                        <div
+                          id="monthly-budget-progress-bar"
+                          className="h-2.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden"
+                        >
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              monthComparison.utilizationPercent <= 90
+                                ? "bg-emerald-500"
+                                : monthComparison.utilizationPercent <= 100
+                                ? "bg-amber-500"
+                                : "bg-rose-500"
+                            }`}
+                            style={{
+                              width: `${Math.min(100, Math.max(0, monthComparison.utilizationPercent))}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Category-by-Category Comparison List (US-059) */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                            Detalle por Categoría
+                          </h3>
+                          <p className="text-2xs text-zinc-500 dark:text-zinc-400">
+                            Cumplimiento de metas asignadas en {formatMonthSpanish(selectedMonthKey)}
+                          </p>
+                        </div>
+                        <span className="text-3xs font-medium text-zinc-500 dark:text-zinc-400">
+                          {monthComparison.categoryComparisons.length} categorías presupuestadas
+                        </span>
+                      </div>
+
+                      <div id="category-comparison-list" className="space-y-3">
+                        {monthComparison.categoryComparisons.map((cat) => {
+                          const statusColors = {
+                            under: "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800",
+                            near: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800",
+                            over: "bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800",
+                            way_over: "bg-rose-100 text-rose-900 border-rose-300 dark:bg-rose-950 dark:text-rose-200 dark:border-rose-700 font-bold",
+                          };
+
+                          const statusLabels = {
+                            under: "Dentro de meta",
+                            near: "Cerca del límite",
+                            over: "Exceso",
+                            way_over: "Exceso elevado (+25%)",
+                          };
+
+                          const barColors = {
+                            under: "bg-emerald-500",
+                            near: "bg-amber-500",
+                            over: "bg-rose-500",
+                            way_over: "bg-rose-600",
+                          };
+
+                          return (
+                            <div
+                              key={`comparison-${cat.categoryId}`}
+                              id={`category-comparison-card-${cat.categoryId}`}
+                              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 shadow-2xs space-y-3"
+                            >
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                                    {cat.categoryName}
+                                  </span>
+                                  <span
+                                    className={`text-3xs font-medium px-2 py-0.5 rounded-full border ${
+                                      cat.isEssential
+                                        ? "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
+                                        : "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
+                                    }`}
+                                  >
+                                    {cat.isEssential ? "Fijo / Esencial" : "Variable / Ocio"}
+                                  </span>
+                                  <span
+                                    className={`text-3xs font-semibold px-2 py-0.5 rounded-full border ${
+                                      statusColors[cat.status]
+                                    }`}
+                                  >
+                                    {statusLabels[cat.status]}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-3 text-xs font-mono">
+                                  <span className="font-bold text-zinc-900 dark:text-zinc-100">
+                                    {formatCurrency(cat.actualGTQ)}
+                                  </span>
+                                  <span className="text-zinc-400">/</span>
+                                  <span className="text-zinc-500 dark:text-zinc-400">
+                                    {formatCurrency(cat.budgetedGTQ)}
+                                  </span>
+                                  <span className="text-3xs font-semibold px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                                    {Math.round(cat.utilizationPercent)}%
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Progress bar and remaining indicator */}
+                              <div className="space-y-1">
+                                <div className="h-2 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-300 ${
+                                      barColors[cat.status]
+                                    }`}
+                                    style={{
+                                      width: `${Math.min(100, Math.max(0, cat.utilizationPercent))}%`,
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex justify-between items-center text-2xs">
+                                  <span className="text-zinc-400">
+                                    Meta: {formatCurrency(cat.budgetedGTQ)}
+                                  </span>
+                                  <span
+                                    className={`font-semibold ${
+                                      cat.remainingGTQ >= 0
+                                        ? "text-emerald-600 dark:text-emerald-400"
+                                        : "text-rose-600 dark:text-rose-400"
+                                    }`}
+                                  >
+                                    {cat.remainingGTQ >= 0
+                                      ? `Disponible: ${formatCurrency(cat.remainingGTQ)}`
+                                      : `Exceso: ${formatCurrency(Math.abs(cat.remainingGTQ))}`}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Unbudgeted Categories Warning Card (US-059) */}
+                    {monthComparison.unbudgetedCategories.length > 0 && (
+                      <div
+                        id="card-unbudgeted-warning"
+                        className="bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-5 shadow-xs space-y-3"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                            <Icons.AlertCircle className="w-4 h-4" />
+                          </div>
+                          <div className="space-y-1">
+                            <h4 className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-200">
+                              Gastos en categorías fuera de presupuesto
+                            </h4>
+                            <p className="text-2xs text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
+                              En este mes se registraron gastos en categorías que no están contempladas en tu presupuesto activo.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          {monthComparison.unbudgetedCategories.map((unb) => (
+                            <span
+                              key={`unbudgeted-${unb.categoryName}`}
+                              className="text-2xs font-medium px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-amber-200/80 dark:border-amber-800/60 text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5"
+                            >
+                              <span>{unb.categoryName}:</span>
+                              <strong className="font-mono text-amber-800 dark:text-amber-300">
+                                {formatCurrency(unb.actualGTQ)}
+                              </strong>
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="pt-1">
+                          <button
+                            type="button"
+                            id="btn-add-unbudgeted-to-plan"
+                            onClick={handleEditBudget}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-colors cursor-pointer"
+                          >
+                            <Icons.Plus className="w-3.5 h-3.5" />
+                            <span>Agregar categorías a mi presupuesto</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : null}
+              </>
+            )}
           </section>
         )}
 

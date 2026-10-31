@@ -167,19 +167,19 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
 
 ## Phase 30: Monthly Budget Comparison & Gamified Performance Stats
 
-### [ ] US-059: Monthly Budget vs. Actual Expense Comparison Engine & Visualization
+### [x] US-059: Monthly Budget vs. Actual Expense Comparison Engine & Visualization
 - **As a** user with an active budget and uploaded expenses,
 - **I want to** compare each uploaded month's expenses against that month's applicable budget—both in total and category by category,
 - **So that** I can clearly see where I stayed within budget and where I overspent in any given month.
 - **Split-Brain Boundary:** 100% Local (Mathematical comparison engine and native SVG/Tailwind progress visualizations).
 - **Acceptance Criteria:**
-  - [ ] Implements `compareMonthAgainstBudget(transactions: Transaction[], monthKey: string, budgetPlan: BudgetPlan)` in `src/lib/budget-engine.ts` computing:
+  - [x] Implements `compareMonthAgainstBudget(transactions: Transaction[], monthKey: string, budgetPlan: BudgetPlan)` in `src/lib/budget-engine.ts` computing:
     - Total budgeted (`totalBudgetedGTQ`) vs. total spent (`totalSpentGTQ`), remaining balance (`remainingGTQ`), and overall utilization percentage.
     - Per-category comparison: `budgetedGTQ`, `actualGTQ`, `differenceGTQ`, `utilizationPercent`, and status (`"under"` when `<= 90%`, `"near"` when `> 90%` and `<= 100%`, `"over"` when `> 100%`, and `"way_over"` when `>= 125%` or exceeding target by a significant margin).
     - Unbudgeted categories warning: identifies any categories with actual spending in that month that were not included in the budget.
-  - [ ] Renders a Month Selector bar allowing the user to switch between each uploaded calendar month (e.g., `"Julio 2026"`, `"Agosto 2026"`, `"Septiembre 2026"`), displaying a badge indicating which budget version is applied to that month.
-  - [ ] Displays a high-level Monthly Summary Card contrasting `"Presupuesto del Mes (Q)"` vs. `"Gasto Real (Q)"` with a visual progress bar and net difference (`"Ahorro bajo presupuesto: Q XXX.XX"` in emerald or `"Exceso sobre presupuesto: Q XXX.XX"` in rose/amber).
-  - [ ] Displays a Category-by-Category Comparison List/Chart with color-coded progress bars, exact amounts (`Q gastado / Q meta`), and percentage badges.
+  - [x] Renders a Month Selector bar allowing the user to switch between each uploaded calendar month (e.g., `"Julio 2026"`, `"Agosto 2026"`, `"Septiembre 2026"`), displaying a badge indicating which budget version is applied to that month.
+  - [x] Displays a high-level Monthly Summary Card contrasting `"Presupuesto del Mes (Q)"` vs. `"Gasto Real (Q)"` with a visual progress bar and net difference (`"Ahorro bajo presupuesto: Q XXX.XX"` in emerald or `"Exceso sobre presupuesto: Q XXX.XX"` in rose/amber).
+  - [x] Displays a Category-by-Category Comparison List/Chart with color-coded progress bars, exact amounts (`Q gastado / Q meta`), and percentage badges.
 
 ### [ ] US-060: Gamified Budget Statistics (Weekly Streaks & Category Goal Counters)
 - **As a** user tracking my budget progress,

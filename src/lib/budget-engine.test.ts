@@ -10,6 +10,8 @@ import {
   isFixedCommitmentCategory,
   roundToCleanQuetzales,
   applyBudgetUpdate,
+  compareMonthAgainstBudget,
+  formatMonthSpanish,
 } from "./budget-engine";
 import { Transaction } from "@/types/transaction";
 import { BudgetPlan, StoredBudgetState } from "@/types/budget";
@@ -289,6 +291,89 @@ describe("US-056: Budget Category Tiers & Historical Context Helpers", () => {
       const newState = applyBudgetUpdate(prevState, updatedPlan, "from_now_on", []);
       assert.strictEqual(newState.currentBudget?.totalMonthlyBudgetGTQ, 2800);
       assert.ok(newState.effectiveFromMonth);
+    });
+  });
+
+  describe("US-059: Monthly Budget vs Actual Expense Comparison Engine", () => {
+    it("formats month keys into clean Spanish month names", () => {
+      assert.strictEqual(formatMonthSpanish("2026-09"), "Septiembre 2026");
+      assert.strictEqual(formatMonthSpanish("2026-01"), "Enero 2026");
+      assert.strictEqual(formatMonthSpanish("2026-12"), "Diciembre 2026");
+      assert.strictEqual(formatMonthSpanish("invalid"), "invalid");
+    });
+
+    it("accurately compares a month against its budget plan with category statuses and unbudgeted warnings", () => {
+      const budgetPlan: BudgetPlan = {
+        id: "plan-test",
+        name: "Presupuesto Test",
+        targets: [
+          // Target 1: Under budget (spent 800 <= 90% of 1000)
+          { categoryId: "supermercado", categoryName: "Supermercado", monthlyLimitGTQ: 1000, isEssential: true },
+          // Target 2: Near limit (spent 950 > 90% and <= 100% of 1000)
+          { categoryId: "transporte", categoryName: "Transporte y Combustible", monthlyLimitGTQ: 1000, isEssential: true },
+          // Target 3: Over limit (spent 1100 > 100% and < 125% of 1000)
+          { categoryId: "restaurantes", categoryName: "Restaurantes y Cafés", monthlyLimitGTQ: 1000, isEssential: false },
+          // Target 4: Way over limit (spent 1500 >= 125% of 1000)
+          { categoryId: "suscripciones", categoryName: "Suscripciones", monthlyLimitGTQ: 1000, isEssential: false },
+        ],
+        totalMonthlyBudgetGTQ: 4000,
+        createdMode: "zero",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      };
+
+      const transactions: Transaction[] = [
+        // Supermercado: 800 (80% -> under)
+        { id: "1", date: "2026-09-02", description: "Supermercado", amount: 800, currency: "GTQ", category: "Supermercado" },
+        // Transporte: 950 (95% -> near)
+        { id: "2", date: "2026-09-05", description: "Gasolina", amount: 950, currency: "GTQ", category: "Transporte y Combustible" },
+        // Restaurantes: 1100 (110% -> over)
+        { id: "3", date: "2026-09-10", description: "Almuerzo", amount: 1100, currency: "GTQ", category: "Restaurantes y Cafés" },
+        // Suscripciones: 1500 (150% -> way_over)
+        { id: "4", date: "2026-09-12", description: "Plataformas", amount: 1500, currency: "GTQ", category: "Suscripciones" },
+        // Unbudgeted Category: Salud y Farmacia: 300
+        { id: "5", date: "2026-09-15", description: "Farmacia", amount: 300, currency: "GTQ", category: "Salud y Farmacia" },
+        // Other month transaction (should be excluded)
+        { id: "6", date: "2026-08-15", description: "Supermercado Agosto", amount: 2000, currency: "GTQ", category: "Supermercado" },
+      ];
+
+      const result = compareMonthAgainstBudget(transactions, "2026-09", budgetPlan);
+
+      // Total Budgeted: 4000
+      assert.strictEqual(result.totalBudgetedGTQ, 4000);
+      // Total Spent: 800 + 950 + 1100 + 1500 + 300 = 4650
+      assert.strictEqual(result.totalSpentGTQ, 4650);
+      // Remaining: 4000 - 4650 = -650 (over budget)
+      assert.strictEqual(result.remainingGTQ, -650);
+      // Utilization: (4650 / 4000) * 100 = 116.3%
+      assert.strictEqual(result.utilizationPercent, 116.3);
+
+      // Category checks
+      const superComp = result.categoryComparisons.find((c) => c.categoryName === "Supermercado")!;
+      assert.strictEqual(superComp.actualGTQ, 800);
+      assert.strictEqual(superComp.budgetedGTQ, 1000);
+      assert.strictEqual(superComp.remainingGTQ, 200);
+      assert.strictEqual(superComp.status, "under");
+
+      const transComp = result.categoryComparisons.find((c) => c.categoryName === "Transporte y Combustible")!;
+      assert.strictEqual(transComp.actualGTQ, 950);
+      assert.strictEqual(transComp.remainingGTQ, 50);
+      assert.strictEqual(transComp.status, "near");
+
+      const restComp = result.categoryComparisons.find((c) => c.categoryName === "Restaurantes y Cafés")!;
+      assert.strictEqual(restComp.actualGTQ, 1100);
+      assert.strictEqual(restComp.remainingGTQ, -100);
+      assert.strictEqual(restComp.differenceGTQ, 100);
+      assert.strictEqual(restComp.status, "over");
+
+      const suscComp = result.categoryComparisons.find((c) => c.categoryName === "Suscripciones")!;
+      assert.strictEqual(suscComp.actualGTQ, 1500);
+      assert.strictEqual(suscComp.remainingGTQ, -500);
+      assert.strictEqual(suscComp.status, "way_over");
+
+      // Unbudgeted category check
+      assert.strictEqual(result.unbudgetedCategories.length, 1);
+      assert.strictEqual(result.unbudgetedCategories[0].categoryName, "Salud y Farmacia");
+      assert.strictEqual(result.unbudgetedCategories[0].actualGTQ, 300);
     });
   });
 });
