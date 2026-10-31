@@ -582,7 +582,7 @@ export default function Home() {
     setSummary(updatedSummary);
     setBankName(
       prevBankName && detectedBankName && prevBankName !== detectedBankName
-        ? "Consolidado multicuenta"
+        ? null
         : detectedBankName || prevBankName
     );
 

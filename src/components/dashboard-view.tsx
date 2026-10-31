@@ -217,6 +217,15 @@ function DashboardPanelSection({
   );
 }
 
+const VERIFIED_BANKS = new Set([
+  "Banco Industrial",
+  "Banco Cuscatlán",
+  "BAC Credomatic",
+  "Banco FICOHSA",
+  "Banco Agromercantil (BAM)",
+  "Banco G&T Continental",
+]);
+
 interface DashboardViewProps {
   transactions: Transaction[];
   summary: CSVParsingSummary | null;
@@ -532,10 +541,7 @@ export function DashboardView({
               <h1 className="text-sm sm:text-base font-bold tracking-tight text-zinc-900 dark:text-zinc-50 leading-tight">
                 Expense Tracker
               </h1>
-              {bankName &&
-                !bankName.includes("Consolidado multicuenta") &&
-                !bankName.toLowerCase().includes("lista rápida") &&
-                !bankName.toLowerCase().includes("rápida") && (
+              {bankName && VERIFIED_BANKS.has(bankName) && (
                 <span className="text-3xs font-mono font-medium px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                   {bankName}
                 </span>

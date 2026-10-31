@@ -151,7 +151,7 @@ export async function processSingleFile(
         success: true,
         transactions: data.transactions || [],
         summary: data.summary,
-        bankName: data.bankName || "Banco G&T Continental",
+        bankName: data.bankName || null,
       };
     } catch (err) {
       return {

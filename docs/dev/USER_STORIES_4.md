@@ -387,19 +387,19 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
 
 ## Phase 35: Multi-Bank Credit Card Ingestion End-to-End Integration & Regression Verification
 
-### [ ] US-071: End-to-End Multi-Bank Credit Card Ingestion & Regression Verification
+### [x] US-071: End-to-End Multi-Bank Credit Card Ingestion & Regression Verification
 - **As a** user uploading credit card statements from any supported Guatemalan bank,
 - **I want** the automatic bank detector and specialized credit card parsers to integrate seamlessly with the existing deduplication, expense classification, dashboard, and budget tools,
 - **So that** the entire ingestion pipeline is reliable, accurate, and completely free of regressions.
 - **Split-Brain Boundary:** 100% Local verification.
 - **Acceptance Criteria:**
-  - [ ] Credit card statements from Banco Industrial, Banco Cuscatlán, BAC Credomatic, FICOHSA, and Banco Agromercantil (BAM) are automatically identified and correctly parsed locally without requiring manual selection.
-  - [ ] Verified bank names are passed cleanly to the dashboard header (displaying verified bank chips and strictly adhering to the no-pseudo-metadata rule).
-  - [ ] Multi-file batch upload and incremental ingestion work seamlessly across multiple credit card statements from different banks in the same session.
-  - [ ] Multi-currency extraction correctly converts foreign currency expenses to Quetzales across all 5 credit card parsers.
-  - [ ] Deduplication engine detects repeated statements or overlapping billing periods from the same credit card.
-  - [ ] Unrecognized statement formats smoothly transition to the local PII anonymization and review flow.
-  - [ ] 100% of user-facing UI text, error messages, and bank indicators are in Spanish with zero emojis.
-  - [ ] `npm test` passes all unit tests (including legacy checks, text list parser, and new credit card parser tests) with 0 failures.
-  - [ ] `npm run build` succeeds with zero TypeScript and Next.js Turbopack build errors.
+  - [x] Credit card statements from Banco Industrial, Banco Cuscatlán, BAC Credomatic, FICOHSA, and Banco Agromercantil (BAM) are automatically identified and correctly parsed locally without requiring manual selection.
+  - [x] Verified bank names are passed cleanly to the dashboard header (displaying verified bank chips and strictly adhering to the no-pseudo-metadata rule).
+  - [x] Multi-file batch upload and incremental ingestion work seamlessly across multiple credit card statements from different banks in the same session.
+  - [x] Multi-currency extraction correctly converts foreign currency expenses to Quetzales across all 5 credit card parsers.
+  - [x] Deduplication engine detects repeated statements or overlapping billing periods from the same credit card.
+  - [x] Unrecognized statement formats smoothly transition to the local PII anonymization and review flow.
+  - [x] 100% of user-facing UI text, error messages, and bank indicators are in Spanish with zero emojis.
+  - [x] `npm test` passes all unit tests (including legacy checks, text list parser, and new credit card parser tests) with 0 failures.
+  - [x] `npm run build` succeeds with zero TypeScript and Next.js Turbopack build errors.
 
