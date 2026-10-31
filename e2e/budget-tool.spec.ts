@@ -684,4 +684,124 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await expect(page.locator("#category-comparison-card-supermercado")).toContainText("2,200");
     await expect(page.locator("#category-comparison-card-supermercado")).toContainText("Exceso");
   });
+
+  test("US-060: displays gamified budget performance stats (weekly streaks, category goal counts, best savings)", async ({ page }) => {
+    await page.goto("/");
+
+    // Seed session with transactions across 3 consecutive weeks
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "expense_tracker_session_v1",
+        JSON.stringify({
+          version: 1,
+          savedAt: new Date().toISOString(),
+          transactions: [
+            // Week 1 (2026-09-08): 400
+            {
+              id: "tx-g-1",
+              date: "2026-09-08",
+              description: "Supermercados La Torre",
+              amount: 400,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+            // Week 2 (2026-09-15): 500
+            {
+              id: "tx-g-2",
+              date: "2026-09-15",
+              description: "Supermercados La Torre",
+              amount: 500,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+            // Week 3 (2026-09-22): 600
+            {
+              id: "tx-g-3",
+              date: "2026-09-22",
+              description: "Restaurante San Martin",
+              amount: 600,
+              currency: "GTQ",
+              category: "Restaurantes y Cafés",
+              classificationSource: "local",
+            },
+          ],
+          summary: {
+            totalRowsProcessed: 3,
+            validTransactionsCount: 3,
+            skippedRowsCount: 0,
+            totalAmount: 1500,
+          },
+          bankName: "Banco Industrial",
+          customCategories: [],
+        })
+      );
+
+      localStorage.setItem(
+        "expense_tracker_budget_v1",
+        JSON.stringify({
+          currentBudget: {
+            id: "budget-fun-stats-test",
+            name: "Presupuesto Mensual",
+            targets: [
+              {
+                categoryId: "supermercado",
+                categoryName: "Supermercado",
+                monthlyLimitGTQ: 2000,
+                isEssential: true,
+              },
+              {
+                categoryId: "restaurantes",
+                categoryName: "Restaurantes y Cafés",
+                monthlyLimitGTQ: 800,
+                isEssential: false,
+              },
+            ],
+            totalMonthlyBudgetGTQ: 2800, // weekly budget ≈ 646.65
+            createdMode: "zero",
+            updatedAt: "2026-09-01T00:00:00.000Z",
+          },
+          monthlyBudgets: {},
+          effectiveFromMonth: null,
+        })
+      );
+    });
+
+    await page.reload();
+    await page.locator("#btn-resume-session").click();
+
+    // Open budget tool
+    await page.locator("#btn-dashboard-open-budget").click();
+
+    // Gamified fun stats row should be visible
+    const funStatsRow = page.locator("#gamified-fun-stats-row");
+    await expect(funStatsRow).toBeVisible();
+
+    // Check Weekly Streak Card
+    const streakCard = page.locator("#card-stat-weekly-streak");
+    await expect(streakCard).toBeVisible();
+    await expect(streakCard).toContainText("Racha semanal");
+    await expect(streakCard).toContainText("3 semanas");
+    await expect(streakCard).toContainText("seguidas dentro del presupuesto");
+
+    // Check Category Goals Card
+    const goalsCard = page.locator("#card-stat-category-goals");
+    await expect(goalsCard).toBeVisible();
+    await expect(goalsCard).toContainText("Metas por categoría");
+    await expect(goalsCard).toContainText("2 de 2");
+    await expect(goalsCard).toContainText("categorías en meta este mes");
+
+    // Check Best Category Savings Card
+    const bestCard = page.locator("#card-stat-best-category");
+    await expect(bestCard).toBeVisible();
+    await expect(bestCard).toContainText("Mayor ahorro");
+    await expect(bestCard).toContainText("Supermercado");
+
+    // Check Months Within Budget Card
+    const monthsCard = page.locator("#card-stat-months-within-budget");
+    await expect(monthsCard).toBeVisible();
+    await expect(monthsCard).toContainText("Meses en meta");
+    await expect(monthsCard).toContainText("1 de 1");
+  });
 });

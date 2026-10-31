@@ -181,22 +181,22 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
   - [x] Displays a high-level Monthly Summary Card contrasting `"Presupuesto del Mes (Q)"` vs. `"Gasto Real (Q)"` with a visual progress bar and net difference (`"Ahorro bajo presupuesto: Q XXX.XX"` in emerald or `"Exceso sobre presupuesto: Q XXX.XX"` in rose/amber).
   - [x] Displays a Category-by-Category Comparison List/Chart with color-coded progress bars, exact amounts (`Q gastado / Q meta`), and percentage badges.
 
-### [ ] US-060: Gamified Budget Statistics (Weekly Streaks & Category Goal Counters)
+### [x] US-060: Gamified Budget Statistics (Weekly Streaks & Category Goal Counters)
 - **As a** user tracking my budget progress,
 - **I want** to see motivating, fun statistics such as how many weeks in a row I have achieved my budget and how many categories met their goal,
 - **So that** staying on budget feels rewarding and engaging.
 - **Split-Brain Boundary:** 100% Local (Deterministic streak and goal calculation in `src/lib/budget-engine.ts`).
 - **Acceptance Criteria:**
-  - [ ] Implements `calculateBudgetFunStats(transactions: Transaction[], budgetState: StoredBudgetState, selectedMonthKey: string)` in `src/lib/budget-engine.ts` calculating:
+  - [x] Implements `calculateBudgetFunStats(transactions: Transaction[], budgetState: StoredBudgetState, selectedMonthKey: string)` in `src/lib/budget-engine.ts` calculating:
     1. **Weekly Streak (`semanasEnRacha`):** Partitions uploaded transaction dates into calendar weeks (or 7-day windows across the uploaded period) and compares each week's spending against the weekly pro-rated budget (`totalMonthlyBudgetGTQ / 4.33` or `totalMonthlyBudgetGTQ / 4` per month's budget). Calculates both the current consecutive streak of weeks within budget and the best streak achieved.
     2. **Categories Met Goal (`categoriasCumplidas`):** For the selected month, counts how many budgeted categories finished at or below their target (`actualGTQ <= monthlyLimitGTQ`) out of total budgeted categories (e.g., `"5 de 7 categorías cumplidas"`).
     3. **Best Performing Category / Savings Highlight:** Identifies the category with the highest Quetzal or percentage savings under budget in the selected month.
     4. **Months Within Overall Budget:** Counts how many uploaded months achieved total spending at or below the monthly budget.
-  - [ ] Renders a dedicated row of scannable, modern KPI cards in the Budgeting Tool using crisp SVG icons (`Icons.Award` / `Icons.TrendingUp` / `Icons.CheckCircle` / `Icons.Flame` or equivalent standard SVGs in `src/components/icons.tsx`):
+  - [x] Renders a dedicated row of scannable, modern KPI cards in the Budgeting Tool using crisp SVG icons (`Icons.Award` / `Icons.TrendingUp` / `Icons.CheckCircle` / `Icons.Flame` or equivalent standard SVGs in `src/components/icons.tsx`):
     - Card 1: `"Racha semanal"` (e.g., `"3 semanas seguidas dentro del presupuesto"`).
     - Card 2: `"Metas por categoría"` (e.g., `"5 de 6 categorías en meta este mes"`).
     - Card 3: `"Balance del mes"` / `"Mejor categoría"`.
-  - [ ] Includes unit tests in `src/lib/budget-engine.test.ts` validating weekly streak counting (consecutive pass, broken streak reset, best streak) and category goal tallies.
+  - [x] Includes unit tests in `src/lib/budget-engine.test.ts` validating weekly streak counting (consecutive pass, broken streak reset, best streak) and category goal tallies.
 
 ---
 

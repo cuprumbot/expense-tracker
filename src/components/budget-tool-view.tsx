@@ -18,6 +18,7 @@ import {
   getBudgetForMonth,
   compareMonthAgainstBudget,
   formatMonthSpanish,
+  calculateBudgetFunStats,
 } from "@/lib/budget-engine";
 
 export type BudgetToolTab = "configurar" | "comparativa" | "sugerencias";
@@ -105,6 +106,14 @@ export function BudgetToolView({
     }
     return compareMonthAgainstBudget(transactions, selectedMonthKey, monthBudgetPlan);
   }, [transactions, selectedMonthKey, monthBudgetPlan]);
+
+  // Compute gamified performance fun stats (US-060)
+  const funStats = useMemo(() => {
+    if (!transactions || transactions.length === 0 || !budgetState?.currentBudget) {
+      return null;
+    }
+    return calculateBudgetFunStats(transactions, budgetState, selectedMonthKey);
+  }, [transactions, budgetState, selectedMonthKey]);
 
   // Active category targets for the builder
   const [targetsMap, setTargetsMap] = useState<Map<string, CategoryBudgetTarget>>(() => {
@@ -1228,6 +1237,157 @@ export function BudgetToolView({
                   </div>
                 ) : monthComparison ? (
                   <>
+                    {/* Gamified Fun Stats Row (US-060) */}
+                    {funStats && (
+                      <div
+                        id="gamified-fun-stats-row"
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"
+                      >
+                        {/* Card 1: Racha semanal */}
+                        <div
+                          id="card-stat-weekly-streak"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs space-y-2 flex flex-col justify-between"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                              Racha semanal
+                            </span>
+                            <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-500 flex items-center justify-center">
+                              <Icons.Flame className="w-4 h-4" />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xl sm:text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
+                              {funStats.semanasEnRacha.currentStreak}{" "}
+                              <span className="text-xs font-sans font-medium text-zinc-500 dark:text-zinc-400">
+                                {funStats.semanasEnRacha.currentStreak === 1 ? "semana" : "semanas"}
+                              </span>
+                            </div>
+                            <p className="text-2xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                              {funStats.semanasEnRacha.currentStreak > 0
+                                ? "seguidas dentro del presupuesto"
+                                : "Comienza una racha esta semana"}
+                            </p>
+                          </div>
+                          <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-3xs text-zinc-400">
+                            <span>Mejor racha lograda:</span>
+                            <strong className="text-zinc-700 dark:text-zinc-300 font-mono">
+                              {funStats.semanasEnRacha.bestStreak} {funStats.semanasEnRacha.bestStreak === 1 ? "sem." : "sem."}
+                            </strong>
+                          </div>
+                        </div>
+
+                        {/* Card 2: Metas por categoría */}
+                        <div
+                          id="card-stat-category-goals"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs space-y-2 flex flex-col justify-between"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                              Metas por categoría
+                            </span>
+                            <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-500 flex items-center justify-center">
+                              <Icons.Award className="w-4 h-4" />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xl sm:text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
+                              {funStats.categoriasCumplidas.metCount}{" "}
+                              <span className="text-xs font-sans font-medium text-zinc-500 dark:text-zinc-400">
+                                de {funStats.categoriasCumplidas.totalBudgetedCount}
+                              </span>
+                            </div>
+                            <p className="text-2xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                              categorías en meta este mes
+                            </p>
+                          </div>
+                          <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-3xs text-zinc-400">
+                            <span>Cumplimiento:</span>
+                            <strong className="text-indigo-600 dark:text-indigo-400 font-mono">
+                              {funStats.categoriasCumplidas.totalBudgetedCount > 0
+                                ? Math.round(
+                                    (funStats.categoriasCumplidas.metCount /
+                                      funStats.categoriasCumplidas.totalBudgetedCount) *
+                                      100
+                                  )
+                                : 0}
+                              %
+                            </strong>
+                          </div>
+                        </div>
+
+                        {/* Card 3: Mejor categoría / Ahorro */}
+                        <div
+                          id="card-stat-best-category"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs space-y-2 flex flex-col justify-between"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                              Mayor ahorro
+                            </span>
+                            <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-500 flex items-center justify-center">
+                              <Icons.TrendingUp className="w-4 h-4" />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                              {funStats.mejorCategoria ? funStats.mejorCategoria.categoryName : "Sin ahorro aún"}
+                            </div>
+                            <p className="text-2xs text-zinc-500 dark:text-zinc-400 mt-0.5 font-mono">
+                              {funStats.mejorCategoria
+                                ? `+${formatCurrency(funStats.mejorCategoria.savedAmountGTQ)} bajo meta`
+                                : "Superaste tus metas este mes"}
+                            </p>
+                          </div>
+                          <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-3xs text-zinc-400">
+                            <span>Margen:</span>
+                            <strong className="text-emerald-600 dark:text-emerald-400 font-mono">
+                              {funStats.mejorCategoria ? `${funStats.mejorCategoria.savedPercent}%` : "0%"}
+                            </strong>
+                          </div>
+                        </div>
+
+                        {/* Card 4: Meses dentro de presupuesto */}
+                        <div
+                          id="card-stat-months-within-budget"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs space-y-2 flex flex-col justify-between"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                              Meses en meta
+                            </span>
+                            <div className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-500 flex items-center justify-center">
+                              <Icons.CheckCircle2 className="w-4 h-4" />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xl sm:text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
+                              {funStats.mesesDentroDePresupuesto.metCount}{" "}
+                              <span className="text-xs font-sans font-medium text-zinc-500 dark:text-zinc-400">
+                                de {funStats.mesesDentroDePresupuesto.totalMonthsCount}
+                              </span>
+                            </div>
+                            <p className="text-2xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                              meses dentro de tu presupuesto general
+                            </p>
+                          </div>
+                          <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-3xs text-zinc-400">
+                            <span>Historial evaluado:</span>
+                            <strong className="text-teal-600 dark:text-teal-400 font-mono">
+                              {funStats.mesesDentroDePresupuesto.totalMonthsCount > 0
+                                ? Math.round(
+                                    (funStats.mesesDentroDePresupuesto.metCount /
+                                      funStats.mesesDentroDePresupuesto.totalMonthsCount) *
+                                      100
+                                  )
+                                : 0}
+                              %
+                            </strong>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* High-level Monthly Summary Card (US-059) */}
                     <div
                       id="card-monthly-budget-summary"

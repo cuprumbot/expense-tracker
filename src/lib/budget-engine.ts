@@ -4,6 +4,7 @@ import {
   CategoryBudgetTarget,
   MonthBudgetComparison,
   CategoryComparisonResult,
+  BudgetFunStats,
 } from "@/types/budget";
 import { Transaction } from "@/types/transaction";
 import defaultCatalog from "@/data/merchant-catalog.json";
@@ -431,5 +432,141 @@ export function compareMonthAgainstBudget(
     utilizationPercent,
     categoryComparisons,
     unbudgetedCategories,
+  };
+}
+
+/**
+ * Calculates gamified budget statistics including weekly streaks, category goal tallies, and savings highlights.
+ */
+export function calculateBudgetFunStats(
+  transactions: Transaction[],
+  budgetState: StoredBudgetState,
+  selectedMonthKey: string
+): BudgetFunStats {
+  const validTxs = (transactions || []).filter(
+    (t) => t.date && t.date.length >= 10 && t.amount > 0
+  );
+
+  // 1. Weekly Streak Calculation (semanasEnRacha)
+  let currentStreak = 0;
+  let bestStreak = 0;
+
+  if (validTxs.length > 0) {
+    const weekSpendMap = new Map<string, number>();
+
+    for (const t of validTxs) {
+      const parts = t.date.substring(0, 10).split("-").map((p) => parseInt(p, 10));
+      const d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+      const day = d.getUTCDay();
+      const diffToMonday = (day + 6) % 7;
+      const monday = new Date(d.getTime() - diffToMonday * 86400000);
+      const weekKey = monday.toISOString().substring(0, 10);
+
+      weekSpendMap.set(weekKey, (weekSpendMap.get(weekKey) || 0) + t.amount);
+    }
+
+    const sortedWeeks = Array.from(weekSpendMap.keys()).sort();
+
+    for (const weekKey of sortedWeeks) {
+      const spent = weekSpendMap.get(weekKey) || 0;
+      const monthKey = weekKey.substring(0, 7);
+      const applicablePlan =
+        getBudgetForMonth(budgetState, monthKey) || budgetState.currentBudget;
+
+      const monthlyBudget = applicablePlan?.totalMonthlyBudgetGTQ || 0;
+      const weeklyBudget = monthlyBudget > 0 ? monthlyBudget / 4.33 : 0;
+
+      if (weeklyBudget > 0) {
+        if (spent <= weeklyBudget) {
+          currentStreak += 1;
+          if (currentStreak > bestStreak) {
+            bestStreak = currentStreak;
+          }
+        } else {
+          currentStreak = 0;
+        }
+      }
+    }
+  }
+
+  // 2. Categories Met Goal in Selected Month (categoriasCumplidas) & 3. Best Performing Category (mejorCategoria)
+  const monthPlan =
+    getBudgetForMonth(budgetState, selectedMonthKey) || budgetState.currentBudget;
+
+  let metCount = 0;
+  let totalBudgetedCount = 0;
+  let mejorCategoria: {
+    categoryName: string;
+    savedAmountGTQ: number;
+    savedPercent: number;
+  } | null = null;
+
+  if (monthPlan && monthPlan.targets && monthPlan.targets.length > 0) {
+    totalBudgetedCount = monthPlan.targets.length;
+
+    const monthTxs = validTxs.filter((t) => t.date.startsWith(selectedMonthKey));
+    const actualByCategory = new Map<string, number>();
+
+    for (const t of monthTxs) {
+      const cat = t.category?.trim().toLowerCase() || "otros";
+      actualByCategory.set(cat, (actualByCategory.get(cat) || 0) + t.amount);
+    }
+
+    let maxSavedGTQ = -1;
+
+    for (const target of monthPlan.targets) {
+      const actual = actualByCategory.get(target.categoryName.toLowerCase()) || 0;
+      if (actual <= target.monthlyLimitGTQ) {
+        metCount += 1;
+      }
+
+      const savedGTQ = target.monthlyLimitGTQ - actual;
+      if (savedGTQ > 0 && savedGTQ > maxSavedGTQ) {
+        maxSavedGTQ = savedGTQ;
+        const savedPercent =
+          target.monthlyLimitGTQ > 0 ? (savedGTQ / target.monthlyLimitGTQ) * 100 : 0;
+        mejorCategoria = {
+          categoryName: target.categoryName,
+          savedAmountGTQ: Math.round(savedGTQ * 100) / 100,
+          savedPercent: Math.round(savedPercent * 10) / 10,
+        };
+      }
+    }
+  }
+
+  // 4. Months Within Overall Budget (mesesDentroDePresupuesto)
+  const monthSpendMap = new Map<string, number>();
+  for (const t of validTxs) {
+    const m = t.date.substring(0, 7);
+    monthSpendMap.set(m, (monthSpendMap.get(m) || 0) + t.amount);
+  }
+
+  let monthsMetCount = 0;
+  let totalMonthsCount = 0;
+
+  for (const [m, spent] of monthSpendMap.entries()) {
+    const plan = getBudgetForMonth(budgetState, m) || budgetState.currentBudget;
+    if (plan && plan.totalMonthlyBudgetGTQ > 0) {
+      totalMonthsCount += 1;
+      if (spent <= plan.totalMonthlyBudgetGTQ) {
+        monthsMetCount += 1;
+      }
+    }
+  }
+
+  return {
+    semanasEnRacha: {
+      currentStreak,
+      bestStreak,
+    },
+    categoriasCumplidas: {
+      metCount,
+      totalBudgetedCount,
+    },
+    mejorCategoria,
+    mesesDentroDePresupuesto: {
+      metCount: monthsMetCount,
+      totalMonthsCount,
+    },
   };
 }

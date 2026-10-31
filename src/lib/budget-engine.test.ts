@@ -12,6 +12,7 @@ import {
   applyBudgetUpdate,
   compareMonthAgainstBudget,
   formatMonthSpanish,
+  calculateBudgetFunStats,
 } from "./budget-engine";
 import { Transaction } from "@/types/transaction";
 import { BudgetPlan, StoredBudgetState } from "@/types/budget";
@@ -374,6 +375,95 @@ describe("US-056: Budget Category Tiers & Historical Context Helpers", () => {
       assert.strictEqual(result.unbudgetedCategories.length, 1);
       assert.strictEqual(result.unbudgetedCategories[0].categoryName, "Salud y Farmacia");
       assert.strictEqual(result.unbudgetedCategories[0].actualGTQ, 300);
+    });
+  });
+
+  describe("US-060: Gamified Budget Statistics & Streak Counters", () => {
+    const budgetPlan: BudgetPlan = {
+      id: "plan-gamified",
+      name: "Presupuesto Mensual",
+      targets: [
+        { categoryId: "supermercado", categoryName: "Supermercado", monthlyLimitGTQ: 2000, isEssential: true },
+        { categoryId: "restaurantes", categoryName: "Restaurantes y Cafés", monthlyLimitGTQ: 500, isEssential: false },
+        { categoryId: "transporte", categoryName: "Transporte y Combustible", monthlyLimitGTQ: 500, isEssential: true },
+      ],
+      totalMonthlyBudgetGTQ: 3000, // Weekly budget: 3000 / 4.33 ≈ 692.84
+      createdMode: "zero",
+      updatedAt: "2026-09-01T00:00:00.000Z",
+    };
+
+    const budgetState: StoredBudgetState = {
+      currentBudget: budgetPlan,
+      monthlyBudgets: {},
+      effectiveFromMonth: null,
+    };
+
+    it("tracks consecutive weekly streaks correctly when weekly expenses stay within weekly limit", () => {
+      // 3 consecutive Mondays: 2026-09-07, 2026-09-14, 2026-09-21
+      // Weekly limit ≈ 692.84. Spending 400, 500, 600 each week -> all within limit
+      const transactions: Transaction[] = [
+        { id: "w1", date: "2026-09-08", description: "Compra 1", amount: 400, currency: "GTQ", category: "Supermercado" },
+        { id: "w2", date: "2026-09-15", description: "Compra 2", amount: 500, currency: "GTQ", category: "Supermercado" },
+        { id: "w3", date: "2026-09-22", description: "Compra 3", amount: 600, currency: "GTQ", category: "Supermercado" },
+      ];
+
+      const stats = calculateBudgetFunStats(transactions, budgetState, "2026-09");
+      assert.strictEqual(stats.semanasEnRacha.currentStreak, 3);
+      assert.strictEqual(stats.semanasEnRacha.bestStreak, 3);
+    });
+
+    it("resets weekly streak when a week exceeds limit and tracks best achieved streak", () => {
+      // Week 1: 500 <= 692 (streak = 1)
+      // Week 2: 600 <= 692 (streak = 2)
+      // Week 3: 1200 > 692 (streak broken -> 0)
+      // Week 4: 400 <= 692 (streak = 1, best = 2)
+      const transactions: Transaction[] = [
+        { id: "w1", date: "2026-09-01", description: "W1", amount: 500, currency: "GTQ", category: "Supermercado" },
+        { id: "w2", date: "2026-09-08", description: "W2", amount: 600, currency: "GTQ", category: "Supermercado" },
+        { id: "w3", date: "2026-09-15", description: "W3", amount: 1200, currency: "GTQ", category: "Supermercado" },
+        { id: "w4", date: "2026-09-22", description: "W4", amount: 400, currency: "GTQ", category: "Supermercado" },
+      ];
+
+      const stats = calculateBudgetFunStats(transactions, budgetState, "2026-09");
+      assert.strictEqual(stats.semanasEnRacha.currentStreak, 1);
+      assert.strictEqual(stats.semanasEnRacha.bestStreak, 2);
+    });
+
+    it("accurately tallies categories met goal and identifies best performing category", () => {
+      // In 2026-09:
+      // Supermercado: 1700 <= 2000 (met! savings = 300)
+      // Restaurantes: 600 > 500 (not met!)
+      // Transporte: 500 <= 500 (met! savings = 0)
+      const transactions: Transaction[] = [
+        { id: "1", date: "2026-09-05", description: "Super", amount: 1700, currency: "GTQ", category: "Supermercado" },
+        { id: "2", date: "2026-09-10", description: "Rest", amount: 600, currency: "GTQ", category: "Restaurantes y Cafés" },
+        { id: "3", date: "2026-09-15", description: "Gas", amount: 500, currency: "GTQ", category: "Transporte y Combustible" },
+      ];
+
+      const stats = calculateBudgetFunStats(transactions, budgetState, "2026-09");
+
+      // 2 of 3 categories met
+      assert.strictEqual(stats.categoriasCumplidas.metCount, 2);
+      assert.strictEqual(stats.categoriasCumplidas.totalBudgetedCount, 3);
+
+      // Best category is Supermercado with 300 saved (15%)
+      assert.ok(stats.mejorCategoria);
+      assert.strictEqual(stats.mejorCategoria?.categoryName, "Supermercado");
+      assert.strictEqual(stats.mejorCategoria?.savedAmountGTQ, 300);
+      assert.strictEqual(stats.mejorCategoria?.savedPercent, 15);
+    });
+
+    it("evaluates months within overall budget accurately across multiple uploaded months", () => {
+      // Month 1 (2026-08): total 2800 <= 3000 (met!)
+      // Month 2 (2026-09): total 3500 > 3000 (not met!)
+      const transactions: Transaction[] = [
+        { id: "1", date: "2026-08-10", description: "Aug", amount: 2800, currency: "GTQ", category: "Supermercado" },
+        { id: "2", date: "2026-09-10", description: "Sep", amount: 3500, currency: "GTQ", category: "Supermercado" },
+      ];
+
+      const stats = calculateBudgetFunStats(transactions, budgetState, "2026-09");
+      assert.strictEqual(stats.mesesDentroDePresupuesto.metCount, 1);
+      assert.strictEqual(stats.mesesDentroDePresupuesto.totalMonthsCount, 2);
     });
   });
 });
