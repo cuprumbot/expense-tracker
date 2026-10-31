@@ -107,8 +107,8 @@ export function cleanBamDescription(rawDesc: string): string {
   if (!rawDesc) return "";
   let desc = rawDesc.trim();
 
-  // Strip leading asterisks or cardholder names (e.g. "*CHRISTIAN BROLO")
-  desc = desc.replace(/^\*[A-Z\s]+\*\s*/i, "");
+  // Strip leading asterisks or cardholder names (e.g. "*CHRISTIAN BROLO*" or "*CHRISTIAN BROLO ")
+  desc = desc.replace(/^\*([A-Z\s]+?\*|[A-Z]+\s+[A-Z]+\s+)/i, "");
 
   // Strip POS prefixes
   desc = desc.replace(/^(COMPRA\s+POS|POS\s+BAM|POS|COMPRA)\s+/i, "");
@@ -227,6 +227,7 @@ export async function extractBamTransactionsFromParser(
 
   const numPages = parser.doc.numPages;
   let totalTextItemsAcrossDoc = 0;
+  let activeSectionCurrency: "GTQ" | "USD" = "GTQ";
 
   for (let p = 1; p <= numPages; p++) {
     const page = await parser.doc.getPage(p);
@@ -256,6 +257,16 @@ export async function extractBamTransactionsFromParser(
     for (const y of sortedY) {
       const items = linesByY.get(y)!.sort((a, b) => a.x - b.x);
       const lineStr = items.map((it) => it.str).join(" ");
+
+      // Section currency tracking
+      if (lineStr.includes("EN DOLARES") || lineStr.includes("EN DÓLARES") || lineStr.includes("SUBTOTAL USD")) {
+        activeSectionCurrency = "USD";
+        continue;
+      }
+      if (lineStr.includes("EN QUETZALES") || lineStr.includes("SUBTOTAL QTZ")) {
+        activeSectionCurrency = "GTQ";
+        continue;
+      }
 
       // Ignore section headers, table titles, card labels
       if (
@@ -317,7 +328,7 @@ export async function extractBamTransactionsFromParser(
       }
 
       const cleanDesc = cleanBamDescription(rawDesc);
-      const isUsd = (debitItem && debitItem.str.includes("$")) || false;
+      const isUsd = activeSectionCurrency === "USD" || (debitItem && debitItem.str.includes("$")) || false;
 
       let finalAmount = debitVal;
       let originalCurrency: "GTQ" | "USD" = "GTQ";
@@ -389,7 +400,18 @@ export function parseBamStatementText(text: string): {
   const lineRegexSingleAmount =
     /^(\d{1,2}\/\d{1,2}\/\d{4})\s+(?:\d{1,2}\/\d{1,2}\/\d{4}\s+)?(.+?)\s+([Q\$]?\.?\s*[\d,]+\.\d{2}-?)$/i;
 
+  let activeSectionCurrency: "GTQ" | "USD" = "GTQ";
+
   for (const line of lines) {
+    if (line.includes("EN DOLARES") || line.includes("EN DÓLARES") || line.includes("SUBTOTAL USD")) {
+      activeSectionCurrency = "USD";
+      continue;
+    }
+    if (line.includes("EN QUETZALES") || line.includes("SUBTOTAL QTZ")) {
+      activeSectionCurrency = "GTQ";
+      continue;
+    }
+
     let dateStr = "";
     let rawDesc = "";
     let debitStr = "";
@@ -433,7 +455,7 @@ export function parseBamStatementText(text: string): {
     }
 
     const cleanDesc = cleanBamDescription(rawDesc);
-    const isUsd = debitStr.includes("$");
+    const isUsd = activeSectionCurrency === "USD" || debitStr.includes("$");
 
     let finalAmount = debitVal;
     let originalCurrency: "GTQ" | "USD" = "GTQ";

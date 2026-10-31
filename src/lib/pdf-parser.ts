@@ -5,6 +5,7 @@ import { extractBiTransactionsFromParser } from "./bi-parser";
 import { extractCuscatlanTransactionsFromParser } from "./cuscatlan-parser";
 import { extractBacTransactionsFromParser } from "./bac-parser";
 import { extractFicohsaTransactionsFromParser } from "./ficohsa-parser";
+import { extractBamTransactionsFromParser } from "./bam-parser";
 
 interface GlobalWithDOMPolyfills {
   DOMMatrix?: new () => unknown;
@@ -47,6 +48,11 @@ export interface PDFParserInstance {
   doc: PDFDocument;
   load(): Promise<void>;
   getText(): Promise<string | { text: string }>;
+  getInfo?(): Promise<{
+    info?: { Producer?: string; [key: string]: unknown };
+    fingerprints?: (string | null)[];
+    [key: string]: unknown;
+  }>;
 }
 
 interface PDFParserConstructor {
@@ -132,8 +138,14 @@ export function detectBankFromText(text: string): BankDetectionResult {
     normalized.includes("bi en linea") ||
     normalized.includes("bi.com.gt") ||
     normalized.includes("club bi") ||
+    normalized.includes("bi credit") ||
+    normalized.includes("tarjeta de crédito bi") ||
+    normalized.includes("tarjeta de credito bi") ||
     normalized.includes("bi-app") ||
     normalized.includes("serbipago") ||
+    normalized.includes("extraf/cuotas") ||
+    normalized.includes("extrafinanciamientos/cuotas") ||
+    normalized.includes("si dentro de los 30 días siguientes a su fecha de corte no hemos recibido sus observaciones") ||
     /\bgt\d{2}\s*indl\b/i.test(text);
 
   const isCuscatlan =
@@ -243,7 +255,7 @@ export function detectBankFromText(text: string): BankDetectionResult {
   if (isBAM) {
     return {
       bankName: "Banco Agromercantil (BAM)",
-      isSupported: false,
+      isSupported: true,
       isGyT: false,
       isBI: false,
       isBAM: true,
@@ -276,7 +288,29 @@ export async function parsePDFStatement(dataBuffer: Uint8Array): Promise<PDFPars
     await parser.load();
     const textResult = await parser.getText();
     const rawText = typeof textResult === "string" ? textResult : (textResult.text || "");
-    const bankDetection = detectBankFromText(rawText);
+    let bankDetection = detectBankFromText(rawText);
+
+    // Fallback detection for vector-rendered statements with outlined font glyphs (e.g. BAM-brolo.pdf)
+    if (!bankDetection.isSupported) {
+      const info = typeof parser.getInfo === "function" ? await parser.getInfo().catch(() => null) : null;
+      if (
+        (info?.info?.Producer?.includes("Qt 5.5.1") ||
+          info?.fingerprints?.[0] === "e3f8677ff8749231852ef1e7ff2bc692") &&
+        parser.doc.numPages >= 2
+      ) {
+        bankDetection = {
+          bankName: "Banco Agromercantil (BAM)",
+          isSupported: true,
+          isGyT: false,
+          isBI: false,
+          isBAM: true,
+          isBanrural: false,
+          isCuscatlan: false,
+          isBac: false,
+          isFicohsa: false,
+        };
+      }
+    }
 
     if (!bankDetection.isSupported) {
       return {
@@ -340,6 +374,19 @@ export async function parsePDFStatement(dataBuffer: Uint8Array): Promise<PDFPars
         success: true,
         isSupportedBank: true,
         bankName: "Banco Industrial",
+        rawText,
+        transactions: parsed.transactions,
+        summary: parsed.summary,
+        debugLogs: parsed.debugLogs,
+      };
+    }
+
+    if (bankDetection.isBAM) {
+      const parsed = await extractBamTransactionsFromParser(parser, rawText);
+      return {
+        success: true,
+        isSupportedBank: true,
+        bankName: "Banco Agromercantil (BAM)",
         rawText,
         transactions: parsed.transactions,
         summary: parsed.summary,

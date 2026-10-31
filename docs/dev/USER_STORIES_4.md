@@ -300,22 +300,22 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
   - [ ] Bank detection executes 100% locally with zero network requests or LLM invocations.
   - [ ] Includes unit tests in `src/lib/pdf-parser.test.ts` verifying accurate detection and automatic dispatching for all 5 credit card issuers, as well as fallback behavior for unsupported documents.
 
-### [ ] US-066: Banco Industrial (BI) Credit Card Statement PDF Parser
+### [x] US-066: Banco Industrial (BI) Credit Card Statement PDF Parser
 - **As a** Banco Industrial credit card cardholder,
 - **I want to** upload my Bi Credit (Visa or Mastercard) PDF statement and have my expenses extracted locally,
 - **So that** my credit card spending is accurately tracked in Quetzales with complete privacy.
 - **Split-Brain Boundary:** 100% Local (Local PDF text extraction and regex parsing in `src/lib/bi-parser.ts`).
 - **Acceptance Criteria:**
-  - [ ] References and specializes **US-018** ([`iteration_2/USER_STORIES_2.md`](./iteration_2/USER_STORIES_2.md)) exclusively for Bi Credit credit card statement layouts (Visa / Mastercard).
-  - [ ] Extracts individual card purchase transactions from Banco Industrial credit card statement layouts.
-  - [ ] Parses transaction dates (`DD/MM/YYYY` or `DD-MMM`) and normalizes them to ISO format `YYYY-MM-DD`.
-  - [ ] Normalizes merchant/establishment descriptions: removes authorization codes, POS terminal markers (`POS BI`, `COMPRA POS`), card terminal numbers, and location identifiers (e.g., `GUATEMALA GTM`, `GT`).
-  - [ ] Extracts purchase amounts in both Guatemalan Quetzales (`Q`) and US Dollars (`$`), converting USD transactions to Quetzales at the active exchange rate and tagging `originalCurrency: "USD"` / `originalAmount`.
-  - [ ] Filters out payments to the card (`PAGO DE TARJETA`, `PAGO EN EFECTIVO`, `PAGO POR BI EN LINEA`, `PAGO ACH`), credit adjustments, cashback/points redemptions, and financing reversals.
-  - [ ] Ignores statement summaries and header blocks (`Límite de Crédito`, `Saldo al Corte`, `Pago Mínimo`, `Pago de Contado`, `Fecha de Corte`, `Fecha Límite de Pago`, `Puntos Bi Disponibles`).
-  - [ ] Discards legal footers, disclaimer text, and interest calculation disclosure tables.
-  - [ ] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
-  - [ ] Includes comprehensive unit tests in `src/lib/bi-parser.test.ts` covering single-page, multi-page, and dual-currency (GTQ and USD) credit card statement fixtures.
+  - [x] References and specializes **US-018** ([`iteration_2/USER_STORIES_2.md`](./iteration_2/USER_STORIES_2.md)) exclusively for Bi Credit credit card statement layouts (Visa / Mastercard).
+  - [x] Extracts individual card purchase transactions from Banco Industrial credit card statement layouts.
+  - [x] Parses transaction dates (`DD/MM/YYYY` or `DD-MMM`) and normalizes them to ISO format `YYYY-MM-DD`.
+  - [x] Normalizes merchant/establishment descriptions: removes authorization codes, POS terminal markers (`POS BI`, `COMPRA POS`), card terminal numbers, and location identifiers (e.g., `GUATEMALA GTM`, `GT`).
+  - [x] Extracts purchase amounts in both Guatemalan Quetzales (`Q`) and US Dollars (`$`), converting USD transactions to Quetzales at the active exchange rate and tagging `originalCurrency: "USD"` / `originalAmount`.
+  - [x] Filters out payments to the card (`PAGO DE TARJETA`, `PAGO EN EFECTIVO`, `PAGO POR BI EN LINEA`, `PAGO ACH`), credit adjustments, cashback/points redemptions, and financing reversals.
+  - [x] Ignores statement summaries and header blocks (`Límite de Crédito`, `Saldo al Corte`, `Pago Mínimo`, `Pago de Contado`, `Fecha de Corte`, `Fecha Límite de Pago`, `Puntos Bi Disponibles`).
+  - [x] Discards legal footers, disclaimer text, and interest calculation disclosure tables.
+  - [x] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
+  - [x] Includes comprehensive unit tests in `src/lib/bi-parser.test.ts` covering single-page, multi-page, and dual-currency (GTQ and USD) credit card statement fixtures.
 
 ### [x] US-067: Banco Cuscatlán Credit Card Statement PDF Parser
 - **As a** Banco Cuscatlán credit card customer,
@@ -365,23 +365,23 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
   - [x] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
   - [x] Includes unit tests in `src/lib/ficohsa-parser.test.ts` covering Ficohsa statement text fixtures, multi-page layouts, and edge cases.
 
-### [ ] US-070: Banco Agromercantil (BAM) Credit Card Statement PDF Parser
+### [x] US-070: Banco Agromercantil (BAM) Credit Card Statement PDF Parser
 - **As a** Banco Agromercantil (BAM) credit card customer,
 - **I want to** upload my BAM credit card PDF statement and have my expenses parsed locally,
 - **So that** I can track my spending without relying on external LLM extraction services.
 - **Split-Brain Boundary:** 100% Local (Dedicated module `src/lib/bam-parser.ts`).
 - **Acceptance Criteria:**
-  - [ ] References and supersedes draft story **US-020** ([`iteration_2/USER_STORIES_2.md`](./iteration_2/USER_STORIES_2.md)), specializing exclusively in BAM credit card statements.
-  - [ ] Creates dedicated parser `src/lib/bam-parser.ts` exporting `extractBamTransactionsFromParser(parser, rawText)`.
-  - [ ] Extracts transaction rows exclusively from BAM credit card statement layouts (Visa and Mastercard).
-  - [ ] Accurately extracts transaction date, merchant concept, and debit amount.
-  - [ ] Normalizes dates to `YYYY-MM-DD`.
-  - [ ] Handles dual-currency statements (GTQ and USD), converting USD purchases to Quetzales at the active exchange rate and setting `originalCurrency: "USD"`.
-  - [ ] Cleans and sanitizes concept strings, stripping authorization codes, terminal numbers, POS tokens, and address strings.
-  - [ ] Excludes payments to the card (`PAGO DE TARJETA`, `PAGO ELECTRONICO BAM`, `ABONO A TARJETA`), rewards redemptions (Puntos BAM), credit adjustments, and financing reversals.
-  - [ ] Discards non-transactional metadata, credit limit summaries (`Límite de Crédito`, `Saldo al Corte`, `Pago Mínimo`), cut-off dates (`Fecha de Corte`), and payment deadlines (`Fecha Límite de Pago`).
-  - [ ] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
-  - [ ] Includes unit tests in `src/lib/bam-parser.test.ts` covering typical BAM credit card statement layouts and tabular formats.
+  - [x] References and supersedes draft story **US-020** ([`iteration_2/USER_STORIES_2.md`](./iteration_2/USER_STORIES_2.md)), specializing exclusively in BAM credit card statements.
+  - [x] Creates dedicated parser `src/lib/bam-parser.ts` exporting `extractBamTransactionsFromParser(parser, rawText)`.
+  - [x] Extracts transaction rows exclusively from BAM credit card statement layouts (Visa and Mastercard).
+  - [x] Accurately extracts transaction date, merchant concept, and debit amount.
+  - [x] Normalizes dates to `YYYY-MM-DD`.
+  - [x] Handles dual-currency statements (GTQ and USD), converting USD purchases to Quetzales at the active exchange rate and setting `originalCurrency: "USD"`.
+  - [x] Cleans and sanitizes concept strings, stripping authorization codes, terminal numbers, POS tokens, and address strings.
+  - [x] Excludes payments to the card (`PAGO DE TARJETA`, `PAGO ELECTRONICO BAM`, `ABONO A TARJETA`), rewards redemptions (Puntos BAM), credit adjustments, and financing reversals.
+  - [x] Discards non-transactional metadata, credit limit summaries (`Límite de Crédito`, `Saldo al Corte`, `Pago Mínimo`), cut-off dates (`Fecha de Corte`), and payment deadlines (`Fecha Límite de Pago`).
+  - [x] Outputs canonical `Transaction[]` tagged with `classificationSource: 'local'`.
+  - [x] Includes unit tests in `src/lib/bam-parser.test.ts` covering typical BAM credit card statement layouts and tabular formats.
 
 ---
 
