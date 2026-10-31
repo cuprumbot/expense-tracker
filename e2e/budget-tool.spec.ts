@@ -161,4 +161,132 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await expect(page.locator("#btn-dashboard-open-budget")).toBeVisible();
     await expect(page.getByText("1 movimientos analizados")).toBeVisible();
   });
+
+  test("US-056: creates budget from zero using tiered category presets and quick actions", async ({ page }) => {
+    await page.goto("/");
+
+    // Open budget tool from landing
+    await page.locator("#btn-open-budget-landing").click();
+    await expect(page.locator("#tab-configurar-presupuesto")).toBeVisible();
+
+    // Verify option 2 is disabled without transactions
+    const fromTxsOption = page.locator("#btn-mode-from-transactions");
+    await expect(fromTxsOption).toBeDisabled();
+
+    // Verify option 1 (desde cero) is selected
+    const fromZeroOption = page.locator("#btn-mode-from-zero");
+    await expect(fromZeroOption).toBeVisible();
+
+    // Click "Agregar categorías principales"
+    const addMainBtn = page.locator("#btn-add-main-categories");
+    await expect(addMainBtn).toBeVisible();
+    await addMainBtn.click();
+
+    // Verify essential and discretionary cards were added
+    const supermercadoCard = page.locator("#target-card-supermercado");
+    await expect(supermercadoCard).toBeVisible();
+    await expect(supermercadoCard.getByText("Esencial")).toBeVisible();
+
+    const restaurantesCard = page.locator("#target-card-restaurantes");
+    await expect(restaurantesCard).toBeVisible();
+    await expect(restaurantesCard.getByText("Estilo de vida")).toBeVisible();
+
+    // Verify essential tiered amount preset chips (e.g., Q 3,000)
+    const preset3000 = supermercadoCard.getByRole("button", { name: "Q 3,000" });
+    await expect(preset3000).toBeVisible();
+    await preset3000.click();
+
+    // Fine-tune with +Q 100
+    const plusBtn = supermercadoCard.getByRole("button", { name: "+Q 100" });
+    await plusBtn.click();
+
+    // Verify summary bar is updated
+    const summaryBar = page.locator("#budget-builder-summary-bar");
+    await expect(summaryBar).toBeVisible();
+    await expect(page.locator("#total-budgeted-display")).toBeVisible();
+
+    // Click "Guardar presupuesto"
+    const saveBtn = page.locator("#btn-save-budget");
+    await expect(saveBtn).toBeEnabled();
+    await saveBtn.click();
+
+    // Verify transition to comparativa tab and active status badge
+    await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
+    await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
+
+    // Verify persistence after page reload
+    await page.reload();
+    await page.locator("#btn-open-budget-landing").click();
+    await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
+  });
+
+  test("US-056: displays historical context chips when transactions exist", async ({ page }) => {
+    await page.goto("/");
+
+    // Seed session with transactions
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "expense_tracker_session_v1",
+        JSON.stringify({
+          version: 1,
+          savedAt: new Date().toISOString(),
+          transactions: [
+            {
+              id: "tx-h-1",
+              date: "2026-08-01",
+              description: "Supermercados La Torre",
+              amount: 1000,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+            {
+              id: "tx-h-2",
+              date: "2026-09-01",
+              description: "Supermercados La Torre",
+              amount: 1500,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+          ],
+          summary: {
+            totalRowsProcessed: 2,
+            validTransactionsCount: 2,
+            skippedRowsCount: 0,
+            totalAmount: 2500,
+          },
+          bankName: "Banco Industrial",
+          customCategories: [],
+        })
+      );
+    });
+
+    await page.reload();
+    await page.locator("#btn-resume-session").click();
+
+    // Open budget tool from dashboard
+    await page.locator("#btn-dashboard-open-budget").click();
+
+    // Switch to configurar tab
+    await page.locator("#tab-configurar-presupuesto").click();
+
+    // Click Supermercado chip to add it
+    const superChip = page.locator("#chip-cat-supermercado");
+    if (!(await page.locator("#target-card-supermercado").isVisible().catch(() => false))) {
+      await superChip.click();
+    }
+
+    // Historical chips should be rendered
+    const historyAvgChip = page.locator("#chip-history-avg-supermercado");
+    await expect(historyAvgChip).toBeVisible();
+    await expect(historyAvgChip).toContainText("Promedio: Q");
+
+    // Click historical chip to set target
+    await historyAvgChip.click();
+
+    // Click save
+    await page.locator("#btn-save-budget").click();
+    await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
+  });
 });

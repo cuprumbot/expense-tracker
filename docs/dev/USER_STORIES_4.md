@@ -110,24 +110,24 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
 
 ## Phase 28: Budget Creation Flows (From Zero & Transaction-Based)
 
-### [ ] US-056: Interactive "Create Budget From Zero" Builder with Tiered Category Presets
+### [x] US-056: Interactive "Create Budget From Zero" Builder with Tiered Category Presets
 - **As a** user who wants to create a budget from scratch,
 - **I want** clickable category chips to easily add categories to my budget and one-click target amount suggestions tailored to each category's importance and my past spending,
 - **So that** building a complete, logical budget from zero takes only a few clicks.
 - **Split-Brain Boundary:** 100% Local (Deterministic category tier presets and interactive UI).
 - **Acceptance Criteria:**
-  - [ ] When no budget exists (or when creating a new budget), presents two clear starting paths:
+  - [x] When no budget exists (or when creating a new budget), presents two clear starting paths:
     1. `"Crear presupuesto desde cero"` (Always available).
     2. `"Generar basado en mis gastos subidos"` (Available when transactions are loaded; displays a helpful prompt to upload movements if none exist yet).
-  - [ ] In the `"Crear presupuesto desde cero"` flow:
+  - [x] In the `"Crear presupuesto desde cero"` flow:
     - Displays clickable category pills/cards for all standard categories in `merchant-catalog.json` plus any user-created `CustomCategory` items, grouped or badged by priority (`"Gastos Esenciales / Hogar"` vs. `"Estilo de Vida y Ocio"`).
     - Clicking a category chip adds it to (or removes it from) the active budget builder list. Includes an `"Agregar categorías principales"` quick action for convenience.
-  - [ ] For each added category, provides clickable quick-amount pills (`Q`) so the user can set or adjust the target without typing from scratch:
+  - [x] For each added category, provides clickable quick-amount pills (`Q`) so the user can set or adjust the target without typing from scratch:
     - **Logical Category Tiers:** Essential living expense categories (`Supermercado`, `Servicios Básicos`, `Transporte y Combustible`, `Salud y Farmacia`, `Educación`, `Visacuotas y Financiamiento`) provide higher suggested amount chips (e.g., `Q 1,000`, `Q 2,000`, `Q 3,000`, `Q 4,500`) than discretionary / "for fun" categories (`Restaurantes y Cafés`, `Entretenimiento y Compras`, `Suscripciones`), which provide lower suggested amount chips (e.g., `Q 150`, `Q 300`, `Q 500`, `Q 800`).
     - **Historical Context Chips (when transactions exist):** If the user has uploaded transactions for that category, also displays clickable chips based on their actual history (e.g., `"Promedio: Q 1,450"`, `"Último mes: Q 1,600"`, `"Meta -10%: Q 1,300"`).
     - Also includes a clean numeric input in `Q` and quick increment/decrement buttons (`-Q 100` / `+Q 100`) for fine-tuning.
-  - [ ] Displays a live summary bar showing the total monthly budget in Quetzales (`Total presupuestado: Q XX,XXX.XX`) and breakdown between essential and discretionary targets.
-  - [ ] Clicking `"Guardar presupuesto"` persists the budget to `localStorage` and transitions to the Budget Comparison & Overview screen.
+  - [x] Displays a live summary bar showing the total monthly budget in Quetzales (`Total presupuestado: Q XX,XXX.XX`) and breakdown between essential and discretionary targets.
+  - [x] Clicking `"Guardar presupuesto"` persists the budget to `localStorage` and transitions to the Budget Comparison & Overview screen.
 
 ### [ ] US-057: Realistic "Create Budget From Transactions" Generator
 - **As a** user who has already uploaded bank statements or expense lists,
