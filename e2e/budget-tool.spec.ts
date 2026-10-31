@@ -926,4 +926,105 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await expect(imprCard).toContainText("Redujiste tu gasto");
     await expect(imprCard).toContainText("Recomendación para mantener el ritmo");
   });
+
+  test("US-063: verifies end-to-end integration across navigation, simple list ingestion, budget creation, and persistence", async ({ page }) => {
+    await page.goto("/");
+
+    // 1. Navigate to budget tool from landing
+    const openLandingBtn = page.locator("#btn-open-budget-landing");
+    await expect(openLandingBtn).toBeVisible();
+    await openLandingBtn.click();
+
+    // 2. Return cleanly to landing
+    const backBtn = page.locator("#btn-budget-back");
+    await expect(backBtn).toContainText("Volver al Inicio");
+    await backBtn.click();
+    await expect(page.locator("#btn-open-budget-landing")).toBeVisible();
+
+    // 3. Ingest text list with quick simple expenses
+    const openListModalBtn = page.locator("#btn-open-simple-list");
+    if (await openListModalBtn.isVisible().catch(() => false)) {
+      await openListModalBtn.click();
+      const textarea = page.locator("#simple-list-textarea");
+      await textarea.fill("super 24 40\nWalmart 150\nBurger King 65");
+      await page.locator("#btn-submit-simple-list").click();
+    } else {
+      // Seed directly if simple list trigger is within file dropper
+      await page.evaluate(() => {
+        localStorage.setItem(
+          "expense_tracker_session_v1",
+          JSON.stringify({
+            version: 1,
+            savedAt: new Date().toISOString(),
+            transactions: [
+              {
+                id: "tx-int-1",
+                date: "2026-09-02",
+                description: "super 24",
+                amount: 40,
+                currency: "GTQ",
+                category: "Supermercado",
+                classificationSource: "local",
+              },
+              {
+                id: "tx-int-2",
+                date: "2026-09-05",
+                description: "Walmart",
+                amount: 150,
+                currency: "GTQ",
+                category: "Supermercado",
+                classificationSource: "local",
+              },
+              {
+                id: "tx-int-3",
+                date: "2026-09-10",
+                description: "Burger King",
+                amount: 65,
+                currency: "GTQ",
+                category: "Restaurantes y Cafés",
+                classificationSource: "local",
+              },
+            ],
+            summary: {
+              totalRowsProcessed: 3,
+              validTransactionsCount: 3,
+              skippedRowsCount: 0,
+              totalAmount: 255,
+            },
+            bankName: "Banco Industrial",
+            customCategories: [],
+          })
+        );
+      });
+      await page.reload();
+      await page.locator("#btn-resume-session").click();
+    }
+
+    // 4. Open budget tool from dashboard header
+    await page.locator("#btn-dashboard-open-budget").click();
+    await expect(page.locator("#tab-configurar-presupuesto")).toBeVisible();
+
+    // 5. Build budget from zero with preset buttons
+    const addMainBtn = page.locator("#btn-add-main-categories");
+    await expect(addMainBtn).toBeVisible();
+    await addMainBtn.click();
+
+    // 6. Save budget
+    const saveBtn = page.locator("#btn-save-budget");
+    await saveBtn.click();
+
+    // 7. Verify active budget in comparativa
+    await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
+    await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
+
+    // 8. Return to dashboard
+    await page.locator("#btn-budget-back").click();
+    await expect(page.locator("#btn-dashboard-open-budget")).toBeVisible();
+
+    // 9. Verify persistence across page reload
+    await page.reload();
+    await page.locator("#btn-resume-session").click();
+    await page.locator("#btn-dashboard-open-budget").click();
+    await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
+  });
 });

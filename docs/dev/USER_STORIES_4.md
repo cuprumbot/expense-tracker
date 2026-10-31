@@ -236,22 +236,22 @@ It details the implementation of the comprehensive **Budgeting Tool** (creation 
 
 ## Phase 32: Fourth Iteration End-to-End Integration & Quality Assurance
 
-### [ ] US-063: End-to-End Budgeting & Simple List Integration, Localization & Regression Verification
+### [x] US-063: End-to-End Budgeting & Simple List Integration, Localization & Regression Verification
 - **As a** user,
 - **I want** the Budgeting Tool and Simple Expense List ingestion to integrate seamlessly with existing PDF/CSV parsers, the 4-panel dashboard, and `localStorage` persistence,
 - **So that** the entire application remains fast, cohesive, accessible, and error-free.
 - **Split-Brain Boundary:** 100% Local verification.
 - **Acceptance Criteria:**
-  - [ ] The Budgeting Tool is reachable from both the initial File Upload view and the Dashboard view, and returns cleanly to the previous screen.
-  - [ ] Budgets can be created both from zero (with clickable category chips and logical tiered amount presets) and from uploaded transactions (with realistic targets).
-  - [ ] Editing a budget prompts the user to apply changes to previous months or from now on, and monthly comparisons/stats honor the selected scope.
-  - [ ] Simple text lists (`Walmart 150`, `150 Burger king`, `40 super 24`, `super 24 20`, etc.) parse accurately with upload-day dates, `GTQ` currency defaults, and context-aware vendor number disambiguation.
-  - [ ] All budget data and imported list transactions persist in `localStorage` across page reloads.
-  - [ ] 100% of user-facing UI text, labels, buttons, modals, and coaching insights are in Spanish.
-  - [ ] Zero emojis are used anywhere in the UI; all icons use standard SVG components.
-  - [ ] All monetary amounts are formatted in Guatemalan Quetzales (`Q` / `GTQ`).
-  - [ ] `npm test` passes all existing and new unit tests with zero regressions.
-  - [ ] `npm run build` succeeds with zero TypeScript or Next.js build errors.
+  - [x] The Budgeting Tool is reachable from both the initial File Upload view and the Dashboard view, and returns cleanly to the previous screen.
+  - [x] Budgets can be created both from zero (with clickable category chips and logical tiered amount presets) and from uploaded transactions (with realistic targets).
+  - [x] Editing a budget prompts the user to apply changes to previous months or from now on, and monthly comparisons/stats honor the selected scope.
+  - [x] Simple text lists (`Walmart 150`, `150 Burger king`, `40 super 24`, `super 24 20`, etc.) parse accurately with upload-day dates, `GTQ` currency defaults, and context-aware vendor number disambiguation.
+  - [x] All budget data and imported list transactions persist in `localStorage` across page reloads.
+  - [x] 100% of user-facing UI text, labels, buttons, modals, and coaching insights are in Spanish.
+  - [x] Zero emojis are used anywhere in the UI; all icons use standard SVG components.
+  - [x] All monetary amounts are formatted in Guatemalan Quetzales (`Q` / `GTQ`).
+  - [x] `npm test` passes all existing and new unit tests with zero regressions.
+  - [x] `npm run build` succeeds with zero TypeScript or Next.js build errors.
 
 ---
 
