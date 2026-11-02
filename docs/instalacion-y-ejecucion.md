@@ -129,7 +129,7 @@ npm run lint
 
 ### Pruebas Unitarias
 
-Para ejecutar la suite completa de pruebas unitarias (131 pruebas) mediante el Node.js Test Runner:
+Para ejecutar la suite completa de pruebas unitarias (291 pruebas en 58 suites) mediante el Node.js Test Runner:
 
 ```bash
 npm test

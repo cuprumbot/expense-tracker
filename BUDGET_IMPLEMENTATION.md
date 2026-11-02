@@ -23,7 +23,19 @@ Se ha implementado el módulo completo de Presupuestos Personales (**Personal Ex
 
 ---
 
-## 2. Detalle de Historias de Usuario Implementadas
+## 2. Galería Visual del Módulo de Presupuestos
+
+| Configurador Interactivo y Presets por Niveles | Comparativa Real vs. Presupuestado y Rachas |
+| :---: | :---: |
+| ![Configurador de Presupuestos](docs/screenshots/budget-tool-builder.png) | ![Comparativa y Rachas](docs/screenshots/budget-tool-overview.png) |
+
+| Diagnósticos de Causa Raíz y Sugerencias de Mejora |
+| :---: |
+| ![Diagnósticos y Coaching](docs/screenshots/budget-tool-insights.png) |
+
+---
+
+## 3. Detalle de Historias de Usuario Implementadas
 
 | Historia | Título | Commit | Estado |
 | :--- | :--- | :--- | :---: |
@@ -101,11 +113,11 @@ Se ha implementado el módulo completo de Presupuestos Personales (**Personal Ex
 
 ---
 
-## 3. Resultados de Pruebas y Verificación
+## 4. Resultados de Pruebas y Verificación
 
 ### Pruebas Unitarias (`npm test`)
 - **Total de Pruebas Ejecutadas:** 291
-- **Suites:** 81
+- **Suites:** 58
 - **Pasadas:** 291 (100%)
 - **Fallidas:** 0
 - **Tiempo de Ejecución:** ~5.7s
@@ -135,7 +147,7 @@ Se ha implementado el módulo completo de Presupuestos Personales (**Personal Ex
 
 ---
 
-## 4. Archivos Clave Creados o Modificados
+## 5. Archivos Clave Creados o Modificados
 
 - `src/types/budget.ts`: Definición de interfaces y tipos de presupuestos, metas, estadísticas y comparaciones.
 - `src/lib/budget-engine.ts`: Motor determinista de cálculo presupuestario, generación de metas, diagnósticos de causa raíz y estadísticas.
