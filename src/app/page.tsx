@@ -1106,34 +1106,37 @@ export default function Home() {
           </p>
         </section>
 
-        {/* Prominent Budget Tool Entry Card (US-055) */}
-        <section
-          id="card-budget-tool-entry"
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl border border-indigo-200/80 bg-indigo-50/50 dark:border-indigo-900/60 dark:bg-indigo-950/20 shadow-xs"
-        >
-          <div className="flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5 sm:mt-0">
-              <Icons.Target className="w-5 h-5" />
-            </div>
-            <div className="space-y-0.5">
-              <h2 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                Herramienta de Presupuesto
-              </h2>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Planifica y controla tus metas financieras mensuales desde cero o basadas en tus gastos reales.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            id="btn-open-budget-landing"
-            onClick={handleOpenBudgetTool}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 rounded-xl transition-colors cursor-pointer shadow-xs shrink-0 self-stretch sm:self-auto justify-center"
+        {/* Budget Tool Entry Card when no session is active (US-055) */}
+        {!savedSession && (
+          <section
+            id="card-budget-tool-entry"
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 shadow-xs"
           >
-            <Icons.Target className="w-4 h-4" />
-            <span>Crear o ver mi presupuesto</span>
-          </button>
-        </section>
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shrink-0 shadow-xs mt-0.5 sm:mt-0">
+                <Icons.Target className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <h2 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                  Herramienta de Presupuesto
+                </h2>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  Planifica y controla tus metas financieras mensuales desde cero o basadas en tus gastos reales.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              id="btn-open-budget-landing"
+              onClick={handleOpenBudgetTool}
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors cursor-pointer shadow-xs shrink-0 self-stretch sm:self-auto justify-center"
+            >
+              <Icons.Target className="w-4 h-4 shrink-0" />
+              <span>Ir al presupuesto</span>
+              <Icons.ArrowRight className="w-4 h-4 shrink-0" />
+            </button>
+          </section>
+        )}
 
         {/* Storage Notification Toast */}
         {storageNotification && (
@@ -1152,9 +1155,9 @@ export default function Home() {
           </div>
         )}
 
-        {/* Saved Session Detection Banner (US-011) - High Visual Priority */}
+        {/* Saved Session Detection Banner (US-011) - Equal Visual Weight for Dashboard & Budget */}
         {savedSession && !transactions && !isProcessingPDF && !unsupportedBank && (
-          <section className="rounded-2xl border-2 border-zinc-900/10 dark:border-zinc-100/15 bg-white dark:bg-zinc-900 p-6 sm:p-7 shadow-md space-y-5">
+          <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-7 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3.5">
                 <div className="w-11 h-11 rounded-2xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
@@ -1183,43 +1186,91 @@ export default function Home() {
                 </div>
               </div>
 
-              {savedSession.summary?.totalAmount !== undefined && (
-                <div className="sm:text-right bg-zinc-50 dark:bg-zinc-950/60 sm:bg-transparent sm:dark:bg-transparent p-3 sm:p-0 rounded-xl border sm:border-0 border-zinc-100 dark:border-zinc-800/80">
-                  <span className="text-3xs uppercase font-medium tracking-wider text-zinc-400 block">
-                    Gasto total registrado
-                  </span>
-                  <span className="text-lg sm:text-xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
-                    {formatCurrency(savedSession.summary.totalAmount)}
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center gap-4">
+                {savedSession.summary?.totalAmount !== undefined && (
+                  <div className="sm:text-right bg-zinc-50 dark:bg-zinc-950/60 sm:bg-transparent sm:dark:bg-transparent p-3 sm:p-0 rounded-xl border sm:border-0 border-zinc-100 dark:border-zinc-800/80">
+                    <span className="text-3xs uppercase font-medium tracking-wider text-zinc-400 block">
+                      Gasto total registrado
+                    </span>
+                    <span className="text-lg sm:text-xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
+                      {formatCurrency(savedSession.summary.totalAmount)}
+                    </span>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  id="btn-banner-reset-session"
+                  onClick={() => {
+                    setWipeCustomCategoriesOnReset(false);
+                    setIsResetSessionModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer self-start sm:self-center"
+                  title="Reiniciar sesión de transacciones"
+                >
+                  <Icons.RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reiniciar sesión</span>
+                </button>
+              </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-              <button
-                type="button"
-                id="btn-resume-session"
-                onClick={handleResumeSession}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-sm cursor-pointer"
-              >
-                <Icons.LayoutDashboard className="w-4 h-4" />
-                <span>Ir al dashboard</span>
-                <Icons.ArrowRight className="w-4 h-4" />
-              </button>
+            {/* Equal Prominence Workspace Grid: Dashboard and Budget Tool */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+              {/* Dashboard Action Card */}
+              <div className="flex flex-col justify-between p-5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40 space-y-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
+                <div className="space-y-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shrink-0 shadow-xs">
+                    <Icons.LayoutDashboard className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
+                      Dashboard Financiero
+                    </h3>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                      Explora tus movimientos clasificados, gráficos interactivos de gastos y supervisión de suscripciones.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  id="btn-resume-session"
+                  onClick={handleResumeSession}
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-xs cursor-pointer"
+                >
+                  <Icons.LayoutDashboard className="w-4 h-4 shrink-0" />
+                  <span>Ir al dashboard</span>
+                  <Icons.ArrowRight className="w-4 h-4 shrink-0" />
+                </button>
+              </div>
 
-              <button
-                type="button"
-                id="btn-banner-reset-session"
-                onClick={() => {
-                  setWipeCustomCategoriesOnReset(false);
-                  setIsResetSessionModalOpen(true);
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
-                title="Reiniciar sesión de transacciones"
+              {/* Budget Tool Action Card */}
+              <div
+                id="card-budget-tool-entry"
+                className="flex flex-col justify-between p-5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40 space-y-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
               >
-                <Icons.RotateCcw className="w-3.5 h-3.5" />
-                <span>Reiniciar sesión</span>
-              </button>
+                <div className="space-y-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shrink-0 shadow-xs">
+                    <Icons.Target className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
+                      Herramienta de Presupuesto
+                    </h3>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                      Planifica tus límites de gasto por categoría, compara contra gastos reales y revisa metas de ahorro.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  id="btn-open-budget-landing"
+                  onClick={handleOpenBudgetTool}
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-xs cursor-pointer"
+                >
+                  <Icons.Target className="w-4 h-4 shrink-0" />
+                  <span>Ir al presupuesto</span>
+                  <Icons.ArrowRight className="w-4 h-4 shrink-0" />
+                </button>
+              </div>
             </div>
           </section>
         )}

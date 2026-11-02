@@ -1881,14 +1881,9 @@ export function BudgetToolView({
                       className="bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-900/60 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-100 dark:border-emerald-950/60 pb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 text-3xs font-semibold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                            Continúa Mejorando
-                          </span>
-                          <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-                            {sug.categoryName}
-                          </span>
-                        </div>
+                        <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                          {sug.categoryName}
+                        </span>
                         {sug.metrics?.previousSpentGTQ !== undefined &&
                           sug.metrics?.currentSpentGTQ !== undefined && (
                             <span className="text-2xs font-semibold font-mono text-emerald-700 dark:text-emerald-400">

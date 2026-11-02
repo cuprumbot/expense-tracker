@@ -920,7 +920,7 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     // Check Improvement Card for Restaurantes y Cafés
     const imprCard = page.locator("#suggestion-card-improvement-restaurantes-y-cafés");
     await expect(imprCard).toBeVisible();
-    await expect(imprCard).toContainText("Continúa Mejorando");
+    await expect(imprCard).toContainText("Restaurantes y Cafés");
     await expect(imprCard).toContainText("Redujiste tu gasto");
     await expect(imprCard).toContainText("¡Mantén el ritmo!");
   });
