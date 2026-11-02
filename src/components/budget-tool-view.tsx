@@ -357,10 +357,10 @@ export function BudgetToolView({
             id="btn-budget-back"
             onClick={onBack}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:text-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg transition-colors cursor-pointer"
-            title={hasTransactions ? "Volver al Panel" : "Volver al Inicio"}
+            title={hasTransactions ? "Volver al Dashboard" : "Volver al Inicio"}
           >
             <Icons.ArrowLeft className="w-3.5 h-3.5" />
-            <span>{hasTransactions ? "Volver al Panel" : "Volver al Inicio"}</span>
+            <span>{hasTransactions ? "Volver al Dashboard" : "Volver al Inicio"}</span>
           </button>
 
           <div className="h-5 w-px bg-zinc-200 dark:bg-zinc-800 hidden sm:block" />
@@ -374,16 +374,6 @@ export function BudgetToolView({
                 <h1 className="text-sm sm:text-base font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
                   Mi Presupuesto Mensual
                 </h1>
-                <span
-                  id="badge-budget-status"
-                  className={`text-3xs font-medium px-2 py-0.5 rounded-full border ${
-                    isBudgetActive
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800"
-                      : "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700"
-                  }`}
-                >
-                  {isBudgetActive ? "Presupuesto activo" : "Sin presupuesto configurado"}
-                </span>
               </div>
               {currentBudget && (
                 <p className="text-2xs text-zinc-500 dark:text-zinc-400">
@@ -1208,18 +1198,6 @@ export function BudgetToolView({
                         })}
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span
-                        id="badge-month-budget-version"
-                        className="text-3xs font-medium px-2.5 py-1 rounded-full border bg-zinc-50 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5"
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                        <span>
-                          {monthBudgetPlan?.name || "Presupuesto Mensual"}
-                        </span>
-                      </span>
-                    </div>
                   </div>
                 )}
 
@@ -1796,9 +1774,6 @@ export function BudgetToolView({
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-100 dark:border-indigo-950/60 pb-3">
                           <div className="flex items-center gap-2">
-                            <span className="px-2.5 py-1 text-3xs font-semibold rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800">
-                              Hábito Consolidado — Nuevo Reto
-                            </span>
                             <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
                               {sug.categoryName}
                             </span>
@@ -1871,7 +1846,7 @@ export function BudgetToolView({
                         <Icons.TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                         <div className="space-y-0.5">
                           <span className="text-3xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-                            Recomendación para mantener el ritmo
+                            ¡Mantén el ritmo!
                           </span>
                           <p className="text-xs text-emerald-950 dark:text-emerald-100">
                             {sug.actionableRecommendation}
@@ -1924,12 +1899,9 @@ export function BudgetToolView({
                 onClick={() => handleConfirmScope("all_months")}
                 className="w-full text-left p-3.5 sm:p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group"
               >
-                <div className="flex items-center justify-between">
+                <div>
                   <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                     Aplicar a meses anteriores y de ahora en adelante
-                  </span>
-                  <span className="text-3xs font-medium px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                    Retroactivo
                   </span>
                 </div>
                 <p className="text-2xs text-zinc-500 dark:text-zinc-400 mt-1">
@@ -1944,12 +1916,9 @@ export function BudgetToolView({
                 onClick={() => handleConfirmScope("from_now_on")}
                 className="w-full text-left p-3.5 sm:p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group"
               >
-                <div className="flex items-center justify-between">
+                <div>
                   <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                     Aplicar solo de ahora en adelante
-                  </span>
-                  <span className="text-3xs font-medium px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                    Conservar historial
                   </span>
                 </div>
                 <p className="text-2xs text-zinc-500 dark:text-zinc-400 mt-1">

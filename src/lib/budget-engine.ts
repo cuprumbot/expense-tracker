@@ -798,7 +798,7 @@ export function generateNextMonthSuggestions(
           id: `suggestion-mastery-${target.categoryId}-${Date.now()}`,
           type: "long_term_mastery",
           categoryName: target.categoryName,
-          title: `¡Hábito consolidado en ${target.categoryName}!`,
+          title: `¡Meta alcanzada en ${target.categoryName}!`,
           description: `Has mantenido un control disciplinado en ${target.categoryName} durante ${Math.max(3, consecutiveImprovements + 1)} meses seguidos.`,
           actionableRecommendation: `¡Felicitaciones! Has dominado esta categoría. Te sugerimos enfocar tu atención el próximo mes en optimizar ${pivotCat}.`,
           metrics: {

@@ -80,10 +80,8 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await expect(openBtn).toBeVisible();
     await openBtn.click();
 
-    // 2. Verify Budget Tool View header, status badge and tabs
+    // 2. Verify Budget Tool View header and tabs
     await expect(page.getByRole("heading", { name: "Mi Presupuesto Mensual" })).toBeVisible();
-    const statusBadge = page.locator("#badge-budget-status");
-    await expect(statusBadge).toHaveText("Sin presupuesto configurado");
 
     await expect(page.locator("#tab-configurar-presupuesto")).toBeVisible();
     await expect(page.locator("#tab-comparativa-presupuesto")).toBeVisible();
@@ -145,7 +143,7 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     // Verify Budget Tool View
     await expect(page.getByRole("heading", { name: "Mi Presupuesto Mensual" })).toBeVisible();
     const backBtn = page.locator("#btn-budget-back");
-    await expect(backBtn).toHaveText("Volver al Panel");
+    await expect(backBtn).toHaveText("Volver al Dashboard");
 
     // Switch tabs within budget tool
     await page.locator("#tab-comparativa-presupuesto").click();
@@ -210,14 +208,13 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await expect(saveBtn).toBeEnabled();
     await saveBtn.click();
 
-    // Verify transition to comparativa tab and active status badge
-    await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
+    // Verify transition to comparativa tab
     await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
 
     // Verify persistence after page reload
     await page.reload();
     await page.locator("#btn-open-budget-landing").click();
-    await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
+    await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
   });
 
   test("US-056: displays historical context chips when transactions exist", async ({ page }) => {
@@ -287,7 +284,7 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
 
     // Click save
     await page.locator("#btn-save-budget").click();
-    await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
+    await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
   });
 
   test("US-057: generates realistic budget from uploaded transactions with achievable targets", async ({ page }) => {
@@ -394,8 +391,7 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await expect(confirmBtn).toBeVisible();
     await confirmBtn.click();
 
-    // Verify transition to comparativa and active status badge
-    await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
+    // Verify transition to comparativa
     await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
 
     // Verify localStorage has createdMode: "transactions"
@@ -926,7 +922,7 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await expect(imprCard).toBeVisible();
     await expect(imprCard).toContainText("Continúa Mejorando");
     await expect(imprCard).toContainText("Redujiste tu gasto");
-    await expect(imprCard).toContainText("Recomendación para mantener el ritmo");
+    await expect(imprCard).toContainText("¡Mantén el ritmo!");
   });
 
   test("US-063: verifies end-to-end integration across navigation, simple list ingestion, budget creation, and persistence", async ({ page }) => {
@@ -1016,7 +1012,6 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await saveBtn.click();
 
     // 7. Verify active budget in comparativa
-    await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
     await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
 
     // 8. Return to dashboard
@@ -1027,6 +1022,6 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await page.reload();
     await page.locator("#btn-resume-session").click();
     await page.locator("#btn-dashboard-open-budget").click();
-    await expect(page.locator("#badge-budget-status")).toHaveText("Presupuesto activo");
+    await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
   });
 });
