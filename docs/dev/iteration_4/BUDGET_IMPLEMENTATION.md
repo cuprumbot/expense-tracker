@@ -27,11 +27,11 @@ Se ha implementado el módulo completo de Presupuestos Personales (**Personal Ex
 
 | Configurador Interactivo y Presets por Niveles | Comparativa Real vs. Presupuestado y Rachas |
 | :---: | :---: |
-| ![Configurador de Presupuestos](docs/screenshots/budget-tool-builder.png) | ![Comparativa y Rachas](docs/screenshots/budget-tool-overview.png) |
+| ![Configurador de Presupuestos](../../screenshots/budget-tool-builder.png) | ![Comparativa y Rachas](../../screenshots/budget-tool-overview.png) |
 
 | Diagnósticos de Causa Raíz y Sugerencias de Mejora |
 | :---: |
-| ![Diagnósticos y Coaching](docs/screenshots/budget-tool-insights.png) |
+| ![Diagnósticos y Coaching](../../screenshots/budget-tool-insights.png) |
 
 ---
 
@@ -159,4 +159,4 @@ Se ha implementado el módulo completo de Presupuestos Personales (**Personal Ex
 - `src/app/page.tsx`: Coordinación de navegación global y sincronización de estado de sesión y presupuesto.
 - `e2e/budget-tool.spec.ts`: Suite completa de pruebas E2E en Playwright.
 - `demo/budget-sample-multi-month.csv`: Archivo de muestra con datos multi-mes para pruebas y demostración.
-- `docs/dev/USER_STORIES_4.md`: Historias de usuario US-054 a US-063 marcadas como completadas con sus criterios de aceptación.
+- `USER_STORIES_4.md`: Historias de usuario US-054 a US-063 marcadas como completadas con sus criterios de aceptación.

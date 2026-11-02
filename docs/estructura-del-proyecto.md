@@ -12,6 +12,13 @@ expense-tracker/
 ├── demo/                         # Estados de cuenta de prueba (.pdf y .csv) para 7 bancos
 ├── docs/                         # Documentación técnica completa (en español)
 │   ├── dev/                      # Especificaciones de iteración, historias de usuario y roadmaps
+│   │   ├── iteration_1/          # Historias y prompts de la iteración 1
+│   │   ├── iteration_2/          # Dashboard analítico e historias de la iteración 2
+│   │   ├── iteration_3/          # Implementación UI/UX e historias de la iteración 3
+│   │   └── iteration_4/          # Módulo de presupuestos, ingesta de listas y parsers (US-052 a US-071)
+│   │       ├── BUDGET_IMPLEMENTATION.md # Reporte detallado de implementación y QA de presupuestos
+│   │       ├── PROMPTS_4.md      # Registro de prompts de desarrollo
+│   │       └── USER_STORIES_4.md # Historias de usuario de la cuarta iteración
 │   ├── screenshots/              # Capturas de pantalla de alta resolución de la aplicación
 │   ├── arquitectura-split-brain.md
 │   ├── estructura-del-proyecto.md
@@ -122,8 +129,7 @@ expense-tracker/
 ├── ARCHITECTURE_DIAGRAM.md       # Especificación completa de arquitectura y flujos
 ├── architecture-diagram.html     # Diagrama visual interactivo (HTML+SVG con exportador PNG/PDF)
 ├── architecture-diagram.png      # Captura visual de alta resolución del diagrama
-├── BUDGET_IMPLEMENTATION.md      # Reporte detallado de implementación y QA del módulo de presupuestos
-├── PROPOSED_QUESTIONS.md         # Encuesta de 10 preguntas para evaluación de producto con usuarios
+├── ENCUESTA.md                   # Instrumento y resultados de la encuesta de evaluación de producto
 └── README.md                     # Resumen ejecutivo y guía rápida de inicio
 ```
 

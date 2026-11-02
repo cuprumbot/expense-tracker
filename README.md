@@ -97,7 +97,7 @@ Para consultar la documentación técnica completa, algoritmos y guías de desar
 
 | Documento | Descripción |
 | :--- | :--- |
-| **[Implementación del Módulo de Presupuestos](BUDGET_IMPLEMENTATION.md)** | Especificación técnica del motor presupuestario, persistencia, versionado, causas raíz y reporte de QA (US-054 a US-063). |
+| **[Implementación del Módulo de Presupuestos](docs/dev/iteration_4/BUDGET_IMPLEMENTATION.md)** | Especificación técnica del motor presupuestario, persistencia, versionado, causas raíz y reporte de QA (US-054 a US-063). |
 | **[Herramientas y Arquitectura Técnica](docs/herramientas-y-arquitectura.md)** | Responsabilidades por capas (cliente, servidor local, nube), parsers bancarios y componentes visuales. |
 | **[Arquitectura de Privacidad Split-Brain](docs/arquitectura-split-brain.md)** | Fundamentos de privacidad, costo, latencia y fronteras de datos locales vs. externos. |
 | **[Diagrama de Arquitectura y Flujos](ARCHITECTURE_DIAGRAM.md)** | Descripción de actores, componentes, flujos de datos y mapa interactivo del sistema. |
@@ -106,7 +106,7 @@ Para consultar la documentación técnica completa, algoritmos y guías de desar
 | **[Guía de Instalación y Despliegue](docs/instalacion-y-ejecucion.md)** | Variables de entorno, scripts de ejecución, compilación de producción y hosting en Vercel. |
 | **[Pruebas Unitarias y Automatización E2E](docs/pruebas-unitarias.md)** | Guía de las 291 pruebas unitarias en Node test runner y pruebas de integración con Playwright. |
 | **[Uso de Gemini y Manejo de Fallos](docs/uso-del-llm-y-manejo-de-fallos.md)** | Flujo de rescate para formatos desconocidos, cascada de modelos y tolerancia a fallos. |
-| **[Encuesta de Evaluación de Producto](PROPOSED_QUESTIONS.md)** | Instrumento de validación y preguntas orientadas a evaluar la experiencia y adopción de usuarios. |
+| **[Encuesta de Evaluación de Producto](ENCUESTA.md)** | Instrumento de validación, preguntas de usabilidad y resultados de entrevistas con usuarios. |
 
 ---
 

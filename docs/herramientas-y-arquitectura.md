@@ -115,7 +115,8 @@ Bajo la arquitectura Split-Brain, el modelo en la nube jamás recibe archivos PD
 ## Enlaces de Referencia
 
 * [Volver al README Principal](../README.md)
-* [Implementación del Módulo de Presupuestos](../BUDGET_IMPLEMENTATION.md)
+* [Implementación del Módulo de Presupuestos](dev/iteration_4/BUDGET_IMPLEMENTATION.md)
+* [Encuesta de Evaluación de Producto](../ENCUESTA.md)
 * [Diagrama de Arquitectura y Flujos](../ARCHITECTURE_DIAGRAM.md)
 * [Instalación, Configuración y Ejecución](instalacion-y-ejecucion.md)
 * [Estructura del Proyecto](estructura-del-proyecto.md)
