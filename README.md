@@ -93,25 +93,29 @@ El sistema implementa una estricta separación de responsabilidades donde el 100
 
 El producto fue evaluado con una muestra representativa de 10 usuarios potenciales con diversos hábitos financieros (usuarios de apps, métodos tradicionales en Excel y personas con compromisos de deuda activos).
 
-### Opciones de Visualización
+```mermaid
+pie title Decisión de Adopción y Retención (N=10)
+    "Sí continuaría usándola (Adopción)" : 3
+    "Abandono habitual de apps financieras" : 3
+    "Fiel a su plantilla personal en Excel" : 2
+    "Estrés y ansiedad frente a sus deudas" : 2
+```
 
-> [!NOTE]
-> Por políticas de seguridad de GitHub, al hacer clic en un archivo `.html` en la vista de archivos del repositorio (`blob`), GitHub muestra el código fuente en texto plano. Para visualizar el tablero renderizado directamente en el navegador, utiliza los siguientes accesos:
->
-> * **[Abrir Tablero Visual Renderizado en el Navegador (HTML)](https://htmlpreview.github.io/?https://github.com/cuprumbot/expense-tracker/blob/master/survey-results-dashboard.html)**: Renderiza en vivo el tablero HTML completo con diagramas vectoriales SVG, barras de distribución y notas cualitativas organizadas.
-> * **[Ver Informe Nativo de GitHub con Diagramas (Markdown)](RESULTADOS_ENCUESTA.md)**: Informe renderizado directamente dentro de la interfaz de GitHub con diagramas Mermaid (`flowchart LR`), tablas de frecuencia y bloques de alerta.
-> * **Archivo local**: Puedes abrir directamente [survey-results-dashboard.html](survey-results-dashboard.html) en tu navegador web o acceder vía `http://localhost:3000/survey-results-dashboard.html` al ejecutar el proyecto.
+> [!TIP]
+> Consulta el informe completo con gráficos interactivos Mermaid para cada sección temática, barras de distribución y observaciones cualitativas detalladas directamente en:  
+> **[RESULTADOS_ENCUESTA.md](RESULTADOS_ENCUESTA.md)** *(o en la carpeta de documentación: [docs/resultados-encuesta.md](docs/resultados-encuesta.md))*.  
+> Las respuestas en bruto recopiladas en las entrevistas se encuentran en **[ENCUESTA.md](ENCUESTA.md)**.
 
-### Resumen de Métricas Clave de Validación
+### Resumen Ejecutivo de Validación
 
-| Dimensión Evaluada | Resultado | Hallazgo Principal |
-| :--- | :---: | :--- |
-| **Facilidad de Carga** | **100%** | 8/10 fácil y 2/10 muy fácil. La fricción real está en el portal del banco para descargar el archivo. |
-| **Claridad del Tablero** | **70%** | 7/10 consideraron la vista clara; 3/10 reportaron sobrecarga cognitiva inicial con 4 paneles simultáneos. |
-| **Descubrimiento de Fugas** | **80%** | 5/10 descubrieron gastos hormiga de inmediato y 3/10 al ocultar comercios principales. |
-| **Presupuestos Automáticos** | **70%** | Preferencia por generación realista basada en historial frente a configuración manual. |
-| **Rechazo a Conectar Gmail** | **80%** | Temor por privacidad en correo personal, validando la arquitectura Split-Brain local. |
-| **Retención Continua** | **30%** | 30% adopción directa; 20% retenido por su propio Excel y 20% bloqueado por estrés ante deudas. |
+| Dimensión Evaluada | Distribución Visual | Resultado | Hallazgo Principal |
+| :--- | :--- | :---: | :--- |
+| **Facilidad de Carga** | `[██████████]` | **100%** | 8/10 fácil y 2/10 muy fácil. La fricción real está en el portal del banco para descargar el archivo. |
+| **Claridad del Tablero** | `[███████░░░]` | **70%** | 7/10 consideraron la vista clara; 3/10 reportaron sobrecarga cognitiva inicial con 4 paneles simultáneos. |
+| **Descubrimiento de Fugas** | `[████████░░]` | **80%** | 5/10 descubrieron gastos hormiga de inmediato y 3/10 al ocultar comercios principales. |
+| **Presupuestos Automáticos** | `[███████░░░]` | **70%** | Preferencia por generación realista basada en historial frente a configuración manual. |
+| **Rechazo a Conectar Gmail** | `[████████░░]` | **80%** | Temor por privacidad en correo personal, validando la arquitectura Split-Brain local. |
+| **Retención Continua** | `[███░░░░░░░]` | **30%** | 30% adopción directa; 20% retenido por su propio Excel y 20% bloqueado por estrés ante deudas. |
 
 ---
 
@@ -121,8 +125,7 @@ Para consultar la documentación técnica completa, algoritmos y guías de desar
 
 | Documento | Descripción |
 | :--- | :--- |
-| **[Survey Results Dashboard (HTML en Vivo)](https://htmlpreview.github.io/?https://github.com/cuprumbot/expense-tracker/blob/master/survey-results-dashboard.html)** | Tablero visual interactivo (HTML+SVG) renderizado en el navegador con diagramas y notas cualitativas. |
-| **[Resultados Visuales de la Encuesta (Markdown)](RESULTADOS_ENCUESTA.md)** | Informe complementario renderizado directamente en GitHub con diagramas Mermaid y tablas de frecuencia. |
+| **[Resultados Visuales de la Encuesta](RESULTADOS_ENCUESTA.md)** | Informe visual completo renderizado nativamente en GitHub con diagramas Mermaid, tablas de frecuencia y notas cualitativas. |
 | **[Encuesta y Respuestas Originales](ENCUESTA.md)** | Instrumento de validación y notas originales recopiladas en las entrevistas con 10 usuarios. |
 | **[Implementación del Módulo de Presupuestos](docs/dev/iteration_4/BUDGET_IMPLEMENTATION.md)** | Especificación técnica del motor presupuestario, persistencia, versionado, causas raíz y reporte de QA (US-054 a US-063). |
 | **[Herramientas y Arquitectura Técnica](docs/herramientas-y-arquitectura.md)** | Responsabilidades por capas (cliente, servidor local, nube), parsers bancarios y componentes visuales. |

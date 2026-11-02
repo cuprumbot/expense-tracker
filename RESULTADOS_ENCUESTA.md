@@ -1,336 +1,260 @@
 # Resultados Visuales de la Encuesta de Validación de Producto
 
-Informe consolidado de la prueba y entrevista a profundidad realizada con **10 potenciales usuarios** sobre la experiencia de uso, propuesta de valor y fricción percibida en **Expense Tracker**.
+Informe consolidado de la prueba y entrevista a profundidad realizada con **10 potenciales usuarios** sobre la experiencia de uso, propuesta de valor, usabilidad y fricción psicológica en **Expense Tracker**.
 
 ---
 
-## Resumen Ejecutivo de Métricas Clave
+## 1. Resumen Ejecutivo (KPIs de Validación)
+
+| Métrica Clave | Distribución Visual (N=10) | Resultado | Implicación Directa para el Producto |
+| :--- | :--- | :---: | :--- |
+| **Facilidad de Carga** | `[██████████]` | **100%** | La ingesta local resolvió la fricción técnica; el obstáculo real es la descarga previa en el banco. |
+| **Claridad del Tablero** | `[███████░░░]` | **70%** | 7/10 comprendieron los paneles; 3/10 reportaron sobrecarga cognitiva inicial al ver 4 paneles a la vez. |
+| **Descubrimiento de Fugas** | `[████████░░]` | **80%** | 50% descubrió gastos hormiga de inmediato y 30% tras ocultar comercios principales recurrentes. |
+| **Preferencia de Presupuesto**| `[███████░░░]` | **70%** | Fuerte preferencia por el generador automatizado realista frente a la configuración manual desde cero. |
+| **Rechazo a Conectar Gmail** | `[████████░░]` | **80%** | Preocupación unánime por privacidad, validando la arquitectura Split-Brain 100% local sin nube. |
+| **Retención Continua** | `[███░░░░░░░]` | **30%** | Adopción directa del 30%; el 70% restante enfrenta barreras de hábito (30%), Excel (20%) y estrés (20%). |
+
+---
+
+## 2. Entrada de Datos y Onboarding
+
+### 2.1 ¿Qué tan fácil te resultó cargar tus gastos a la aplicación?
+
+| Nivel de Facilidad | Distribución Visual | Cantidad | Porcentaje |
+| :--- | :--- | :---: | :---: |
+| **Fácil** | `[████████░░]` | 8 / 10 | 80% |
+| **Muy fácil** | `[██░░░░░░░░]` | 2 / 10 | 20% |
+
+> [!NOTE]
+> **Fricción externa observada:**
+> **5 personas** señalaron que la carga dentro de la app fue inmediata y sin tropiezos *una vez ya tenían descargados sus documentos*, pero que el proceso previo de ingresar a la banca en línea y descargar el PDF/CSV resulta tedioso y desalentador.
+
+---
+
+### 2.2 ¿Qué método de entrada utilizaste?
+
+| Método de Ingesta | Distribución Visual | Cantidad | Porcentaje |
+| :--- | :--- | :---: | :---: |
+| **PDF o CSV bancario** | `[███████░░░]` | 7 / 10 | 70% |
+| **Lista rápida en texto (copiar y pegar)** | `[██░░░░░░░░]` | 2 / 10 | 20% |
+| **Ambas modalidades combinadas** | `[█░░░░░░░░░]` | 1 / 10 | 10% |
+
+> [!NOTE]
+> **Comportamiento en prueba por privacidad:**
+> **2 personas** prefirieron no cargar datos personales reales durante la entrevista y optaron por explorar el sistema utilizando exclusivamente el archivo CSV de prueba brindado.
+
+---
+
+### 2.3 Conexión con correo electrónico para estados automáticos
 
 ```mermaid
-flowchart LR
-    subgraph Facilidad["1. Onboarding"]
-        direction TB
-        F1["Carga fácil o muy fácil: 100%"]
-        F2["Preferencia PDF/CSV: 70%"]
-    end
-    subgraph Dashboard["2. Visualización"]
-        direction TB
-        D1["Claridad general: 70%"]
-        D2["Descubrió gastos hormiga: 80%"]
-    end
-    subgraph Presupuesto["3. Planificación"]
-        direction TB
-        P1["Preferencia generación auto: 70%"]
-        P2["Aceptación de control: 80%"]
-    end
-    subgraph Retencion["4. Adopción"]
-        direction TB
-        R1["Uso continuo inmediato: 30%"]
-        R2["Fricción emocional/ansiedad: 20%"]
+pie title 2.3 ¿Conectarías tu correo electrónico para obtener estados de cuenta automáticos? (N=10)
+    "No (Temor por pérdida de privacidad)" : 8
+    "Sí (Conveniencia de no descargar PDFs)" : 2
+```
+
+| Respuesta | Cantidad | Porcentaje | Sentimiento Predominante |
+| :--- | :---: | :---: | :--- |
+| **No la utilizaría** | 8 / 10 | 80% | Temor severo a comprometer la privacidad de su cuenta personal de correo. |
+| **Sí la utilizaría** | 2 / 10 | 20% | Uno de ellos fue quien propuso originalmente la idea la semana previa. |
+
+> [!WARNING]
+> **Insight Crítico de Privacidad:**
+> Aunque la automatización de descarga eliminaría la fricción de los portales bancarios, el 80% de los usuarios rechaza categóricamente entregar acceso a su bandeja de entrada. La decisión de mantener el procesamiento local sin requerir credenciales externas es un acierto fundamental de producto.
+
+---
+
+### 2.4 Captura fotográfica de facturas
+
+| Disposición de Uso | Distribución Visual | Cantidad | Porcentaje |
+| :--- | :--- | :---: | :---: |
+| **No la utilizaría** | `[██████░░░░]` | 6 / 10 | 60% |
+| **Sí (uso habitual)** | `[███░░░░░░░]` | 3 / 10 | 30% |
+| **Solo en fines de semana** | `[█░░░░░░░░░]` | 1 / 10 | 10% |
+
+> [!NOTE]
+> **Patrón de uso condicionado:**
+> La persona que respondió *"solamente fines de semana"* explicó que de lunes a viernes no suele pedir factura ni guardar recibos, pero durante los fines de semana acumula compras en restaurantes y tiendas físicas, momento en que surge la alarma por el gasto total acumulado.
+
+---
+
+## 3. Dashboard Analítico de 4 Paneles
+
+### 3.1 Claridad y comprensión general del Dashboard
+
+| Percepción del Tablero | Distribución Visual | Cantidad | Porcentaje |
+| :--- | :--- | :---: | :---: |
+| **Clara y comprensible** | `[███████░░░]` | 7 / 10 | 70% |
+| **Demasiada información junta (sobrecarga)** | `[███░░░░░░░]` | 3 / 10 | 30% |
+
+> [!NOTE]
+> **Carga cognitiva observada:**
+> **3 personas** sintieron sobrecarga informativa al encontrarse con cuatro paneles gráficos desplegados simultáneamente. Sugieren iniciar con una vista simplificada o permitir colapsar paneles secundarios por defecto.
+
+---
+
+### 3.2 Panel: "¿A dónde va mi dinero?" (Concentración de Comercios)
+
+```mermaid
+pie title 3.2 ¿El panel '¿A dónde va mi dinero?' aportó información útil? (N=10)
+    "Encontró gasto hormiga de inmediato" : 5
+    "Útil al ocultar compras fijas" : 3
+    "No encontró información nueva" : 2
+```
+
+| Experiencia con el Panel | Cantidad | Porcentaje | Detalle Observado |
+| :--- | :---: | :---: | :--- |
+| **Encontró gastos hormiga de inmediato** | 5 / 10 | 50% | Identificó comercios frecuentes con impacto acumulado imprevisto. |
+| **Útil tras ocultar comercios principales** | 3 / 10 | 30% | Necesitó descartar compras grandes fijas (supermercado) para desenterrar compras secundarias. |
+| **Sin información nueva** | 2 / 10 | 20% | Ya tenía total conocimiento de sus principales proveedores. |
+
+> [!TIP]
+> **Validación de la Interacción UX:**
+> La función de descartar/ocultar comercios con un clic fue determinante para que el **30% de los entrevistados** pudiera descubrir fugas de dinero que estaban eclipsadas por los gastos fijos mayores.
+
+---
+
+### 3.3 Panel: "Patrones de consumo" (Día de Semana vs Día de Mes)
+
+| Utilidad Percibida | Distribución Visual | Cantidad | Porcentaje |
+| :--- | :--- | :---: | :---: |
+| **No aportó información nueva** | `[████████░░]` | 8 / 10 | 80% |
+| **Aportó información útil** | `[██░░░░░░░░]` | 2 / 10 | 20% |
+
+> [!NOTE]
+> **Falta de valor diferencial:**
+> La mayoría de entrevistados comentó que *"ya sabía de antemano que en fines de semana gasta más"*. Ver reflejada la obviedad en un gráfico confirmó su intuición, pero no les brindó recomendaciones accionables ni beneficios prácticos nuevos.
+
+---
+
+### 3.4 Panel: "Antigüedad del gasto" (Cuotas, Suscripciones y Compras del Mes)
+
+```mermaid
+pie title 3.4 ¿El panel 'Antigüedad del gasto' le pareció útil? (N=10)
+    "Útil por control de Suscripciones" : 4
+    "Útil por Cuotas y Extrafinanciamientos" : 3
+    "No le pareció útil" : 3
+```
+
+| Foco de Utilidad | Cantidad | Porcentaje | Reacción de los Usuarios |
+| :--- | :---: | :---: | :--- |
+| **Vigilancia de suscripciones fijas** | 4 / 10 | 40% | Permite detectar cobros recurrentes y evaluar cancelaciones. |
+| **Seguimiento de cuotas (Visacuotas)** | 3 / 10 | 30% | Claridad sobre deuda arrastrada de compras de meses anteriores. |
+| **No le pareció útil** | 3 / 10 | 30% | No tienen suscripciones ni compras financiadas en cuotas. |
+
+> [!NOTE]
+> **Impacto emocional frente al endeudamiento:**
+> Dos usuarios con compras en cuotas y extrafinanciamientos mostraron **incomodidad y preocupación visible** durante la prueba: aunque sabían que tenían esas deudas, ver gráficamente el porcentaje de ingresos que absorben cada mes les provocó estrés directo.
+
+---
+
+## 4. Módulo de Presupuestos y Gamificación
+
+### 4.1 Preferencia: Creación Manual vs Generador Automatizado
+
+```mermaid
+pie title 4.1 ¿Prefirió la creación manual o automatizada de presupuesto? (N=10)
+    "Automatizada directa" : 4
+    "Automatizada (requiere mejores categorías)" : 3
+    "Manual desde cero" : 3
+```
+
+| Método Preferido | Cantidad | Porcentaje | Oportunidad Identificada |
+| :--- | :---: | :---: | :--- |
+| **Generador automatizado directo** | 4 / 10 | 40% | Agradecieron metas realistas basadas en promedios históricos. |
+| **Automatizado, pero pide mejores categorías** | 3 / 10 | 30% | Desean categorías más representativas del contexto local guatemalteco. |
+| **Creación manual desde cero** | 3 / 10 | 30% | Prefieren control minucioso sobre cada límite establecido. |
+
+> [!NOTE]
+> **Oportunidad de Producto:**
+> El **70% favorece la automatización**, pero el 30% remarcó que el catálogo inicial de categorías debe ajustarse mejor a la realidad económica local para minimizar recategorizaciones manuales.
+
+---
+
+### 4.2 Indicador de Avance "Dentro del Presupuesto"
+
+| Evaluación del Semáforo | Distribución Visual | Cantidad | Porcentaje |
+| :--- | :--- | :---: | :---: |
+| **Buena y clara** | `[████░░░░░░]` | 4 / 10 | 40% |
+| **Buena, pero la interfaz debe pulirse** | `[████░░░░░░]` | 4 / 10 | 40% |
+| **No se ajusta a sus hábitos** | `[██░░░░░░░░]` | 2 / 10 | 20% |
+
+> [!NOTE]
+> **Ritmo de gasto desincronizado:**
+> Un participante destacó que le causaría estrés ver el semáforo en rojo rápidamente, ya que realiza la mayoría de compras grandes y pagos fuertes en la **primera semana del mes**. El sistema debe contemplar la distribución temporal del presupuesto.
+
+---
+
+### 4.3 Gamificación, Rachas y Contador de Metas
+
+```mermaid
+pie title 4.3 ¿Qué le pareció la gamificación de metas y rachas semanales? (N=10)
+    "Pocos datos cargados para notarlo" : 3
+    "Rechazo (frustración por falta de metas)" : 3
+    "Buena y motivadora" : 2
+    "Sin interés general en gamificación" : 2
+```
+
+| Reacción ante la Gamificación | Cantidad | Porcentaje | Diagnóstico Conductual |
+| :--- | :---: | :---: | :--- |
+| **Insuficientes datos para apreciarla** | 3 / 10 | 30% | Solo cargaron un estado de cuenta; no vieron evolución temporal. |
+| **Rechazo por falta de metas logradas** | 3 / 10 | 30% | Sentimiento de frustración y castigo al ver contadores en cero. |
+| **Le pareció buena** | 2 / 10 | 20% | Usuarios en superávit que valoraron el refuerzo positivo. |
+| **Desinterés general** | 2 / 10 | 20% | Consideran que la gamificación no encaja con herramientas financieras serias. |
+
+> [!WARNING]
+> **Riesgo de Percepción Punitiva:**
+> La gamificación tuvo un efecto contraproducente en usuarios con sobregasto o deudas: al no tener metas alcanzadas, los indicadores vacíos acentuaron la sensación de fracaso en lugar de motivar.
+
+---
+
+## 5. Decisión de Retención y Barreras de Adopción
+
+```mermaid
+pie title 5.1 ¿Continuaría utilizando esta aplicación en su rutina mensual? (N=10)
+    "Sí continuaría usándola (Adopción)" : 3
+    "Abandono habitual de apps financieras" : 3
+    "Fiel a su plantilla personal en Excel" : 2
+    "Estrés y ansiedad frente a sus deudas" : 2
+```
+
+| Disposición de Uso | Cantidad | Porcentaje | Perfil del Usuario y Causa Raíz |
+| :--- | :---: | :---: | :--- |
+| **Sí continuaría usándola** | 3 / 10 | 30% | Personas que valoraron el ahorro de tiempo, la visualización de gastos y la deduplicación automática. |
+| **No: Abandona apps por hábito** | 3 / 10 | 30% | Historial de descargar aplicaciones financieras y dejarlas de usar por fatiga o falta de constancia. |
+| **No: Prefiere su propio Excel** | 2 / 10 | 20% | Usuarios con alta disciplina que ya cuentan con hojas de cálculo diseñadas a su medida. |
+| **No: Estrés y evasión financiera** | 2 / 10 | 20% | Usuarios con deudas que evitan confrontar sus finanzas por angustia y culpa. |
+
+---
+
+## 6. Conclusiones Estratégicas para el Producto
+
+```mermaid
+flowchart TD
+    subgraph Hallazgos["Hallazgos Críticos de Producto"]
+        H1["1. Competidor Real: Excel, no otras apps"]
+        H2["2. Barrera Psicológica: Ansiedad Financiera"]
+        H3["3. Ventaja Defensiva: Privacidad 100% Local"]
     end
 
-    Facilidad --> Dashboard --> Presupuesto --> Retencion
+    subgraph Acciones["Respuestas de Diseño y Funcionalidad"]
+        A1["Facilitar exportación limpia a formatos que complementen Excel"]
+        A2["Tono empático sin alarmas punitivas ni gamificación que juzgue"]
+        A3["Mantener procesamiento en navegador sin requerir credenciales de correo"]
+    end
+
+    H1 --> A1
+    H2 --> A2
+    H3 --> A3
 
     classDef default fill:#18181b,stroke:#3f3f46,color:#fafafa
     classDef highlight fill:#1e3a8a,stroke:#3b82f6,color:#fafafa
 ```
 
----
-
-## 1. Entrada de Datos y Onboarding
-
-### 1.1 ¿Qué tan fácil te resultó cargar tus gastos a la aplicación?
-
-```mermaid
-flowchart LR
-    A["Fácil: 8 (80%)"]:::green
-    B["Muy fácil: 2 (20%)"]:::darkgreen
-    classDef green fill:#10b981,stroke:#059669,color:#fff
-    classDef darkgreen fill:#047857,stroke:#065f46,color:#fff
-```
-
-| Respuesta | Cantidad | Porcentaje |
-|:---|:---:|:---:|
-| **Fácil** | 8 / 10 | 80% |
-| **Muy fácil** | 2 / 10 | 20% |
-
-> [!NOTE]
-> **Observación discreta del usuario:**
-> **5 personas** comentaron que la carga en la app fue rápida y sencilla *una vez ya tenían descargados sus documentos*, pero que entrar a la banca en línea y descargarlos es el paso tedioso del proceso.
-
----
-
-### 1.2 ¿Qué método de entrada utilizaste?
-
-```mermaid
-flowchart LR
-    A["PDF o CSV bancario: 7 (70%)"]:::blue
-    B["Lista rápida texto: 2 (20%)"]:::purple
-    C["Ambas modalidades: 1 (10%)"]:::cyan
-    classDef blue fill:#2563eb,stroke:#1d4ed8,color:#fff
-    classDef purple fill:#7c3aed,stroke:#6d28d9,color:#fff
-    classDef cyan fill:#0891b2,stroke:#0e7490,color:#fff
-```
-
-| Método | Cantidad | Porcentaje |
-|:---|:---:|:---:|
-| **PDF o CSV bancario** | 7 / 10 | 70% |
-| **Copiar y pegar texto ("Lista rápida")** | 2 / 10 | 20% |
-| **Ambas formas** | 1 / 10 | 10% |
-
-> [!NOTE]
-> **Observación discreta del usuario:**
-> **2 personas** prefirieron no subir datos personales reales durante la prueba y optaron por explorar el flujo usando el archivo CSV de prueba brindado.
-
----
-
-### 1.3 Conexión con correo electrónico para estados automáticos
-
-```mermaid
-flowchart LR
-    A["Sí: 2 (20%)"]:::blue
-    B["No: 8 (80%)"]:::red
-    classDef blue fill:#3b82f6,stroke:#1d4ed8,color:#fff
-    classDef red fill:#ef4444,stroke:#b91c1c,color:#fff
-```
-
-| Respuesta | Cantidad | Sentimiento Predominante |
-|:---|:---:|:---|
-| **Sí la utilizaría** | 2 / 10 (20%) | Uno de ellos fue quien propuso la funcionalidad previamente. |
-| **No la utilizaría** | 8 / 10 (80%) | Preocupación unánime por pérdida de privacidad en su correo personal. |
-
-> [!WARNING]
-> **Insight de Privacidad:**
-> Aunque la automatización reduce la fricción de descarga, el 80% de los usuarios no está dispuesto a entregar acceso a su bandeja de correo por desconfianza y privacidad. La arquitectura local sin credenciales externas está plenamente justificada.
-
----
-
-### 1.4 Captura fotográfica de facturas
-
-```mermaid
-flowchart LR
-    A["Sí: 3 (30%)"]:::green
-    B["Solo fines de semana: 1 (10%)"]:::yellow
-    C["No: 6 (60%)"]:::gray
-    classDef green fill:#10b981,stroke:#059669,color:#fff
-    classDef yellow fill:#d97706,stroke:#b45309,color:#fff
-    classDef gray fill:#64748b,stroke:#475569,color:#fff
-```
-
-| Respuesta | Cantidad | Porcentaje |
-|:---|:---:|:---:|
-| **Sí (uso habitual)** | 3 / 10 | 30% |
-| **Solo fines de semana** | 1 / 10 | 10% |
-| **No** | 6 / 10 | 60% |
-
-> [!NOTE]
-> **Observación discreta del usuario:**
-> La persona que respondió *"solamente fines de semana"* detalló que entre semana no suele pedir factura ni acumular recibos, pero durante el fin de semana se juntan muchas compras en comercios y es cuando surge la urgencia de registrarlas.
-
----
-
-## 2. Dashboard Analítico de 4 Paneles
-
-### 2.1 Claridad y utilidad general del Dashboard
-
-```mermaid
-flowchart LR
-    A["Clara y útil: 7 (70%)"]:::blue
-    B["Demasiada información: 3 (30%)"]:::orange
-    classDef blue fill:#2563eb,stroke:#1d4ed8,color:#fff
-    classDef orange fill:#ea580c,stroke:#c2410c,color:#fff
-```
-
-| Percepción | Cantidad | Porcentaje |
-|:---|:---:|:---:|
-| **Clara y útil** | 7 / 10 | 70% |
-| **Demasiada información** | 3 / 10 | 30% |
-
-> [!NOTE]
-> **Observación discreta de UX:**
-> **3 personas** sintieron sobrecarga cognitiva. Tener los 4 paneles abiertos de forma simultánea puede resultar abrumador para usuarios no familiarizados con gráficos financieros.
-
----
-
-### 2.2 Panel: "¿A dónde va mi dinero?"
-
-```mermaid
-flowchart LR
-    A["Descubrió gasto hormiga: 5 (50%)"]:::emerald
-    B["Útil tras ocultar comercios: 3 (30%)"]:::indigo
-    C["Sin información nueva: 2 (20%)"]:::slate
-    classDef emerald fill:#059669,stroke:#047857,color:#fff
-    classDef indigo fill:#4f46e5,stroke:#4338ca,color:#fff
-    classDef slate fill:#64748b,stroke:#475569,color:#fff
-```
-
-| Experiencia con el Panel | Cantidad | Porcentaje |
-|:---|:---:|:---:|
-| **Encontró gasto hormiga de inmediato** | 5 / 10 | 50% |
-| **Útil, pero requirió ocultar compras fijas** | 3 / 10 | 30% |
-| **Sin información nueva** | 2 / 10 | 20% |
-
-> [!TIP]
-> **Validación de Funcionalidad:**
-> La interacción de descartar/ocultar comercios principales fue decisiva para que el **30% de los usuarios** pudiera desenterrar compras menores y gastos hormiga que estaban opacados por gastos fijos grandes como supermercados o combustible.
-
----
-
-### 2.3 Panel: "Patrones de consumo"
-
-```mermaid
-flowchart LR
-    A["Información útil: 2 (20%)"]:::green
-    B["Sin información nueva: 8 (80%)"]:::red
-    classDef green fill:#10b981,stroke:#059669,color:#fff
-    classDef red fill:#ef4444,stroke:#b91c1c,color:#fff
-```
-
-| Percepción | Cantidad | Porcentaje |
-|:---|:---:|:---:|
-| **Aportó información útil** | 2 / 10 | 20% |
-| **No aportó información nueva** | 8 / 10 | 80% |
-
-> [!NOTE]
-> **Observación discreta del usuario:**
-> La gran mayoría comentó que *"ya sabía de antemano que en fines de semana gasta más"*. Verlo en el gráfico confirmó su intuición pero no les aportó una guía clara de acción o beneficio nuevo.
-
----
-
-### 2.4 Panel: "Antigüedad del gasto"
-
-```mermaid
-flowchart LR
-    A["Útil por Suscripciones: 4 (40%)"]:::indigo
-    B["Útil por Cuotas y Financiamiento: 3 (30%)"]:::purple
-    C["No le pareció útil: 3 (30%)"]:::slate
-    classDef indigo fill:#4f46e5,stroke:#3730a3,color:#fff
-    classDef purple fill:#7c3aed,stroke:#6d28d9,color:#fff
-    classDef slate fill:#64748b,stroke:#475569,color:#fff
-```
-
-| Percepción | Cantidad | Porcentaje |
-|:---|:---:|:---:|
-| **Útil para controlar suscripciones** | 4 / 10 | 40% |
-| **Útil para vigilar cuotas y extrafinanciamientos** | 3 / 10 | 30% |
-| **No le pareció útil** | 3 / 10 | 30% |
-
-> [!NOTE]
-> **Observación emocional del usuario:**
-> Dos personas con deudas en Visacuotas y extrafinanciamientos mostraron **preocupación y tensión visible** durante la entrevista: aunque conocían su deuda, confrontar la proporción acumulada que absorbe su quincena les causó incomodidad.
-
----
-
-## 3. Módulo de Presupuestos y Gamificación
-
-### 3.1 Creación Manual vs Generación Automatizada
-
-```mermaid
-flowchart LR
-    A["Auto estándar: 4 (40%)"]:::blue
-    B["Auto + mejores categorías: 3 (30%)"]:::cyan
-    C["Manual: 3 (30%)"]:::zinc
-    classDef blue fill:#2563eb,stroke:#1d4ed8,color:#fff
-    classDef cyan fill:#0891b2,stroke:#0e7490,color:#fff
-    classDef zinc fill:#52525b,stroke:#3f3f46,color:#fff
-```
-
-| Modalidad Preferida | Cantidad | Porcentaje |
-|:---|:---:|:---:|
-| **Generación automatizada directa** | 4 / 10 | 40% |
-| **Automatizada, pero con categorías más precisas** | 3 / 10 | 30% |
-| **Creación manual desde cero** | 3 / 10 | 30% |
-
-> [!NOTE]
-> **Oportunidad de Producto:**
-> El **70% prefiere automatización**, pero el 30% enfatizó que las categorías sugeridas deben reflejar mejor los gastos cotidianos de Guatemala para evitar recategorizaciones manuales.
-
----
-
-### 3.2 Indicador de "Dentro del Presupuesto"
-
-```mermaid
-flowchart LR
-    A["Buena: 4 (40%)"]:::green
-    B["Buena con UI mejorable: 4 (40%)"]:::yellow
-    C["No se ajusta: 2 (20%)"]:::red
-    classDef green fill:#10b981,stroke:#059669,color:#fff
-    classDef yellow fill:#d97706,stroke:#b45309,color:#fff
-    classDef red fill:#ef4444,stroke:#b91c1c,color:#fff
-```
-
-| Evaluación de la Herramienta | Cantidad | Porcentaje |
-|:---|:---:|:---:|
-| **Buena y clara** | 4 / 10 | 40% |
-| **Buena, pero la interfaz visual debe pulirse** | 4 / 10 | 40% |
-| **No se ajusta a sus necesidades** | 2 / 10 | 20% |
-
-> [!NOTE]
-> **Observación discreta del usuario:**
-> Un usuario indicó que le causaría estrés ver el semáforo en rojo o el presupuesto casi consumido rápidamente, pues concentra la mayor parte de sus compras y pagos fijos en la **primera semana del mes**.
-
----
-
-### 3.3 Gamificación y Rachas Semanales
-
-```mermaid
-flowchart LR
-    A["Buena: 2 (20%)"]:::green
-    B["Pocos datos para notar: 3 (30%)"]:::slate
-    C["Rechazo (sin metas logradas): 3 (30%)"]:::rose
-    D["Sin interés en gamificación: 2 (20%)"]:::zinc
-    classDef green fill:#10b981,stroke:#059669,color:#fff
-    classDef slate fill:#64748b,stroke:#475569,color:#fff
-    classDef rose fill:#e11d48,stroke:#be123c,color:#fff
-    classDef zinc fill:#52525b,stroke:#3f3f46,color:#fff
-```
-
-| Percepción de Gamificación | Cantidad | Porcentaje |
-|:---|:---:|:---:|
-| **Le pareció motivadora y buena** | 2 / 10 | 20% |
-| **No cargó suficientes meses para apreciarla** | 3 / 10 | 30% |
-| **No le gustó por falta de metas alcanzadas (frustración)** | 3 / 10 | 30% |
-| **No le interesa la gamificación en aplicaciones** | 2 / 10 | 20% |
-
-> [!WARNING]
-> **Riesgo de Percepción Negativa:**
-> La gamificación tuvo un efecto contraproducente en usuarios en déficit: al no tener metas logradas, los contadores vacíos generaron sensación de frustración y juicio negativo en lugar de motivación.
-
----
-
-## 4. Decisión Final de Retención y Barreras Emocionales
-
-### 4.1 ¿Continuaría utilizando esta aplicación? (N=10)
-
-```mermaid
-flowchart LR
-    subgraph Adopcion["Resultado de Retención"]
-        A["Sí la adoptaría: 3 (30%)"]:::green
-        B["Abandono habitual de apps: 3 (30%)"]:::slate
-        C["Preferencia por Excel: 2 (20%)"]:::blue
-        D["Estrés y ansiedad financiera: 2 (20%)"]:::rose
-    end
-    classDef green fill:#10b981,stroke:#059669,color:#fff
-    classDef slate fill:#64748b,stroke:#475569,color:#fff
-    classDef blue fill:#2563eb,stroke:#1d4ed8,color:#fff
-    classDef rose fill:#e11d48,stroke:#be123c,color:#fff
-```
-
-| Disposición de Uso | Cantidad | Porcentaje | Perfil de Usuario |
-|:---|:---:|:---:|:---|
-| **Sí continuaría usándola** | 3 / 10 | 30% | Usuarios convencidos por la velocidad de visualización y el análisis de gastos. |
-| **No: suele abandonar apps financieras** | 3 / 10 | 30% | Historial de abandono por fatiga o falta de disciplina constante. |
-| **No: prefiere su propio Excel** | 2 / 10 | 20% | Usuarios altamente estructurados con plantillas personales consolidadas. |
-| **No: le genera estrés o ansiedad** | 2 / 10 | 20% | Personas con deudas que evitan confrontar sus estados de cuenta por angustia. |
-
----
-
-## 5. Síntesis Estratégica para el Producto
-
 1. **El competidor real es Excel, no otra app de finanzas:**  
-   Los usuarios con disciplina financiera consolidada ya cuentan con hojas de cálculo hechas a su medida. Solo adoptarán la herramienta si el proceso de importación y extracción local les ahorra el trabajo manual de digitación.
-2. **La barrera psicológica de la evasión y la ansiedad financiera:**  
-   Varios entrevistados expresaron ansiedad vinculada al dinero: confrontar sus deudas o el impacto de la inflación les genera culpa y angustia (*"dejé de usar una app porque todo subía de precio, subían mis gastos y mi sueldo no sube"*). La aplicación debe comunicar empatía y alivio, evitando señales visuales excesivamente alarmistas o juicios punitivos.
+   Los usuarios disciplinados ya tienen hojas de cálculo hechas a su medida. Para conquistarlos, la aplicación no debe competir contra su hoja de cálculo, sino servir como la herramienta más rápida para extraer, limpiar y categorizar sus estados de cuenta locales sin digitación manual.
+2. **La barrera del estrés y la evasión financiera:**  
+   Varios entrevistados expresaron ansiedad vinculada al dinero: confrontar sus deudas o la inflación les genera culpa y angustia (*"dejé de usar una app porque todo subía de precio, subían mis gastos y mi sueldo no sube"*). La aplicación debe evolucionar hacia un tono de acompañamiento y alivio, evitando señales visuales excesivamente alarmistas.
 3. **Privacidad como valor irrenunciable:**  
-   El rechazo del 80% a la conexión con correo electrónico confirma que la arquitectura Split-Brain y el procesamiento 100% local en el navegador representan una ventaja competitiva fundamental frente a servicios en la nube.
-
+   El rechazo del 80% a la conexión con correo electrónico confirma que la arquitectura Split-Brain y el procesamiento 100% local en el navegador representan una ventaja competitiva fundamental frente a alternativas en la nube.
