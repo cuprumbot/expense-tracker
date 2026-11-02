@@ -87,7 +87,33 @@ El sistema implementa una estricta separación de responsabilidades donde el 100
 
 ![Diagrama de Arquitectura de Expense Tracker](architecture-diagram.png)
 
-> Puedes explorar e interactuar con el diagrama completo en [architecture-diagram.html](architecture-diagram.html) o consultar la especificación en [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md).
+---
+
+## Validación con Usuarios y Resultados de la Encuesta
+
+El producto fue evaluado con una muestra representativa de 10 usuarios potenciales con diversos hábitos financieros (usuarios de apps, métodos tradicionales en Excel y personas con compromisos de deuda activos).
+
+### Tablero Visual de Resultados (Survey Results Dashboard)
+
+Visualización interactiva guiada por diagramas vectoriales (SVG), barras de distribución porcentual y notas cualitativas discretas organizadas por sección temática.
+
+[![Survey Results Dashboard](docs/screenshots/survey-results-dashboard.png)](survey-results-dashboard.html)
+
+> [!TIP]
+> Puedes abrir e interactuar con el tablero visual completo directamente en:  
+> **[Survey Results Dashboard (survey-results-dashboard.html)](survey-results-dashboard.html)** *(o en la carpeta de documentación: [docs/survey-results-dashboard.html](docs/survey-results-dashboard.html))*.  
+> También puedes consultar el informe complementario en Markdown con diagramas Mermaid en **[RESULTADOS_ENCUESTA.md](RESULTADOS_ENCUESTA.md)** y las notas de entrevista originales en **[ENCUESTA.md](ENCUESTA.md)**.
+
+### Resumen de Métricas Clave de Validación
+
+| Dimensión Evaluada | Resultado | Hallazgo Principal |
+| :--- | :---: | :--- |
+| **Facilidad de Carga** | **100%** | 8/10 fácil y 2/10 muy fácil. La fricción real está en el portal del banco para descargar el archivo. |
+| **Claridad del Tablero** | **70%** | 7/10 consideraron la vista clara; 3/10 reportaron sobrecarga cognitiva inicial con 4 paneles simultáneos. |
+| **Descubrimiento de Fugas** | **80%** | 5/10 descubrieron gastos hormiga de inmediato y 3/10 al ocultar comercios principales. |
+| **Presupuestos Automáticos** | **70%** | Preferencia por generación realista basada en historial frente a configuración manual. |
+| **Rechazo a Conectar Gmail** | **80%** | Temor por privacidad en correo personal, validando la arquitectura Split-Brain local. |
+| **Retención Continua** | **30%** | 30% adopción directa; 20% retenido por su propio Excel y 20% bloqueado por estrés ante deudas. |
 
 ---
 
@@ -97,6 +123,9 @@ Para consultar la documentación técnica completa, algoritmos y guías de desar
 
 | Documento | Descripción |
 | :--- | :--- |
+| **[Survey Results Dashboard](survey-results-dashboard.html)** | Tablero visual interactivo (HTML+SVG) con diagramas de distribución, métricas clave (KPIs) y observaciones discretas de usuarios. |
+| **[Resultados Visuales de la Encuesta (Markdown)](RESULTADOS_ENCUESTA.md)** | Informe complementario en Markdown estructurado con diagramas Mermaid y tablas de frecuencia. |
+| **[Encuesta y Respuestas Originales](ENCUESTA.md)** | Instrumento de validación y notas originales recopiladas en las entrevistas con 10 usuarios. |
 | **[Implementación del Módulo de Presupuestos](docs/dev/iteration_4/BUDGET_IMPLEMENTATION.md)** | Especificación técnica del motor presupuestario, persistencia, versionado, causas raíz y reporte de QA (US-054 a US-063). |
 | **[Herramientas y Arquitectura Técnica](docs/herramientas-y-arquitectura.md)** | Responsabilidades por capas (cliente, servidor local, nube), parsers bancarios y componentes visuales. |
 | **[Arquitectura de Privacidad Split-Brain](docs/arquitectura-split-brain.md)** | Fundamentos de privacidad, costo, latencia y fronteras de datos locales vs. externos. |
@@ -106,7 +135,6 @@ Para consultar la documentación técnica completa, algoritmos y guías de desar
 | **[Guía de Instalación y Despliegue](docs/instalacion-y-ejecucion.md)** | Variables de entorno, scripts de ejecución, compilación de producción y hosting en Vercel. |
 | **[Pruebas Unitarias y Automatización E2E](docs/pruebas-unitarias.md)** | Guía de las 291 pruebas unitarias en Node test runner y pruebas de integración con Playwright. |
 | **[Uso de Gemini y Manejo de Fallos](docs/uso-del-llm-y-manejo-de-fallos.md)** | Flujo de rescate para formatos desconocidos, cascada de modelos y tolerancia a fallos. |
-| **[Encuesta de Evaluación de Producto](ENCUESTA.md)** | Instrumento de validación, preguntas de usabilidad y resultados de entrevistas con usuarios. |
 
 ---
 

@@ -26,6 +26,7 @@ expense-tracker/
 │   ├── instalacion-y-ejecucion.md
 │   ├── privacidad-y-anonimizacion.md
 │   ├── pruebas-unitarias.md
+│   ├── resultados-encuesta.md        # Informe visual de validación con usuarios (Mermaid y métricas)
 │   └── uso-del-llm-y-manejo-de-fallos.md
 ├── e2e/                          # Pruebas End-to-End automatizadas con Playwright
 │   ├── budget-tool.spec.ts       # Suite E2E completa del módulo de presupuestos (12 pruebas)
@@ -129,7 +130,9 @@ expense-tracker/
 ├── ARCHITECTURE_DIAGRAM.md       # Especificación completa de arquitectura y flujos
 ├── architecture-diagram.html     # Diagrama visual interactivo (HTML+SVG con exportador PNG/PDF)
 ├── architecture-diagram.png      # Captura visual de alta resolución del diagrama
-├── ENCUESTA.md                   # Instrumento y resultados de la encuesta de evaluación de producto
+├── ENCUESTA.md                   # Instrumento y respuestas originales de la encuesta
+├── RESULTADOS_ENCUESTA.md        # Informe complementario de validación con diagramas Mermaid
+├── survey-results-dashboard.html # Tablero visual interactivo de resultados (HTML+SVG con métricas y notas)
 └── README.md                     # Resumen ejecutivo y guía rápida de inicio
 ```
 
