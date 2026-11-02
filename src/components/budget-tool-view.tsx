@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Icons } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Transaction, CSVParsingSummary, CustomCategory } from "@/types/transaction";
@@ -58,6 +58,19 @@ export function BudgetToolView({
   const [creationMode, setCreationMode] = useState<"zero" | "transactions">(
     currentBudget?.createdMode || "zero"
   );
+
+  const userSwitchedTabRef = useRef(false);
+  useEffect(() => {
+    if (isBudgetActive && !userSwitchedTabRef.current) {
+      setActiveTab("comparativa");
+    }
+  }, [isBudgetActive]);
+
+  useEffect(() => {
+    if (currentBudget?.createdMode) {
+      setCreationMode(currentBudget.createdMode);
+    }
+  }, [currentBudget?.createdMode]);
 
   // Scope confirmation modal state
   const [showUpdateScopeModal, setShowUpdateScopeModal] = useState(false);
@@ -300,6 +313,7 @@ export function BudgetToolView({
         setCreationMode(currentBudget.createdMode);
       }
     }
+    userSwitchedTabRef.current = true;
     setActiveTab("configurar");
   };
 
@@ -402,7 +416,10 @@ export function BudgetToolView({
           <button
             type="button"
             id="tab-configurar-presupuesto"
-            onClick={() => setActiveTab("configurar")}
+            onClick={() => {
+              userSwitchedTabRef.current = true;
+              setActiveTab("configurar");
+            }}
             className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer shrink-0 ${
               activeTab === "configurar"
                 ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-semibold shadow-2xs border border-indigo-200 dark:border-indigo-800/80"
@@ -416,7 +433,10 @@ export function BudgetToolView({
           <button
             type="button"
             id="tab-comparativa-presupuesto"
-            onClick={() => setActiveTab("comparativa")}
+            onClick={() => {
+              userSwitchedTabRef.current = true;
+              setActiveTab("comparativa");
+            }}
             className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer shrink-0 ${
               activeTab === "comparativa"
                 ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-semibold shadow-2xs border border-indigo-200 dark:border-indigo-800/80"
@@ -430,7 +450,10 @@ export function BudgetToolView({
           <button
             type="button"
             id="tab-sugerencias-presupuesto"
-            onClick={() => setActiveTab("sugerencias")}
+            onClick={() => {
+              userSwitchedTabRef.current = true;
+              setActiveTab("sugerencias");
+            }}
             className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer shrink-0 ${
               activeTab === "sugerencias"
                 ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-semibold shadow-2xs border border-indigo-200 dark:border-indigo-800/80"
@@ -1203,18 +1226,59 @@ export function BudgetToolView({
 
                 {/* Empty State when no transactions uploaded yet */}
                 {!hasTransactions ? (
-                  <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3 shadow-xs">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 mx-auto flex items-center justify-center">
-                      <Icons.Upload className="w-5 h-5" />
+                  <div className="space-y-6">
+                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3 shadow-xs">
+                      <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 mx-auto flex items-center justify-center">
+                        <Icons.Upload className="w-5 h-5" />
+                      </div>
+                      <div className="max-w-md mx-auto space-y-1">
+                        <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                          Carga movimientos para ver tu comparativa
+                        </h4>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                          Sube un estado de cuenta en PDF o una lista de gastos para comparar automáticamente lo que gastaste contra las metas de este mes.
+                        </p>
+                      </div>
                     </div>
-                    <div className="max-w-md mx-auto space-y-1">
-                      <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                        Carga movimientos para ver tu comparativa
-                      </h4>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                        Sube un estado de cuenta en PDF o una lista de gastos para comparar automáticamente lo que gastaste contra las metas de este mes.
-                      </p>
-                    </div>
+
+                    {currentBudget?.targets && currentBudget.targets.length > 0 && (
+                      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                          <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                            Metas mensuales configuradas ({currentBudget.targets.length} categorías)
+                          </h3>
+                          <span className="text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                            Total presupuestado: {formatCurrency(currentBudget.totalMonthlyBudgetGTQ)}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {currentBudget.targets.map((target) => (
+                            <div
+                              key={`configured-target-${target.categoryId}`}
+                              className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 flex items-center justify-between gap-2"
+                            >
+                              <div className="space-y-0.5">
+                                <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 block">
+                                  {target.categoryName}
+                                </span>
+                                <span
+                                  className={`text-3xs font-medium px-2 py-0.5 rounded-full border inline-block ${
+                                    target.isEssential
+                                      ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                                      : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                                  }`}
+                                >
+                                  {target.isEssential ? "Esencial" : "Estilo de vida"}
+                                </span>
+                              </div>
+                              <span className="text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100 shrink-0">
+                                {formatCurrency(target.monthlyLimitGTQ)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : monthComparison ? (
                   <>

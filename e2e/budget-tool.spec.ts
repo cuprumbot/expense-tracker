@@ -1024,4 +1024,104 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await page.locator("#btn-dashboard-open-budget").click();
     await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
   });
+
+  test("loads saved budget and restores saved transactions directly from landing screen without prior dashboard visit", async ({ page }) => {
+    await page.goto("/");
+
+    // Seed session and budget in localStorage
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "expense_tracker_session_v1",
+        JSON.stringify({
+          version: 1,
+          savedAt: new Date().toISOString(),
+          transactions: [
+            {
+              id: "tx-landing-1",
+              date: "2026-10-05",
+              description: "Walmart Roosevelt",
+              amount: 450,
+              currency: "GTQ",
+              category: "Supermercado",
+              classificationSource: "local",
+            },
+            {
+              id: "tx-landing-2",
+              date: "2026-10-12",
+              description: "San Martin Cafe",
+              amount: 120,
+              currency: "GTQ",
+              category: "Restaurantes y Cafés",
+              classificationSource: "local",
+            },
+          ],
+          summary: {
+            totalRowsProcessed: 2,
+            validTransactionsCount: 2,
+            skippedRowsCount: 0,
+            totalAmount: 570,
+          },
+          bankName: "Banco Industrial",
+          customCategories: [],
+        })
+      );
+
+      localStorage.setItem(
+        "expense_tracker_budget_v1",
+        JSON.stringify({
+          currentBudget: {
+            id: "budget-saved-landing",
+            name: "Presupuesto Test",
+            targets: [
+              {
+                categoryId: "supermercado",
+                categoryName: "Supermercado",
+                monthlyLimitGTQ: 2000,
+                isEssential: true,
+              },
+              {
+                categoryId: "restaurantes",
+                categoryName: "Restaurantes y Cafés",
+                monthlyLimitGTQ: 500,
+                isEssential: false,
+              },
+            ],
+            totalMonthlyBudgetGTQ: 2500,
+            createdMode: "zero",
+            updatedAt: new Date().toISOString(),
+          },
+          monthlyBudgets: {},
+          effectiveFromMonth: null,
+        })
+      );
+    });
+
+    // Reload to simulate a user opening the application with existing saved session and budget
+    await page.reload();
+
+    // Verify user is on the landing screen (entry card and saved session banner visible)
+    const openLandingBtn = page.locator("#btn-open-budget-landing");
+    await expect(openLandingBtn).toBeVisible();
+
+    // Directly click "Crear o ver mi presupuesto" WITHOUT clicking "Ir al dashboard"
+    await openLandingBtn.click();
+
+    // Verify budget tool opened with active budget AND active comparison against restored transactions
+    await expect(page.locator("#section-comparativa-presupuesto")).toBeVisible();
+    await expect(page.locator("#month-selector-bar")).toBeVisible();
+    await expect(page.locator("#card-monthly-budget-summary")).toBeVisible();
+    await expect(page.locator("#summary-total-spent")).toContainText("570");
+    await expect(page.locator("#category-comparison-card-supermercado")).toBeVisible();
+    await expect(page.locator("#category-comparison-card-supermercado")).toContainText("450");
+    await expect(page.locator("#category-comparison-card-restaurantes")).toBeVisible();
+    await expect(page.locator("#category-comparison-card-restaurantes")).toContainText("120");
+
+    // Verify back button now says "Volver al Dashboard" since transactions are restored
+    const backBtn = page.locator("#btn-budget-back");
+    await expect(backBtn).toHaveText("Volver al Dashboard");
+    await backBtn.click();
+
+    // Verify user seamlessly arrives on Dashboard
+    await expect(page.locator("#btn-dashboard-open-budget")).toBeVisible();
+  });
 });

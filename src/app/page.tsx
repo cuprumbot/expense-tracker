@@ -951,16 +951,46 @@ export default function Home() {
     saveStoredBudgetState(newState);
   };
 
+  const handleOpenBudgetTool = () => {
+    // 1. If transactions are not active in state, but a saved session exists,
+    // restore it so that transactions, summary, categories and bank are available in the budget tool.
+    const session = savedSession || loadStoredSession();
+    if (session && session.transactions?.length > 0 && (!transactions || transactions.length === 0)) {
+      const sanitizedTxs = ensureUniqueTransactionIds(session.transactions);
+      transactionsRef.current = sanitizedTxs;
+      setTransactions(sanitizedTxs);
+      setSummary(session.summary);
+      if (session.customCategories?.length > 0) {
+        setCustomCategories(session.customCategories);
+      }
+      if (session.savingsRecommendations) {
+        setSavingsRecommendations(session.savingsRecommendations);
+      }
+      setBankName(session.bankName || null);
+      setSavedSession(null);
+    }
+
+    // 2. Ensure budgetState is loaded from storage if not already present in state
+    if (!budgetState) {
+      const storedBudget = loadStoredBudgetState();
+      if (storedBudget) {
+        setBudgetState(storedBudget);
+      }
+    }
+
+    setIsBudgetToolOpen(true);
+  };
+
   const isDashboardActive = Boolean(transactions && summary);
 
   return (
     <>
       {isBudgetToolOpen ? (
         <BudgetToolView
-          transactions={transactions}
-          summary={summary}
-          customCategories={customCategories}
-          budgetState={budgetState}
+          transactions={transactions || savedSession?.transactions || loadStoredSession()?.transactions || null}
+          summary={summary || savedSession?.summary || loadStoredSession()?.summary || null}
+          customCategories={customCategories.length > 0 ? customCategories : (savedSession?.customCategories || loadStoredCategories())}
+          budgetState={budgetState || loadStoredBudgetState()}
           onSaveBudgetState={handleSaveBudgetState}
           onBack={() => setIsBudgetToolOpen(false)}
         />
@@ -971,7 +1001,7 @@ export default function Home() {
           bankName={bankName}
           customCategories={customCategories}
           isClassifyingWithLLM={isClassifyingWithLLM}
-          onOpenBudgetTool={() => setIsBudgetToolOpen(true)}
+          onOpenBudgetTool={handleOpenBudgetTool}
           onAddMoreStatements={() => setIsAddMoreModalOpen(true)}
           onResetSession={() => {
             setWipeCustomCategoriesOnReset(false);
@@ -983,7 +1013,7 @@ export default function Home() {
               summary={summary!}
               externalFilter={filter}
               onClearExternalFilter={onClearFilter}
-              onOpenBudgetTool={() => setIsBudgetToolOpen(true)}
+              onOpenBudgetTool={handleOpenBudgetTool}
               sourceLabel={
                 bankName
                   ? `${bankName} · ${routedFile?.file.name || "Múltiples archivos"}`
@@ -1097,7 +1127,7 @@ export default function Home() {
           <button
             type="button"
             id="btn-open-budget-landing"
-            onClick={() => setIsBudgetToolOpen(true)}
+            onClick={handleOpenBudgetTool}
             className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 rounded-xl transition-colors cursor-pointer shadow-xs shrink-0 self-stretch sm:self-auto justify-center"
           >
             <Icons.Target className="w-4 h-4" />
@@ -1459,7 +1489,7 @@ export default function Home() {
           <TransactionTable
             transactions={transactions}
             summary={summary}
-            onOpenBudgetTool={() => setIsBudgetToolOpen(true)}
+            onOpenBudgetTool={handleOpenBudgetTool}
             sourceLabel={
               bankName
                 ? `${bankName} · ${routedFile?.file.name || "Múltiples archivos"}`
