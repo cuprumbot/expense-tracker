@@ -93,16 +93,14 @@ El sistema implementa una estricta separación de responsabilidades donde el 100
 
 El producto fue evaluado con una muestra representativa de 10 usuarios potenciales con diversos hábitos financieros (usuarios de apps, métodos tradicionales en Excel y personas con compromisos de deuda activos).
 
-### Tablero Visual de Resultados (Survey Results Dashboard)
+### Opciones de Visualización
 
-Visualización interactiva guiada por diagramas vectoriales (SVG), barras de distribución porcentual y notas cualitativas discretas organizadas por sección temática.
-
-[![Survey Results Dashboard](docs/screenshots/survey-results-dashboard.png)](survey-results-dashboard.html)
-
-> [!TIP]
-> Puedes abrir e interactuar con el tablero visual completo directamente en:  
-> **[Survey Results Dashboard (survey-results-dashboard.html)](survey-results-dashboard.html)** *(o en la carpeta de documentación: [docs/survey-results-dashboard.html](docs/survey-results-dashboard.html))*.  
-> También puedes consultar el informe complementario en Markdown con diagramas Mermaid en **[RESULTADOS_ENCUESTA.md](RESULTADOS_ENCUESTA.md)** y las notas de entrevista originales en **[ENCUESTA.md](ENCUESTA.md)**.
+> [!NOTE]
+> Por políticas de seguridad de GitHub, al hacer clic en un archivo `.html` en la vista de archivos del repositorio (`blob`), GitHub muestra el código fuente en texto plano. Para visualizar el tablero renderizado directamente en el navegador, utiliza los siguientes accesos:
+>
+> * **[Abrir Tablero Visual Renderizado en el Navegador (HTML)](https://htmlpreview.github.io/?https://github.com/cuprumbot/expense-tracker/blob/master/survey-results-dashboard.html)**: Renderiza en vivo el tablero HTML completo con diagramas vectoriales SVG, barras de distribución y notas cualitativas organizadas.
+> * **[Ver Informe Nativo de GitHub con Diagramas (Markdown)](RESULTADOS_ENCUESTA.md)**: Informe renderizado directamente dentro de la interfaz de GitHub con diagramas Mermaid (`flowchart LR`), tablas de frecuencia y bloques de alerta.
+> * **Archivo local**: Puedes abrir directamente [survey-results-dashboard.html](survey-results-dashboard.html) en tu navegador web o acceder vía `http://localhost:3000/survey-results-dashboard.html` al ejecutar el proyecto.
 
 ### Resumen de Métricas Clave de Validación
 
@@ -123,8 +121,8 @@ Para consultar la documentación técnica completa, algoritmos y guías de desar
 
 | Documento | Descripción |
 | :--- | :--- |
-| **[Survey Results Dashboard](survey-results-dashboard.html)** | Tablero visual interactivo (HTML+SVG) con diagramas de distribución, métricas clave (KPIs) y observaciones discretas de usuarios. |
-| **[Resultados Visuales de la Encuesta (Markdown)](RESULTADOS_ENCUESTA.md)** | Informe complementario en Markdown estructurado con diagramas Mermaid y tablas de frecuencia. |
+| **[Survey Results Dashboard (HTML en Vivo)](https://htmlpreview.github.io/?https://github.com/cuprumbot/expense-tracker/blob/master/survey-results-dashboard.html)** | Tablero visual interactivo (HTML+SVG) renderizado en el navegador con diagramas y notas cualitativas. |
+| **[Resultados Visuales de la Encuesta (Markdown)](RESULTADOS_ENCUESTA.md)** | Informe complementario renderizado directamente en GitHub con diagramas Mermaid y tablas de frecuencia. |
 | **[Encuesta y Respuestas Originales](ENCUESTA.md)** | Instrumento de validación y notas originales recopiladas en las entrevistas con 10 usuarios. |
 | **[Implementación del Módulo de Presupuestos](docs/dev/iteration_4/BUDGET_IMPLEMENTATION.md)** | Especificación técnica del motor presupuestario, persistencia, versionado, causas raíz y reporte de QA (US-054 a US-063). |
 | **[Herramientas y Arquitectura Técnica](docs/herramientas-y-arquitectura.md)** | Responsabilidades por capas (cliente, servidor local, nube), parsers bancarios y componentes visuales. |

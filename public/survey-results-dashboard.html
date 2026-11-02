@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resultados de Encuesta de Producto - Expense Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --background: #09090b;
+      --card: #18181b;
+      --border: #27272a;
+      --foreground: #fafafa;
+      --muted-foreground: #a1a1aa;
+      --accent: #3b82f6;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --background: #f8fafc;
+        --card: #ffffff;
+        --border: #e2e8f0;
+        --foreground: #0f172a;
+        --muted-foreground: #64748b;
+        --accent: #2563eb;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased p-4 sm:p-6 lg:p-8 min-h-screen">
+  <div id="survey-results-container" class="max-w-5xl mx-auto space-y-8">
+    
+    <!-- Header -->
+    <header class="border-b border-[var(--border)] pb-6 space-y-2">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Reporte Visual de Producto · Muestra N=10
+        </div>
+        <span class="text-xs text-[var(--muted-foreground)]">Entrevistas a profundidad</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Resultados de Validación con Usuarios</h1>
+      <p class="text-sm text-[var(--muted-foreground)] max-w-3xl">
+        Evaluación de usabilidad, percepción de valor y fricción psicológica en 10 usuarios de diversos perfiles financieros (usuarios de apps, métodos tradicionales en Excel y personas con deudas activas).
+      </p>
+    </header>
+
+    <!-- Top KPI Highlights -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-1">
+        <span class="text-xs font-medium text-[var(--muted-foreground)]">Facilidad de Carga</span>
+        <div class="text-2xl font-bold text-emerald-500">100%</div>
+        <p class="text-xs text-[var(--muted-foreground)]">10/10 la calificaron fácil o muy fácil</p>
+      </div>
+
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-1">
+        <span class="text-xs font-medium text-[var(--muted-foreground)]">Claridad Dashboard</span>
+        <div class="text-2xl font-bold text-blue-500">70%</div>
+        <p class="text-xs text-[var(--muted-foreground)]">7/10 comprendieron la vista general</p>
+      </div>
+
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-1">
+        <span class="text-xs font-medium text-[var(--muted-foreground)]">Preferencia Presupuesto</span>
+        <div class="text-2xl font-bold text-indigo-500">70%</div>
+        <p class="text-xs text-[var(--muted-foreground)]">Prefiere generación automatizada</p>
+      </div>
+
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-1">
+        <span class="text-xs font-medium text-[var(--muted-foreground)]">Retención Inmediata</span>
+        <div class="text-2xl font-bold text-amber-500">30%</div>
+        <p class="text-xs text-[var(--muted-foreground)]">Barreras: ansiedad (20%) y Excel (20%)</p>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 1: Entrada de Datos -->
+    <section class="space-y-4">
+      <div class="flex items-center gap-2 pb-2 border-b border-[var(--border)]">
+        <span class="w-6 h-6 rounded-md bg-blue-500/10 text-blue-500 flex items-center justify-center font-bold text-xs">1</span>
+        <h2 class="text-lg font-semibold">Entrada de Datos</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <!-- 1.1 Facilidad de carga -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <h3 class="text-sm font-semibold">1.1 ¿Qué tan fácil resultó cargar los gastos?</h3>
+              <span class="text-xs font-mono font-medium text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">100% Éxito</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] mb-3">Percepción del esfuerzo en el onboarding inicial</p>
+
+            <!-- Diagrama de barras -->
+            <div class="space-y-2">
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span class="text-sm font-medium">Fácil</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">8 personas (80%)</span>
+                </div>
+                <div class="w-full h-3 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-500 rounded-full" style="width: 80%"></div>
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span class="text-sm font-medium">Muy fácil</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">2 personas (20%)</span>
+                </div>
+                <div class="w-full h-3 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-600 rounded-full" style="width: 20%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nota discreta -->
+          <div class="bg-zinc-500/5 border border-zinc-500/15 rounded-lg p-2.5 text-xs text-[var(--muted-foreground)] flex items-start gap-2">
+            <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <span class="font-medium text-[var(--foreground)]">Fricción externa observada:</span>
+              5 personas señalaron que fue fácil una vez descargados sus archivos, pero que el proceso previo en los portales bancarios resulta tedioso.
+            </div>
+          </div>
+        </div>
+
+        <!-- 1.2 Método utilizado -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <h3 class="text-sm font-semibold">1.2 ¿Qué método de entrada utilizaste?</h3>
+              <span class="text-xs font-mono font-medium text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded">PDF dominante</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] mb-3">Distribución de canales de ingreso probados</p>
+
+            <!-- Diagrama Segmentado -->
+            <div class="space-y-2">
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span class="text-sm font-medium">PDF o CSV bancario</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">7 personas (70%)</span>
+                </div>
+                <div class="w-full h-3 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-blue-500 rounded-full" style="width: 70%"></div>
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span class="text-sm font-medium">Copiar y pegar lista ("Lista rápida")</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">2 personas (20%)</span>
+                </div>
+                <div class="w-full h-3 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-indigo-500 rounded-full" style="width: 20%"></div>
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span class="text-sm font-medium">Ambas modalidades</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">1 persona (10%)</span>
+                </div>
+                <div class="w-full h-3 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-cyan-500 rounded-full" style="width: 10%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nota discreta -->
+          <div class="bg-zinc-500/5 border border-zinc-500/15 rounded-lg p-2.5 text-xs text-[var(--muted-foreground)] flex items-start gap-2">
+            <svg class="w-4 h-4 text-blue-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div>
+              <span class="font-medium text-[var(--foreground)]">Comportamiento en prueba:</span>
+              2 personas prefirieron no cargar datos personales y validaron el sistema usando exclusivamente el CSV de prueba provisto.
+            </div>
+          </div>
+        </div>
+
+        <!-- 1.3 Conectar Correo Electrónico -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <h3 class="text-sm font-semibold">1.3 ¿Conectarías tu correo para estados automáticos?</h3>
+              <span class="text-xs font-mono font-medium text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded">80% Rechazo</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] mb-3">Evaluación de conveniencia frente a privacidad</p>
+
+            <!-- Diagrama Comparativo -->
+            <div class="flex items-center gap-2 h-7 w-full rounded-lg overflow-hidden bg-zinc-800/30 p-1">
+              <div class="h-full bg-blue-500 rounded-md flex items-center justify-center text-xs font-semibold text-white transition-all" style="width: 20%">
+                Sí (2)
+              </div>
+              <div class="h-full bg-rose-600 rounded-md flex items-center justify-center text-xs font-semibold text-white transition-all" style="width: 80%">
+                No (8)
+              </div>
+            </div>
+            <div class="flex justify-between text-xs text-[var(--muted-foreground)] pt-1">
+              <span>Sí: 20% (1 persona lo propuso previamente)</span>
+              <span>No: 80%</span>
+            </div>
+          </div>
+
+          <!-- Nota discreta -->
+          <div class="bg-rose-500/5 border border-rose-500/20 rounded-lg p-2.5 text-xs text-rose-400 flex items-start gap-2">
+            <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0 0v2m0-2h2m-2 0H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="text-[var(--muted-foreground)]">
+              <span class="font-medium text-rose-500">Objeción principal:</span>
+              El temor a perder la privacidad de su cuenta de correo personal superó por completo la comodidad de no descargar el PDF.
+            </div>
+          </div>
+        </div>
+
+        <!-- 1.4 Fotos a facturas -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <h3 class="text-sm font-semibold">1.4 ¿Tomarías fotos a facturas para cargar gastos?</h3>
+              <span class="text-xs font-mono font-medium text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded">Interés Moderado</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] mb-3">Recepción del ingreso manual por cámara</p>
+
+            <!-- Diagrama Segmentado -->
+            <div class="space-y-2">
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span>Sí (uso continuo)</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">3 personas (30%)</span>
+                </div>
+                <div class="w-full h-2.5 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-500 rounded-full" style="width: 30%"></div>
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span>Solo fines de semana (acumulación)</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">1 persona (10%)</span>
+                </div>
+                <div class="w-full h-2.5 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-amber-500 rounded-full" style="width: 10%"></div>
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span>No</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">6 personas (60%)</span>
+                </div>
+                <div class="w-full h-2.5 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-zinc-500 rounded-full" style="width: 60%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nota discreta -->
+          <div class="bg-zinc-500/5 border border-zinc-500/15 rounded-lg p-2.5 text-xs text-[var(--muted-foreground)] flex items-start gap-2">
+            <svg class="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <div>
+              <span class="font-medium text-[var(--foreground)]">Patrón de uso condicionado:</span>
+              El usuario que respondió "fines de semana" explicó que es cuando junta recibos físicos en restaurantes y comercios y siente alarma por el total.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: Dashboard -->
+    <section class="space-y-4">
+      <div class="flex items-center gap-2 pb-2 border-b border-[var(--border)]">
+        <span class="w-6 h-6 rounded-md bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold text-xs">2</span>
+        <h2 class="text-lg font-semibold">Dashboard Analítico de 4 Paneles</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <!-- 2.1 Claridad del Dashboard -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <h3 class="text-sm font-semibold">2.1 ¿Le pareció clara y útil la información general?</h3>
+              <span class="text-xs font-mono font-medium text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded">70% Favorable</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] mb-3">Valoración visual del tablero principal</p>
+
+            <div class="flex items-center gap-2 h-7 w-full rounded-lg overflow-hidden bg-zinc-800/30 p-1">
+              <div class="h-full bg-blue-600 rounded-md flex items-center justify-center text-xs font-semibold text-white" style="width: 70%">
+                Clara y útil: 7 (70%)
+              </div>
+              <div class="h-full bg-zinc-600 rounded-md flex items-center justify-center text-xs font-semibold text-white" style="width: 30%">
+                Sobrecarga: 3 (30%)
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-zinc-500/5 border border-zinc-500/15 rounded-lg p-2.5 text-xs text-[var(--muted-foreground)] flex items-start gap-2">
+            <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+              <span class="font-medium text-[var(--foreground)]">Carga cognitiva:</span>
+              3 personas reportaron que 4 paneles simultáneos presentan "demasiada información junta", sugiriendo poder colapsar o simplificar por defecto.
+            </div>
+          </div>
+        </div>
+
+        <!-- 2.2 ¿A dónde va mi dinero? -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <h3 class="text-sm font-semibold">2.2 Panel: "¿A dónde va mi dinero?"</h3>
+              <span class="text-xs font-mono font-medium text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">80% Descubrimiento</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] mb-3">Identificación de comercios y gastos hormiga</p>
+
+            <div class="space-y-2">
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span>Encontró gasto hormiga de inmediato</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">5 (50%)</span>
+                </div>
+                <div class="w-full h-2.5 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-500 rounded-full" style="width: 50%"></div>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span>Útil, pero requirió filtrar comercios fijos</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">3 (30%)</span>
+                </div>
+                <div class="w-full h-2.5 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-blue-500 rounded-full" style="width: 30%"></div>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span>Sin información nueva</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">2 (20%)</span>
+                </div>
+                <div class="w-full h-2.5 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-zinc-500 rounded-full" style="width: 20%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-zinc-500/5 border border-zinc-500/15 rounded-lg p-2.5 text-xs text-[var(--muted-foreground)] flex items-start gap-2">
+            <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <div>
+              <span class="font-medium text-[var(--foreground)]">Validación UX:</span>
+              La posibilidad de hacer clic en un comercio para ocultarlo temporalmente permitió desenterrar gastos hormiga secundarios en el 30% de los casos.
+            </div>
+          </div>
+        </div>
+
+        <!-- 2.3 Patrones de consumo -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <h3 class="text-sm font-semibold">2.3 Panel: "Patrones de consumo"</h3>
+              <span class="text-xs font-mono font-medium text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded">80% Sin Novedad</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] mb-3">Día de la semana vs Día del mes</p>
+
+            <div class="flex items-center gap-2 h-7 w-full rounded-lg overflow-hidden bg-zinc-800/30 p-1">
+              <div class="h-full bg-emerald-600 rounded-md flex items-center justify-center text-xs font-semibold text-white" style="width: 20%">
+                Útil: 2 (20%)
+              </div>
+              <div class="h-full bg-zinc-600 rounded-md flex items-center justify-center text-xs font-semibold text-white" style="width: 80%">
+                No útil: 8 (80%)
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-zinc-500/5 border border-zinc-500/15 rounded-lg p-2.5 text-xs text-[var(--muted-foreground)] flex items-start gap-2">
+            <svg class="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <span class="font-medium text-[var(--foreground)]">Falta de valor diferencial:</span>
+              La mayoría comentó que ya es consciente de que gasta más en fines de semana; el gráfico confirmó lo obvio sin aportar consejos prácticos.
+            </div>
+          </div>
+        </div>
+
+        <!-- 2.4 Antigüedad del gasto -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <h3 class="text-sm font-semibold">2.4 Panel: "Antigüedad del gasto"</h3>
+              <span class="text-xs font-mono font-medium text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded">70% Utilidad</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] mb-3">Suscripciones, cuotas (Visacuotas) y compras del mes</p>
+
+            <div class="space-y-2">
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span>Útil por control de suscripciones</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">4 (40%)</span>
+                </div>
+                <div class="w-full h-2.5 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-indigo-500 rounded-full" style="width: 40%"></div>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span>Útil por cuotas y extrafinanciamientos</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">3 (30%)</span>
+                </div>
+                <div class="w-full h-2.5 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-purple-500 rounded-full" style="width: 30%"></div>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span>No le pareció útil</span>
+                  <span class="font-mono text-[var(--muted-foreground)]">3 (30%)</span>
+                </div>
+                <div class="w-full h-2.5 bg-zinc-800/20 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-zinc-500 rounded-full" style="width: 30%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-purple-500/5 border border-purple-500/20 rounded-lg p-2.5 text-xs text-purple-400 flex items-start gap-2">
+            <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="text-[var(--muted-foreground)]">
+              <span class="font-medium text-purple-400">Impacto emocional en deudores:</span>
+              Los dos usuarios preocupados por cuotas sabían de su compromiso, pero visualizar el peso acumulado en el gráfico les generó inquietud directa.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: Presupuestos y Gamificación -->
+    <section class="space-y-4">
+      <div class="flex items-center gap-2 pb-2 border-b border-[var(--border)]">
+        <span class="w-6 h-6 rounded-md bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold text-xs">3</span>
+        <h2 class="text-lg font-semibold">Módulo de Presupuestos y Gamificación</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        <!-- 3.1 Creación Manual vs Auto -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <h3 class="text-sm font-semibold">3.1 Modo de Creación</h3>
+              <span class="text-xs font-mono font-medium text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">70% Auto</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] mb-3">Preferencia de configuración inicial</p>
+
+            <div class="space-y-2 text-xs">
+              <div>
+                <div class="flex justify-between py-1">
+                  <span>Automatizada pura</span>
+                  <span class="font-mono font-semibold">40%</span>
+                </div>
+                <div class="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-indigo-500" style="width: 40%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between py-1">
+                  <span>Auto (requiere mejores categorías)</span>
+                  <span class="font-mono font-semibold">30%</span>
+                </div>
+                <div class="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-blue-500" style="width: 30%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between py-1">
+                  <span>Manual desde cero</span>
+                  <span class="font-mono font-semibold">30%</span>
+                </div>
+                <div class="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-zinc-500" style="width: 30%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-zinc-500/5 border border-zinc-500/15 rounded-lg p-2.5 text-xs text-[var(--muted-foreground)]">
+            <span class="font-medium text-[var(--foreground)]">Oportunidad de producto:</span>
+            El 70% desea automatización, pero pide categorías más afinadas a gastos locales de Guatemala.
+          </div>
+        </div>
+
+        <!-- 3.2 Monitoreo de Presupuesto -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <h3 class="text-sm font-semibold">3.2 Control "Dentro de Presupuesto"</h3>
+              <span class="text-xs font-mono font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">80% Positivo</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] mb-3">Percepción de utilidad del semáforo</p>
+
+            <div class="space-y-2 text-xs">
+              <div>
+                <div class="flex justify-between py-1">
+                  <span>Buena herramienta</span>
+                  <span class="font-mono font-semibold">40%</span>
+                </div>
+                <div class="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-500" style="width: 40%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between py-1">
+                  <span>Buena, pero UI debe pulirse</span>
+                  <span class="font-mono font-semibold">40%</span>
+                </div>
+                <div class="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-amber-500" style="width: 40%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between py-1">
+                  <span>No se ajusta a sus necesidades</span>
+                  <span class="font-mono font-semibold">20%</span>
+                </div>
+                <div class="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-rose-500" style="width: 20%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-amber-500/5 border border-amber-500/20 rounded-lg p-2.5 text-xs text-amber-500">
+            <span class="font-medium text-[var(--foreground)]">Ritmo de compras:</span>
+            Un usuario expresó estrés al ver el semáforo en rojo temprano, pues hace pagos fuertes al inicio del mes.
+          </div>
+        </div>
+
+        <!-- 3.3 Gamificación y Rachas -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <h3 class="text-sm font-semibold">3.3 Gamificación y Rachas</h3>
+              <span class="text-xs font-mono font-medium text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded">Baja Adopción</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] mb-3">Recepción de metas y semanas bajo control</p>
+
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between py-0.5">
+                <span>Le pareció buena</span>
+                <span class="font-mono font-semibold text-emerald-400">20% (2)</span>
+              </div>
+              <div class="flex justify-between py-0.5">
+                <span>Insuficientes datos para verla</span>
+                <span class="font-mono font-semibold text-zinc-400">30% (3)</span>
+              </div>
+              <div class="flex justify-between py-0.5">
+                <span>Rechazo (sin metas logradas)</span>
+                <span class="font-mono font-semibold text-rose-400">30% (3)</span>
+              </div>
+              <div class="flex justify-between py-0.5">
+                <span>Sin interés en gamificación</span>
+                <span class="font-mono font-semibold text-zinc-500">20% (2)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-rose-500/5 border border-rose-500/20 rounded-lg p-2.5 text-xs text-rose-400">
+            <span class="font-medium text-[var(--foreground)]">Efecto contraproducente:</span>
+            Si el usuario no tiene metas cumplidas, las insignias vacías generan frustración y sensación de fracaso.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECCIÓN 4: Retención y Barreras Emocionales -->
+    <section class="space-y-4">
+      <div class="flex items-center gap-2 pb-2 border-b border-[var(--border)]">
+        <span class="w-6 h-6 rounded-md bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-xs">4</span>
+        <h2 class="text-lg font-semibold">Decisión de Retención y Barreras de Adopción</h2>
+      </div>
+
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 space-y-6">
+        <div>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <h3 class="text-base font-semibold">4.1 ¿Continuaría utilizando esta aplicación? (N=10)</h3>
+            <span class="text-xs font-mono px-2.5 py-1 rounded bg-zinc-800 text-zinc-300">30% Adopción Directa</span>
+          </div>
+          <p class="text-xs text-[var(--muted-foreground)]">Segmentación de la decisión final de uso</p>
+        </div>
+
+        <!-- Diagrama de Barra Segmentada de Adopción -->
+        <div class="space-y-2">
+          <div class="flex h-9 w-full rounded-xl overflow-hidden p-1 bg-zinc-800/40 gap-1.5">
+            <div class="bg-emerald-600 rounded-lg flex items-center justify-center text-xs font-bold text-white px-2" style="width: 30%" title="Sí continuarían (3)">
+              Sí (30%)
+            </div>
+            <div class="bg-zinc-600 rounded-lg flex items-center justify-center text-xs font-bold text-white px-2" style="width: 30%" title="Abandona apps por hábito (3)">
+              Abandono habitual (30%)
+            </div>
+            <div class="bg-blue-600 rounded-lg flex items-center justify-center text-xs font-bold text-white px-2" style="width: 20%" title="Prefiere Excel (2)">
+              Excel propio (20%)
+            </div>
+            <div class="bg-rose-600 rounded-lg flex items-center justify-center text-xs font-bold text-white px-2" style="width: 20%" title="Estrés / Ansiedad (2)">
+              Ansiedad (20%)
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs">
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded bg-emerald-600"></span>
+              <span><strong>30%</strong> Sí la adoptaría</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded bg-zinc-600"></span>
+              <span><strong>30%</strong> Suele abandonar apps</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded bg-blue-600"></span>
+              <span><strong>20%</strong> Fiel a su Excel</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded bg-rose-600"></span>
+              <span><strong>20%</strong> Estrés / Ansiedad</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hallazgos Cualitativos Relevantes -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[var(--border)]">
+          <div class="bg-zinc-500/5 border border-zinc-500/15 rounded-xl p-4 space-y-2">
+            <div class="flex items-center gap-2 text-xs font-semibold text-[var(--foreground)]">
+              <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              El competidor real no es otra app, es Excel
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] leading-relaxed">
+              Las personas que ya tienen el hábito de controlar sus finanzas no buscan una app móvil genérica; tienen plantillas personalizadas y no migran salvo que la app les ahorre el tiempo manual de digitación.
+            </p>
+          </div>
+
+          <div class="bg-rose-500/5 border border-rose-500/20 rounded-xl p-4 space-y-2">
+            <div class="flex items-center gap-2 text-xs font-semibold text-rose-500">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              La barrera de la "Ansiedad Financiera"
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] leading-relaxed">
+              Varios usuarios reportaron que revisar los números les genera angustia cuando están endeudados o perciben inflación: <em>"Dejé de usar apps porque todo subía de precio, mis gastos subían y mi sueldo no"</em>. La app debe comunicar empatía y alivio, no juicios severos.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>
