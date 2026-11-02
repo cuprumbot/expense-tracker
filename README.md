@@ -102,7 +102,9 @@ pie title Decisión de Adopción y Retención (N=10)
 ```
 
 > [!TIP]
-> Consulta el informe completo con gráficos interactivos Mermaid para cada sección temática, barras de distribución y observaciones cualitativas detalladas directamente en:  
+> Puedes abrir e interactuar con el tablero visual completo directamente en GitHub Pages:  
+> **[Survey Results Dashboard (En vivo en GitHub Pages)](https://cuprumbot.github.io/expense-tracker/)**  
+> O consultar el informe técnico con gráficos interactivos Mermaid para cada sección temática en:  
 > **[RESULTADOS_ENCUESTA.md](RESULTADOS_ENCUESTA.md)** *(o en la carpeta de documentación: [docs/resultados-encuesta.md](docs/resultados-encuesta.md))*.  
 > Las respuestas en bruto recopiladas en las entrevistas se encuentran en **[ENCUESTA.md](ENCUESTA.md)**.
 
@@ -125,7 +127,8 @@ Para consultar la documentación técnica completa, algoritmos y guías de desar
 
 | Documento | Descripción |
 | :--- | :--- |
-| **[Resultados Visuales de la Encuesta](RESULTADOS_ENCUESTA.md)** | Informe visual completo renderizado nativamente en GitHub con diagramas Mermaid, tablas de frecuencia y notas cualitativas. |
+| **[Survey Results Dashboard (GitHub Pages)](https://cuprumbot.github.io/expense-tracker/)** | Tablero visual interactivo desplegado en vivo con diagramas vectoriales SVG, barras de distribución y notas cualitativas. |
+| **[Resultados Visuales de la Encuesta (Markdown)](RESULTADOS_ENCUESTA.md)** | Informe visual completo renderizado nativamente en GitHub con diagramas Mermaid, tablas de frecuencia y notas cualitativas. |
 | **[Encuesta y Respuestas Originales](ENCUESTA.md)** | Instrumento de validación y notas originales recopiladas en las entrevistas con 10 usuarios. |
 | **[Implementación del Módulo de Presupuestos](docs/dev/iteration_4/BUDGET_IMPLEMENTATION.md)** | Especificación técnica del motor presupuestario, persistencia, versionado, causas raíz y reporte de QA (US-054 a US-063). |
 | **[Herramientas y Arquitectura Técnica](docs/herramientas-y-arquitectura.md)** | Responsabilidades por capas (cliente, servidor local, nube), parsers bancarios y componentes visuales. |
