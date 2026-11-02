@@ -373,7 +373,7 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
 
     const serviciosCard = page.locator("#realistic-target-card-servicios");
     await expect(serviciosCard).toBeVisible();
-    await expect(serviciosCard.getByText("Fijo / Esencial")).toBeVisible();
+    await expect(serviciosCard.getByText("Esencial")).toBeVisible();
 
     // Test adjustment chip (-10%) on Supermercado
     const cut10Chip = superCard.locator("#chip-cut-10-supermercado");
@@ -664,11 +664,13 @@ test.describe("US-054: Budget Data Structures & LocalStorage Persistence E2E", (
     await expect(superCard).toBeVisible();
     await expect(superCard).toContainText("Dentro de meta");
     await expect(superCard).toContainText("1,800");
+    await expect(superCard.getByText("Esencial")).toBeVisible();
 
     const restCard = page.locator("#category-comparison-card-restaurantes");
     await expect(restCard).toBeVisible();
     await expect(restCard).toContainText("Exceso");
     await expect(restCard).toContainText("650");
+    await expect(restCard.getByText("Estilo de vida")).toBeVisible();
 
     // Verify Unbudgeted warning card for Suscripciones
     const unbudgetedCard = page.locator("#card-unbudgeted-warning");

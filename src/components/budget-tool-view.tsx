@@ -578,9 +578,6 @@ export function BudgetToolView({
                     <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
                       Gastos Esenciales / Hogar
                     </span>
-                    <span className="text-3xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-medium">
-                      Mayor asignación
-                    </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {essentialCategories.map((cat) => {
@@ -614,9 +611,6 @@ export function BudgetToolView({
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
                       Estilo de Vida y Ocio
-                    </span>
-                    <span className="text-3xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-medium">
-                      Discrecional
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -861,7 +855,7 @@ export function BudgetToolView({
                       </span>
                       <span>·</span>
                       <span>
-                        Ocio y estilo de vida:{" "}
+                        Estilo de vida:{" "}
                         <strong className="text-amber-800 dark:text-amber-400">
                           {formatCurrency(discretionaryTotalGTQ)}
                         </strong>
@@ -899,7 +893,7 @@ export function BudgetToolView({
                       Metas realistas sugeridas según tu historial
                     </h3>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                      Fijamos gastos esenciales en el 100% de tu promedio mensual y gastos discrecionales con una optimización alcanzable del 5% al 10%.
+                      Fijamos gastos esenciales en el 100% de tu promedio mensual y gastos de estilo de vida con una optimización alcanzable del 5% al 10%.
                     </p>
                   </div>
                   <button
@@ -955,7 +949,7 @@ export function BudgetToolView({
                                     : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
                                 }`}
                               >
-                                {isEssential ? "Fijo / Esencial" : "Variable / Ocio"}
+                                {isEssential ? "Esencial" : "Estilo de vida"}
                               </span>
                             </div>
                             <p className="text-2xs text-zinc-500 dark:text-zinc-400">
@@ -1098,14 +1092,14 @@ export function BudgetToolView({
                     </div>
                     <div className="flex items-center gap-3 text-2xs text-zinc-500 dark:text-zinc-400">
                       <span>
-                        Fijos / Esenciales:{" "}
+                        Esenciales:{" "}
                         <strong className="text-emerald-800 dark:text-emerald-400">
                           {formatCurrency(essentialTotalGTQ)}
                         </strong>
                       </span>
                       <span>·</span>
                       <span>
-                        Variables / Ocio:{" "}
+                        Estilo de vida:{" "}
                         <strong className="text-amber-800 dark:text-amber-400">
                           {formatCurrency(discretionaryTotalGTQ)}
                         </strong>
@@ -1553,11 +1547,11 @@ export function BudgetToolView({
                                   <span
                                     className={`text-3xs font-medium px-2 py-0.5 rounded-full border ${
                                       cat.isEssential
-                                        ? "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
-                                        : "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
+                                        ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                                        : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
                                     }`}
                                   >
-                                    {cat.isEssential ? "Fijo / Esencial" : "Variable / Ocio"}
+                                    {cat.isEssential ? "Esencial" : "Estilo de vida"}
                                   </span>
                                   <span
                                     className={`text-3xs font-semibold px-2 py-0.5 rounded-full border ${
