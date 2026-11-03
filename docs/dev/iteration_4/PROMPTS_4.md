@@ -144,3 +144,34 @@ Work autonomously end-to-end for EACH user story in the sequence:
 Only stop when all specified User Stories are fully implemented, verified, and committed to the new branch. Then, provide a comprehensive report of what was done and the test results for each story. Summarize it in `BUDGET_IMPLEMENTATION.md`.
 
 After completing the entire batch, execute a `[console]::beep(800, 800)` and delete the `task.lock` file.
+
+---
+
+Write an article in spanish, in specific neutral latinoamerican spanish. The output must be as ready to publish in Medium or Substack as possible. Write it in `article/iteration_4/ARTICLE.md`. Use an engaging tone.
+
+The main ideas I want to transmit in the article are:
+    - Our main competitor might not be another similar app, but some multi-purpouse software such as Excel.
+    - In times of economic uncertainty, expense tracker or budget apps may cause stress to the potential users.
+
+Include these key ideas when writing the article:
+    - We started building an expense tracker app.
+    - The second iteration, once the basic functionality was in place, was focused on how to present data to the users.
+    - We started getting feedback from users, the main roadblock was on the PDF upload. The had to get the bank statements from their email, download it, and then upload it to our tool.
+    - In the third and fourth iterations we focused on adding functionality to the app, such as a budget tool and more ways for the user to upload their expenses. This, in hopes that more functionality would motivate the user to upload their statements.
+    - At this time, we started getting some pieces of feedback that became more important later: many people didn't track their expenses; those who tracked their expenses rigorously already had a tool (and some times it was Excel).
+    - After the budget tool, the list upload, and the additional parsers were implemented, we conducted a bigger survey.
+    - Our main findings were:
+        - For the people that already tracked their expenses, our competitor was Excel.
+        - For the people that didn't already tracked their expenses, we had to delve deeper and find why.
+            - Some people became stressed when thinking about money and tracking expenses, mostly because of ongoing debts. These people could benefit the most from an app like this, but the anxiety it caused was the biggest problem now.
+            - Some of them didn't care enough, either because they have no money problems, or they feel pesimistic about the current global economic situation.
+    - Lessons learned:
+        - Know our real competitors.
+        - Segment the users and understand their psychology.
+            - Who already have this problem under control? Which tool do they use and can we really compete against it?
+            - Why do people don't find ways to solve this problem? Does it stress them? Do they not care enough?
+            - Our real customer base might be really small, but with AI-assisted coding we might be able to offer them a solution that previously we couldn't.
+
+I want to include some images when publishing the article. According to its content, decide if we can reuse some image (copy it to `article/iteration_4`) or if we need to generate some new one.
+
+Do not commit any change, let me review first.
