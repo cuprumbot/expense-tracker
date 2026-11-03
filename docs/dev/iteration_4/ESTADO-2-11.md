@@ -56,3 +56,14 @@ Previo a la implementación de semana 4 se conversó con algunas personas que m�
 Feedback completo en [`ENCUESTA.md`](https://github.com/cuprumbot/expense-tracker/blob/master/ENCUESTA.md)
 
 Visualización de los resultados en [Github Pages](https://cuprumbot.github.io/expense-tracker/)
+
+
+# Conclusiones y aprendizajes
+
+- La principal barrera de entrada continuó siendo la carga de PDF. Entre los usuarios encuestados esta barrera no se logró superar por distintas razones:
+    - Los usuarios conscientes de sus gastos ya tienen otros métodos de control, principalmente Excel. No competimos contra otra aplicación sino contra algo que ellos mismos personalizaron.
+    - A algunos usuarios no les importa lo suficiente llevar el control de sus gastos, puedo dividir a estos en dos categorías: 
+        - Está bastante bien económicamente y por eso no le importa.
+        - Tiene un poco de holgura pero sabe que aunque ahorre un poco más cada mes, no logrará de forma cercana hacer una compra grande.
+    - Hay usuarios con deudas a quienes la aplicación les causó estrés. Ya están conscientes de sus deudas y que deben reducir gastos, pero ser recordados de esto por una fuente adicional les causa malestar.
+- Fue una minoría quien indicó que sí usaría la aplicación. El desarrollo asistido por IA es tan rápido, que puede que valga la pena generar software aún si la cantidad de usuarios es muy baja.
